@@ -126,7 +126,7 @@ const Login = () => {
           <div className="mt-6 text-center space-y-2">
             <p className="text-sm text-gray-600">
               Pas encore membre ?{' '}
-              <Link to="/register" className="text-blue-600 hover:text-blue-700 font-semibold">
+              <Link to="/register" className="text-green-600 hover:text-green-700 font-semibold">
                 Créer un compte
               </Link>
             </p>
