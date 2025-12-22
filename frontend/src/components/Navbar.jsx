@@ -90,7 +90,7 @@ const Navbar = () => {
                 <Button onClick={() => navigate('/login')} variant="ghost" size="sm">
                   Connexion
                 </Button>
-                <Button onClick={() => navigate('/register')} size="sm" className="bg-blue-600 hover:bg-blue-700">
+                <Button onClick={() => navigate('/register')} size="sm" className="bg-green-600 hover:bg-green-700">
                   S'inscrire
                 </Button>
               </>
