@@ -29,7 +29,7 @@ const Navbar = () => {
               alt="En Toute Franchise Logo" 
               className="h-12 w-auto"
             />
-            <span className="text-xl font-bold text-gray-900 hidden sm:block">En Toute Franchise</span>
+            <span className="text-xl font-bold text-white hidden sm:block">En Toute Franchise</span>
           </Link>
 
           {/* Desktop Menu */}
