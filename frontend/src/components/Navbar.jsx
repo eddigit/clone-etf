@@ -23,10 +23,12 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">ETF</span>
-            </div>
+          <Link to="/" className="flex items-center space-x-3">
+            <img 
+              src="https://aide.en-toutefranchise.com/lovable-uploads/19dabfce-86c9-4793-beb5-bcf6cb7b9e7b.png" 
+              alt="En Toute Franchise Logo" 
+              className="h-12 w-auto"
+            />
             <span className="text-xl font-bold text-gray-900 hidden sm:block">En Toute Franchise</span>
           </Link>
 
