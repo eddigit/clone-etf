@@ -11,51 +11,53 @@ export const services = [
   {
     id: 1,
     icon: 'Shield',
-    title: 'Protection Juridique',
-    description: 'Assistance complète pour tous vos litiges professionnels',
+    title: 'Accompagnement Juridique',
+    description: 'Orientation et soutien pour vos démarches juridiques',
     features: [
-      'Médiation et résolution de conflits',
-      'Rédaction et vérification de contrats',
-      'Défense en cas de contentieux',
-      'Conseils juridiques préventifs'
-    ]
+      'Orientation vers avocats partenaires',
+      'Partage de connaissances jurisprudentielles',
+      'Accompagnement dans vos démarches',
+      'Conseils basés sur 30 ans d\'expérience'
+    ],
+    disclaimer: 'L\'association n\'est pas un cabinet d\'avocats'
   },
   {
     id: 2,
     icon: 'FileText',
     title: 'Assistance Administrative',
-    description: 'Support expert face aux organismes officiels',
+    description: 'Aide et orientation face aux organismes officiels',
     features: [
       'Accompagnement URSSAF et caisses',
-      'Aide aux contrôles fiscaux',
-      'Gestion des procédures administratives',
-      'Représentation officielle'
+      'Aide à la préparation aux contrôles',
+      'Orientation sur les procédures',
+      'Partage d\'expériences réussies'
     ]
   },
   {
     id: 3,
     icon: 'TrendingUp',
-    title: 'Conseil Stratégique',
-    description: 'Expertise pour optimiser votre activité',
+    title: 'Conseil & Orientation',
+    description: 'Partage d\'expertise basé sur 30 ans d\'expérience',
     features: [
-      'Conseil en développement d\'activité',
-      'Optimisation fiscale légale',
-      'Structuration juridique',
-      'Veille réglementaire personnalisée'
+      'Orientation pour votre activité',
+      'Partage de bonnes pratiques',
+      'Mise en relation avec experts',
+      'Veille réglementaire informative'
     ]
   },
   {
     id: 4,
     icon: 'Bot',
-    title: 'Assistance Juridique IA 24/7',
-    description: 'Intelligence artificielle entraînée sur 30 ans d\'expertise',
+    title: 'Assistant IA d\'Orientation 24/7',
+    description: 'Outil d\'information basé sur 30 ans d\'expérience',
     features: [
-      'Disponible 24/7',
-      'Expertise de 30 ans intégrée',
-      'Réponses adaptées à votre situation',
-      'Validation par nos juristes'
+      'Disponible 24/7 pour information',
+      'Base de connaissances de 30 ans',
+      'Orientation sur vos questions',
+      'Ne remplace pas un avocat'
     ],
-    isNew: true
+    isNew: true,
+    disclaimer: 'Outil d\'information uniquement, ne remplace pas un conseil juridique professionnel'
   }
 ];
 
