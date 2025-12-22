@@ -37,7 +37,7 @@ const Navbar = () => {
             <Link
               to="/"
               className={`text-sm font-medium transition-colors ${
-                isActive('/') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'
+                isActive('/') ? 'text-green-400' : 'text-gray-300 hover:text-green-400'
               }`}
             >
               Accueil
@@ -45,7 +45,7 @@ const Navbar = () => {
             <Link
               to="/services"
               className={`text-sm font-medium transition-colors ${
-                isActive('/services') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'
+                isActive('/services') ? 'text-green-400' : 'text-gray-300 hover:text-green-400'
               }`}
             >
               Services
@@ -53,7 +53,7 @@ const Navbar = () => {
             <Link
               to="/blog"
               className={`text-sm font-medium transition-colors ${
-                isActive('/blog') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'
+                isActive('/blog') ? 'text-green-400' : 'text-gray-300 hover:text-green-400'
               }`}
             >
               Blog
@@ -61,7 +61,7 @@ const Navbar = () => {
             <Link
               to="/contact"
               className={`text-sm font-medium transition-colors ${
-                isActive('/contact') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'
+                isActive('/contact') ? 'text-green-400' : 'text-gray-300 hover:text-green-400'
               }`}
             >
               Contact
