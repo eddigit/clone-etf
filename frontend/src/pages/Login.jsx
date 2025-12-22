@@ -57,8 +57,12 @@ const Login = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mb-4">
-            <Lock className="h-8 w-8 text-white" />
+          <div className="mx-auto mb-6">
+            <img 
+              src="https://aide.en-toutefranchise.com/lovable-uploads/19dabfce-86c9-4793-beb5-bcf6cb7b9e7b.png" 
+              alt="En Toute Franchise Logo" 
+              className="h-20 w-auto mx-auto"
+            />
           </div>
           <CardTitle className="text-2xl">Connexion</CardTitle>
           <CardDescription>
