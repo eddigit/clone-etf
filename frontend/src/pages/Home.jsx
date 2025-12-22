@@ -76,6 +76,14 @@ const Home = () => {
               respecter votre <strong className="text-green-400">liberté de travailler librement</strong> et vos droits fondamentaux contre le
               favoritisme d'État et la concurrence illicite organisée.
             </p>
+            
+            {/* Important Disclaimer */}
+            <div className="max-w-2xl mx-auto mb-8 p-4 bg-slate-800/70 border border-green-800/50 rounded-lg">
+              <p className="text-sm text-gray-300 text-center">
+                <strong className="text-green-400">Important :</strong> Nous sommes une association d'accompagnement et d'orientation.
+                Nous ne sommes pas un cabinet d'avocats. Nous partageons notre expérience de 30 ans et orientons vers des avocats partenaires si nécessaire.
+              </p>
+            </div>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button size="lg" className="bg-green-600 hover:bg-green-700" onClick={() => navigate('/register')}>
                 <Users className="mr-2 h-5 w-5" />
