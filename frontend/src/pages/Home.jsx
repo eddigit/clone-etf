@@ -46,9 +46,9 @@ const Home = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-950">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-slate-800 via-slate-900 to-green-900 py-20 text-white">
+      <section className="bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 py-20 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <Badge className="mb-4 bg-green-700 text-white hover:bg-green-800 border-green-600">
