@@ -41,10 +41,12 @@ const DashboardLayout = ({ children }) => {
       {/* Sidebar Desktop */}
       <aside className="hidden md:flex md:flex-col md:w-64 bg-white border-r border-gray-200">
         <div className="p-6 border-b border-gray-200">
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">ETF</span>
-            </div>
+          <Link to="/" className="flex items-center space-x-3">
+            <img 
+              src="https://aide.en-toutefranchise.com/lovable-uploads/19dabfce-86c9-4793-beb5-bcf6cb7b9e7b.png" 
+              alt="En Toute Franchise Logo" 
+              className="h-12 w-auto"
+            />
             <span className="text-lg font-bold text-gray-900">Espace Membre</span>
           </Link>
         </div>
