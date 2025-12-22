@@ -91,68 +91,68 @@ const Home = () => {
       </section>
 
       {/* Notre ADN Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-slate-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-bold text-white mb-4">
               Notre ADN : Indépendance & Justice
             </h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
-            <Card className="border-2 border-blue-100">
+            <Card className="border-2 border-green-800 bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center text-2xl">
-                  <Shield className="h-6 w-6 mr-2 text-blue-600" />
+                <CardTitle className="flex items-center text-2xl text-white">
+                  <Shield className="h-6 w-6 mr-2 text-green-400" />
                   Notre Indépendance
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
                   <li className="flex items-start">
-                    <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Association apolitique depuis 1994</span>
+                    <Check className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300">Association apolitique depuis 1994</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Libre et indépendante - Non subventionnée</span>
+                    <Check className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300">Libre et indépendante - Non subventionnée</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Enregistrée N° W134002644 sous-préfecture d'Istres</span>
+                    <Check className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300">Enregistrée N° W134002644 sous-préfecture d'Istres</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Siège : 1 rue François Boucher 13700 Marignane</span>
+                    <Check className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300">Siège : 1 rue François Boucher 13700 Marignane</span>
                   </li>
                 </ul>
               </CardContent>
             </Card>
 
-            <Card className="border-2 border-blue-100">
+            <Card className="border-2 border-green-800 bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center text-2xl">
-                  <Scale className="h-6 w-6 mr-2 text-blue-600" />
+                <CardTitle className="flex items-center text-2xl text-white">
+                  <Scale className="h-6 w-6 mr-2 text-green-400" />
                   Notre Combat
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
                   <li className="flex items-start">
-                    <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Faire respecter les décisions de justice</span>
+                    <Check className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300">Faire respecter les décisions de justice</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Promouvoir l'équité et la transparence</span>
+                    <Check className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300">Promouvoir l'équité et la transparence</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Lutter contre la concurrence déloyale</span>
+                    <Check className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300">Lutter contre la concurrence déloyale</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Défendre votre droit de travailler librement</span>
+                    <Check className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300">Défendre votre droit de travailler librement</span>
                   </li>
                 </ul>
               </CardContent>
