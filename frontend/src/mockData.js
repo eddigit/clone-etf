@@ -138,17 +138,18 @@ export const aiPlans = [
     price: '10',
     currency: '€',
     period: 'mois',
-    description: 'Pour un usage ponctuel et des questions ciblées',
+    description: 'Outil d\'information pour questions ponctuelles',
     tokens: '1000',
     minutes: '10',
     features: [
       '1 000 tokens IA/mois',
       '10 minutes d\'assistance/mois',
-      'Réponses instantanées 24/7',
-      'Expertise de 30 ans intégrée',
-      'Validation par nos experts'
+      'Informations instantanées 24/7',
+      'Base de connaissances de 30 ans',
+      'Outil d\'orientation, ne remplace pas un avocat'
     ],
-    available: false
+    available: false,
+    disclaimer: 'Cet outil fournit des informations basées sur l\'expérience de l\'association. Il ne constitue pas un conseil juridique professionnel et ne remplace pas la consultation d\'un avocat.'
   },
   {
     id: 2,
@@ -156,18 +157,19 @@ export const aiPlans = [
     price: '39',
     currency: '€',
     period: 'mois',
-    description: 'Pour un accompagnement intensif et quotidien',
+    description: 'Outil d\'information pour accompagnement intensif',
     tokens: '10000',
     minutes: '50',
     features: [
       '10 000 tokens IA/mois',
       '50 minutes d\'assistance/mois',
-      'Support prioritaire par nos experts',
-      'Analyses approfondies personnalisées',
+      'Orientation prioritaire par notre équipe',
+      'Analyses informatives personnalisées',
       'Rapports mensuels détaillés'
     ],
     popular: true,
-    available: false
+    available: false,
+    disclaimer: 'Cet outil fournit des informations basées sur l\'expérience de l\'association. Il ne constitue pas un conseil juridique professionnel et ne remplace pas la consultation d\'un avocat.'
   }
 ];
 
