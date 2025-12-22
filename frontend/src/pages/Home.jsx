@@ -51,10 +51,20 @@ const Home = () => {
       <section className="bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 py-20 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <Badge className="mb-4 bg-green-700 text-white hover:bg-green-800 border-green-600">
+            <Badge className="mb-6 bg-green-700 text-white hover:bg-green-800 border-green-600">
               <Shield className="h-3 w-3 mr-1" />
               Association Apolitique, Libre et Indépendante depuis 1994
             </Badge>
+            
+            {/* Logo SVG Hero */}
+            <div className="flex justify-center mb-8">
+              <img 
+                src="https://en-toutefranchise.com/wp-content/uploads/2019/05/LOGO-EN-TOUTE-FRANCHISE-2018VECTO-1.svg" 
+                alt="En Toute Franchise Logo" 
+                className="h-32 md:h-40 w-auto"
+              />
+            </div>
+            
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
               En Toute Franchise
             </h1>
