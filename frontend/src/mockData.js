@@ -70,7 +70,7 @@ export const membershipPlans = [
     currency: '€',
     description: 'Pour les consommateurs et individus',
     features: [
-      'Accès aux ressources juridiques',
+      'Accès aux ressources et retours d\'expérience',
       'Newsletter mensuelle',
       'Participation aux assemblées',
       'Soutien aux actions collectives'
@@ -86,14 +86,15 @@ export const membershipPlans = [
     currency: '€',
     description: 'Pour les professionnels du commerce et de l\'artisanat (moins de 100m²)',
     features: [
-      'Conseil juridique personnalisé',
-      'Accès à l\'assistant IA',
-      'Analyse de documents',
-      'Alertes concurrence déloyale',
-      'Modèles de recours'
+      'Orientation et accompagnement personnalisé',
+      'Accès à l\'assistant IA d\'information',
+      'Partage de retours d\'expérience',
+      'Orientation vers avocats partenaires',
+      'Modèles et ressources documentaires'
     ],
     popular: true,
-    helloAssoUrl: 'https://www.helloasso.com/associations/en-toute-franchise/adhesions/adhesion-2025-commercants-artisans'
+    helloAssoUrl: 'https://www.helloasso.com/associations/en-toute-franchise/adhesions/adhesion-2025-commercants-artisans',
+    disclaimer: 'L\'association accompagne et oriente, ne remplace pas un avocat'
   },
   {
     id: 3,
@@ -103,11 +104,11 @@ export const membershipPlans = [
     currency: '€',
     description: 'Pour les commerces de plus de 100m²',
     features: [
-      'Accompagnement juridique complet',
-      'Représentation devant les tribunaux',
-      'Veille réglementaire personnalisée',
-      'Accès prioritaire aux avocats',
-      'Formation spécialisée'
+      'Accompagnement et orientation renforcés',
+      'Mise en relation avec avocats partenaires',
+      'Veille réglementaire informative',
+      'Accès prioritaire au réseau',
+      'Formation et partage d\'expérience'
     ],
     popular: false,
     helloAssoUrl: 'https://www.helloasso.com/associations/en-toute-franchise/adhesions/adhesion-2025-entreprises'
@@ -121,9 +122,9 @@ export const membershipPlans = [
     description: 'Pour les associations partenaires',
     features: [
       'Partenariat privilégié',
-      'Actions juridiques conjointes',
+      'Actions et orientations conjointes',
       'Partage de ressources',
-      'Coordination des actions'
+      'Coordination des initiatives'
     ],
     popular: false,
     helloAssoUrl: 'https://www.helloasso.com/associations/en-toute-franchise/adhesions/adhesion-2025-associations'
