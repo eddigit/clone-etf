@@ -189,13 +189,28 @@ async def send_message(
     )
     await db.ai_messages.insert_one(user_message.model_dump())
     
-    # TODO: Call OpenAI API here when API key is configured
-    # For now, return a mock response
-    ai_response_content = """Bonjour ! Je suis l'assistant juridique IA d'En Toute Franchise. 
+    // TODO: Call OpenAI API here when API key is configured
+    // For now, return a mock response
+    ai_response_content = """Bonjour ! Je suis l'assistant d'orientation d'En Toute Franchise.
 
-Note : Pour le moment, les réponses sont mockées. L'intégration complète avec l'API OpenAI sera ajoutée lors de la configuration des clés API.
+⚠️ **IMPORTANT** : Je suis un outil d'information basé sur 30 ans d'expérience de l'association. Je ne suis pas un avocat et mes réponses ne constituent pas un conseil juridique professionnel.
 
-Comment puis-je vous aider avec vos questions juridiques ou administratives ?"""
+**Ce que je peux faire :**
+- Vous orienter sur la base de l'expérience de l'association
+- Partager des informations sur des situations similaires rencontrées
+- Vous aider à identifier les questions importantes à poser
+- Vous orienter vers les bonnes ressources ou avocats partenaires si nécessaire
+
+**Ce que je ne peux pas faire :**
+- Fournir un conseil juridique officiel
+- Remplacer un avocat dans votre situation
+- Garantir un résultat juridique
+
+Pour des conseils juridiques professionnels, nous vous orienterons vers nos avocats partenaires.
+
+Comment puis-je vous aider aujourd'hui ?
+
+📝 Note technique : Les réponses sont actuellement mockées. L'intégration OpenAI sera ajoutée avec la configuration des clés API."""
     
     ai_message = Message(
         conversationId=conversation_id,
