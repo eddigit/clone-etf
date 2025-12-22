@@ -109,32 +109,32 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-200 bg-white">
+        <div className="md:hidden border-t border-slate-800 bg-slate-900">
           <div className="px-4 py-3 space-y-3">
             <Link
               to="/"
-              className="block py-2 text-sm font-medium text-gray-700 hover:text-blue-600"
+              className="block py-2 text-sm font-medium text-gray-300 hover:text-green-400"
               onClick={() => setMobileMenuOpen(false)}
             >
               Accueil
             </Link>
             <Link
               to="/services"
-              className="block py-2 text-sm font-medium text-gray-700 hover:text-blue-600"
+              className="block py-2 text-sm font-medium text-gray-300 hover:text-green-400"
               onClick={() => setMobileMenuOpen(false)}
             >
               Services
             </Link>
             <Link
               to="/blog"
-              className="block py-2 text-sm font-medium text-gray-700 hover:text-blue-600"
+              className="block py-2 text-sm font-medium text-gray-300 hover:text-green-400"
               onClick={() => setMobileMenuOpen(false)}
             >
               Blog
             </Link>
             <Link
               to="/contact"
-              className="block py-2 text-sm font-medium text-gray-700 hover:text-blue-600"
+              className="block py-2 text-sm font-medium text-gray-300 hover:text-green-400"
               onClick={() => setMobileMenuOpen(false)}
             >
               Contact
