@@ -356,19 +356,23 @@ const Home = () => {
             ))}
           </div>
 
-          <div className="mt-12 p-6 bg-yellow-50 border border-yellow-200 rounded-xl max-w-4xl mx-auto">
+          <div className="mt-12 p-6 bg-slate-800/70 border-2 border-green-800/50 rounded-xl max-w-4xl mx-auto">
             <div className="flex items-start space-x-3">
-              <AlertCircle className="h-6 w-6 text-yellow-600 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="h-6 w-6 text-green-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Important à retenir</h3>
-                <ul className="space-y-2 text-sm text-gray-700">
+                <h3 className="text-lg font-semibold text-white mb-2">Important à retenir</h3>
+                <ul className="space-y-2 text-sm text-gray-300">
                   <li>
-                    <strong>Prérequis obligatoire :</strong> L'adhésion à l'association est obligatoire pour accéder à
-                    l'assistance IA
+                    <strong className="text-green-400">Prérequis obligatoire :</strong> L'adhésion à l'association est obligatoire pour accéder à
+                    l'assistant IA
                   </li>
                   <li>
-                    <strong>Accès exclusif :</strong> L'assistance IA est réservée exclusivement aux membres de
+                    <strong className="text-green-400">Accès exclusif :</strong> L'assistance IA est réservée exclusivement aux membres de
                     l'association
+                  </li>
+                  <li>
+                    <strong className="text-green-400">Outil d'information :</strong> L'assistant IA est un outil d'orientation basé sur 30 ans d'expérience. 
+                    Il ne remplace pas un conseil juridique professionnel ou la consultation d'un avocat.
                   </li>
                 </ul>
               </div>
