@@ -162,11 +162,11 @@ const Home = () => {
       </section>
 
       {/* Services Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Nos Services d'Excellence</h2>
-            <p className="text-lg text-gray-600">Une gamme complète de services réalisés par des professionnels</p>
+            <h2 className="text-4xl font-bold text-white mb-4">Nos Services d'Excellence</h2>
+            <p className="text-lg text-gray-400">Une gamme complète de services réalisés par des professionnels</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -175,28 +175,28 @@ const Home = () => {
               return (
                 <Card
                   key={service.id}
-                  className={`hover:shadow-lg transition-shadow ${
-                    service.isNew ? 'border-2 border-blue-500 relative' : ''
+                  className={`hover:shadow-xl transition-all bg-slate-800 border-slate-700 ${
+                    service.isNew ? 'border-2 border-green-500 relative' : ''
                   }`}
                 >
                   {service.isNew && (
-                    <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-600">
+                    <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-green-600">
                       NOUVEAU
                     </Badge>
                   )}
                   <CardHeader>
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                      <IconComponent className="h-6 w-6 text-blue-600" />
+                    <div className="w-12 h-12 bg-green-900/50 rounded-lg flex items-center justify-center mb-4">
+                      <IconComponent className="h-6 w-6 text-green-400" />
                     </div>
-                    <CardTitle className="text-xl">{service.title}</CardTitle>
-                    <CardDescription>{service.description}</CardDescription>
+                    <CardTitle className="text-xl text-white">{service.title}</CardTitle>
+                    <CardDescription className="text-gray-400">{service.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
                       {service.features.map((feature, idx) => (
                         <li key={idx} className="flex items-start text-sm">
-                          <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                          <span>{feature}</span>
+                          <Check className="h-4 w-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-300">{feature}</span>
                         </li>
                       ))}
                     </ul>
