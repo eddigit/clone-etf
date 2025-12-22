@@ -116,8 +116,8 @@ const AIAssistant = () => {
                       <Bot className="h-6 w-6 text-purple-600" />
                     </div>
                     <div>
-                      <h2 className="font-semibold text-gray-900">Assistant IA Juridique</h2>
-                      <p className="text-xs text-gray-500">Disponible 24/7</p>
+                      <h2 className="font-semibold text-gray-900">Assistant IA d'Orientation</h2>
+                      <p className="text-xs text-gray-500">Disponible 24/7 - Outil d'information</p>
                     </div>
                   </div>
                   <Badge className="bg-green-100 text-green-700">En ligne</Badge>
