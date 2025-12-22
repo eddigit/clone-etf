@@ -67,7 +67,7 @@ const Home = () => {
               favoritisme d'État et la concurrence illicite organisée.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate('/register')}>
+              <Button size="lg" className="bg-green-600 hover:bg-green-700" onClick={() => navigate('/register')}>
                 <Users className="mr-2 h-5 w-5" />
                 Rejoindre l'association
               </Button>
