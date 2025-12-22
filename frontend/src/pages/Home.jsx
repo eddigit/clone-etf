@@ -48,22 +48,22 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 via-white to-blue-50 py-20">
+      <section className="bg-gradient-to-br from-slate-800 via-slate-900 to-green-900 py-20 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-100">
+            <Badge className="mb-4 bg-green-700 text-white hover:bg-green-800 border-green-600">
               <Shield className="h-3 w-3 mr-1" />
               Association Apolitique, Libre et Indépendante depuis 1994
             </Badge>
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
               En Toute Franchise
             </h1>
-            <p className="text-xl md:text-2xl text-blue-600 font-semibold mb-4">
+            <p className="text-xl md:text-2xl text-green-400 font-semibold mb-4">
               Défenseur de vos droits
             </p>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-8">
+            <p className="text-lg text-gray-300 max-w-3xl mx-auto mb-8">
               Association de Défense des Commerçants Artisans créée en janvier 1994, nous luttons pour faire
-              respecter votre <strong>liberté de travailler librement</strong> et vos droits fondamentaux contre le
+              respecter votre <strong className="text-green-400">liberté de travailler librement</strong> et vos droits fondamentaux contre le
               favoritisme d'État et la concurrence illicite organisée.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
