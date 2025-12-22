@@ -132,15 +132,22 @@ const AIAssistant = () => {
                       <Bot className="h-8 w-8 text-purple-600" />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      Assistant IA Juridique
+                      Assistant IA d'Orientation
                     </h3>
                     <p className="text-gray-600 mb-4">
-                      Posez-moi vos questions juridiques et administratives
+                      Outil d'information basé sur 30 ans d'expérience
                     </p>
+                    <div className="max-w-md mx-auto bg-amber-50 border border-amber-300 rounded-lg p-4 mb-4">
+                      <p className="text-sm text-amber-900">
+                        <AlertCircle className="h-4 w-4 inline mr-1" />
+                        <strong>Important :</strong> Cet assistant fournit des informations et orientations basées sur l'expérience de l'association. 
+                        Il ne constitue pas un conseil juridique professionnel et ne remplace pas la consultation d'un avocat.
+                      </p>
+                    </div>
                     <div className="max-w-md mx-auto bg-blue-50 border border-blue-200 rounded-lg p-4">
                       <p className="text-sm text-blue-800">
                         <AlertCircle className="h-4 w-4 inline mr-1" />
-                        <strong>Note :</strong> Les réponses IA sont actuellement mockées. L'intégration complète sera
+                        <strong>Note technique :</strong> Les réponses IA sont actuellement mockées. L'intégration complète sera
                         ajoutée lors de la configuration des API.
                       </p>
                     </div>
