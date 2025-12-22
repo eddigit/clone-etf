@@ -59,9 +59,9 @@ const Home = () => {
             {/* Logo Hero */}
             <div className="flex justify-center mb-8">
               <img 
-                src="https://aide.en-toutefranchise.com/lovable-uploads/19dabfce-86c9-4793-beb5-bcf6cb7b9e7b.png" 
+                src="/logo-etf.svg" 
                 alt="En Toute Franchise Logo" 
-                className="h-32 md:h-48 w-auto drop-shadow-2xl"
+                className="h-40 md:h-56 w-auto drop-shadow-2xl"
               />
             </div>
             
