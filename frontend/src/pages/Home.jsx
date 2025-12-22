@@ -56,12 +56,12 @@ const Home = () => {
               Association Apolitique, Libre et Indépendante depuis 1994
             </Badge>
             
-            {/* Logo SVG Hero */}
+            {/* Logo Hero */}
             <div className="flex justify-center mb-8">
               <img 
-                src="https://en-toutefranchise.com/wp-content/uploads/2019/05/LOGO-EN-TOUTE-FRANCHISE-2018VECTO-1.svg" 
+                src="https://aide.en-toutefranchise.com/lovable-uploads/19dabfce-86c9-4793-beb5-bcf6cb7b9e7b.png" 
                 alt="En Toute Franchise Logo" 
-                className="h-32 md:h-40 w-auto"
+                className="h-32 md:h-48 w-auto drop-shadow-2xl"
               />
             </div>
             
