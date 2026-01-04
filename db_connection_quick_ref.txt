@@ -1,0 +1,87 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║     CONNEXION BASE DE DONNÉES - EN TOUTE FRANCHISE                ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────┐
+│ INFORMATIONS DE CONNEXION                                        │
+├─────────────────────────────────────────────────────────────────┤
+│ Type:              MongoDB                                       │
+│ Host:              localhost                                     │
+│ Port:              27017                                         │
+│ Database:          test_database                                 │
+│ URL complète:      mongodb://localhost:27017/test_database       │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ COLLECTIONS INSTALLÉES (7)                                       │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. users                 → Utilisateurs et profils               │
+│ 2. ai_conversations      → Conversations IA                      │
+│ 3. ai_messages          → Messages IA                            │
+│ 4. documents            → Documents uploadés                     │
+│ 5. resources            → Ressources disponibles                 │
+│ 6. invoices             → Factures                               │
+│ 7. articles             → Articles de blog                       │
+│ 8. contact_messages     → Messages de contact                    │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ COMPTES DE TEST                                                  │
+├─────────────────────────────────────────────────────────────────┤
+│ UTILISATEUR:                                                     │
+│   Email:        test@example.fr                                  │
+│   Password:     password123                                      │
+│   Role:         user                                             │
+│                                                                  │
+│ ADMINISTRATEUR:                                                  │
+│   Email:        admin@example.fr                                 │
+│   Password:     admin123                                         │
+│   Role:         admin                                            │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ COMMANDES RAPIDES                                                │
+├─────────────────────────────────────────────────────────────────┤
+│ Accéder à MongoDB:                                               │
+│   mongosh mongodb://localhost:27017/test_database                │
+│                                                                  │
+│ Lister les collections:                                          │
+│   db.getCollectionNames()                                        │
+│                                                                  │
+│ Compter les utilisateurs:                                        │
+│   db.users.countDocuments()                                      │
+│                                                                  │
+│ Voir tous les utilisateurs:                                      │
+│   db.users.find().pretty()                                       │
+│                                                                  │
+│ Réinitialiser les données test:                                  │
+│   cd /app/backend && python seed_data.py                         │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ OUTILS DE CONNEXION                                              │
+├─────────────────────────────────────────────────────────────────┤
+│ • MongoDB Compass:                                               │
+│   Connection String: mongodb://localhost:27017/test_database     │
+│                                                                  │
+│ • Python (Backend):                                              │
+│   from motor.motor_asyncio import AsyncIOMotorClient            │
+│   client = AsyncIOMotorClient("mongodb://localhost:27017")      │
+│   db = client["test_database"]                                   │
+│                                                                  │
+│ • API Documentation:                                             │
+│   http://localhost:8001/docs                                     │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ FICHIERS IMPORTANTS                                              │
+├─────────────────────────────────────────────────────────────────┤
+│ • Schéma détaillé:     /app/DATABASE_INFO.md                     │
+│ • Contrats API:        /app/contracts.md                         │
+│ • Configuration:       /app/backend/.env                         │
+│ • Modèles Pydantic:    /app/backend/models.py                    │
+│ • Script de seed:      /app/backend/seed_data.py                 │
+└─────────────────────────────────────────────────────────────────┘
+
+Pour plus de détails, consultez: /app/DATABASE_INFO.md
+
