@@ -9,12 +9,14 @@ import Register from "./pages/Register";
 import Blog from "./pages/Blog";
 import Services from "./pages/Services";
 import Contact from "./pages/Contact";
+import Adhesion from "./pages/Adhesion";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import AIAssistant from "./pages/dashboard/AIAssistant";
 import Documents from "./pages/dashboard/Documents";
 import Resources from "./pages/dashboard/Resources";
 import Subscription from "./pages/dashboard/Subscription";
 import Settings from "./pages/dashboard/Settings";
+import Adhesions from "./pages/dashboard/Adhesions";
 // Admin imports
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -49,6 +51,7 @@ function App() {
           <Route path="/services" element={<PublicLayout><Services /></PublicLayout>} />
           <Route path="/blog" element={<PublicLayout><Blog /></PublicLayout>} />
           <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
+          <Route path="/adhesion" element={<PublicLayout><Adhesion /></PublicLayout>} />
           
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
@@ -92,6 +95,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Subscription />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/adhesions"
+            element={
+              <ProtectedRoute>
+                <Adhesions />
               </ProtectedRoute>
             }
           />

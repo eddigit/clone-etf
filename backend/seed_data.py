@@ -51,14 +51,14 @@ async def seed_database():
     # Create admin user
     admin_user = {
         "id": "admin-user-123",
-        "email": "admin@example.fr",
-        "password": hash_password("admin123"),
-        "firstName": "Admin",
+        "email": "admin@entoutefranchise.com",
+        "password": hash_password("Admin2026!"),
+        "firstName": "Administrateur",
         "lastName": "ETF",
         "phone": "0756974419",
-        "businessName": None,
-        "businessType": None,
-        "membershipType": "individual",
+        "businessName": "En Toute Franchise",
+        "businessType": "Association",
+        "membershipType": "professional",
         "membershipStatus": "active",
         "membershipStartDate": datetime.utcnow(),
         "membershipEndDate": datetime.utcnow() + timedelta(days=365),
@@ -70,9 +70,36 @@ async def seed_database():
     existing_admin = await db.users.find_one({"email": admin_user["email"]})
     if not existing_admin:
         await db.users.insert_one(admin_user)
-        print(f"✓ Created admin user: {admin_user['email']} / admin123")
+        print(f"✓ Created admin user: {admin_user['email']} / Admin2026!")
     else:
         print(f"ℹ Admin user already exists: {admin_user['email']}")
+    
+    # Create super admin user (for development)
+    dev_admin = {
+        "id": "dev-admin-456",
+        "email": "admin@example.fr",
+        "password": hash_password("admin123"),
+        "firstName": "Dev",
+        "lastName": "Admin",
+        "phone": "0600000000",
+        "businessName": None,
+        "businessType": None,
+        "membershipType": "individual",
+        "membershipStatus": "active",
+        "membershipStartDate": datetime.utcnow(),
+        "membershipEndDate": datetime.utcnow() + timedelta(days=365),
+        "role": "admin",
+        "createdAt": datetime.utcnow(),
+        "updatedAt": datetime.utcnow()
+    }
+    
+    existing_dev_admin = await db.users.find_one({"email": dev_admin["email"]})
+    if not existing_dev_admin:
+        await db.users.insert_one(dev_admin)
+        print(f"✓ Created dev admin: {dev_admin['email']} / admin123")
+    else:
+        print(f"ℹ Dev admin already exists: {dev_admin['email']}")
+
     
     # Seed articles
     articles = [
@@ -159,9 +186,10 @@ async def seed_database():
             print(f"✓ Created invoice: {invoice['description']}")
     
     print("\n✅ Database seeded successfully!")
-    print("\n📝 Test credentials:")
-    print("   User: test@example.fr / password123")
-    print("   Admin: admin@example.fr / admin123")
+    print("\n📝 Credentials:")
+    print("   👤 User: test@example.fr / password123")
+    print("   🔧 Dev Admin: admin@example.fr / admin123")
+    print("   👨‍💼 Admin ETF: admin@entoutefranchise.com / Admin2026!")
     
     client.close()
 

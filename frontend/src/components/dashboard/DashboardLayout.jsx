@@ -11,7 +11,8 @@ import {
   LogOut,
   Menu,
   X,
-  Shield
+  Shield,
+  Users
 } from 'lucide-react';
 
 const DashboardLayout = ({ children }) => {
@@ -29,6 +30,7 @@ const DashboardLayout = ({ children }) => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Tableau de bord', path: '/dashboard' },
     { icon: Bot, label: 'Assistant IA', path: '/dashboard/ai' },
+    { icon: Users, label: 'Mes Adhésions', path: '/dashboard/adhesions' },
     { icon: FileText, label: 'Mes Documents', path: '/dashboard/documents' },
     { icon: BookOpen, label: 'Ressources', path: '/dashboard/resources' },
     { icon: CreditCard, label: 'Abonnement', path: '/dashboard/subscription' },

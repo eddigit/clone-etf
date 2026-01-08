@@ -51,6 +51,14 @@ const Navbar = () => {
               Services
             </Link>
             <Link
+              to="/adhesion"
+              className={`text-sm font-medium transition-colors ${
+                isActive('/adhesion') ? 'text-green-400' : 'text-gray-300 hover:text-green-400'
+              }`}
+            >
+              Adhérer
+            </Link>
+            <Link
               to="/blog"
               className={`text-sm font-medium transition-colors ${
                 isActive('/blog') ? 'text-green-400' : 'text-gray-300 hover:text-green-400'
@@ -124,6 +132,13 @@ const Navbar = () => {
               onClick={() => setMobileMenuOpen(false)}
             >
               Services
+            </Link>
+            <Link
+              to="/adhesion"
+              className="block py-2 text-sm font-medium text-gray-300 hover:text-green-400"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Adhérer
             </Link>
             <Link
               to="/blog"

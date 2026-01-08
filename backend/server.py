@@ -20,10 +20,13 @@ from models import (
     # New models for HelloAsso, Coupons, External API
     Coupon, CouponCreate, CouponValidation, CouponValidationResponse,
     ApiKey, HelloAssoPayment, HelloAssoMember, MembershipVerification,
-    AdminStats, MemberListItem
+    AdminStats, MemberListItem,
+    # Membership models
+    MemberData, MembershipCreate, Membership, MembershipResponse
 )
 from auth_utils import hash_password, verify_password, create_access_token, decode_access_token
 from helloasso_service import helloasso_service
+from pdf_service import generate_membership_pdf
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -462,6 +465,7 @@ async def helloasso_webhook(request: Request):
     """
     Webhook pour recevoir les notifications HelloAsso
     Crée ou met à jour un adhérent lors d'un paiement
+    Met à jour le statut des adhésions
     """
     try:
         payload = await request.json()
@@ -487,6 +491,8 @@ async def helloasso_webhook(request: Request):
         # Déterminer le type d'adhésion selon le formulaire
         form_slug = data.get("formSlug", "")
         amount = data.get("amount", 0) / 100  # HelloAsso envoie en centimes
+        order_id = data.get("id", "")
+        payment_id = data.get("paymentId", "")
         
         # Mapper le formulaire au type d'adhésion
         membership_mapping = {
@@ -506,6 +512,7 @@ async def helloasso_webhook(request: Request):
         
         now = datetime.utcnow()
         end_date = now + timedelta(days=365)
+        current_year = now.year
         
         if existing_user:
             # Mettre à jour l'adhésion existante
@@ -543,6 +550,26 @@ async def helloasso_webhook(request: Request):
             logger.info(f"HelloAsso: Created new user {email}")
             
             # TODO: Envoyer un email de bienvenue avec le mot de passe temporaire
+        
+        # Mettre à jour l'adhésion si elle existe (status: pending → paid)
+        membership_update = await db.memberships.update_one(
+            {
+                "user_id": user_id,
+                "year": current_year,
+                "status": "pending"
+            },
+            {
+                "$set": {
+                    "status": "paid",
+                    "payment_id": payment_id,
+                    "helloasso_order_id": order_id,
+                    "updated_at": now
+                }
+            }
+        )
+        
+        if membership_update.modified_count > 0:
+            logger.info(f"HelloAsso: Updated membership status to 'paid' for user {user_id}")
         
         # Générer un coupon pour l'adhérent (Boîte à Outils)
         existing_coupon = await db.coupons.find_one({
@@ -759,6 +786,205 @@ async def get_admin_stats(current_user: dict = Depends(get_admin_user)):
         totalCoupons=total_coupons,
         usedCoupons=used_coupons
     )
+
+# ===================== MEMBERSHIP ENDPOINTS (ADHESIONS) =====================
+
+@api_router.post("/memberships", response_model=MembershipResponse)
+async def create_membership(
+    membership_data: MembershipCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Crée une nouvelle adhésion et génère le PDF
+    
+    Flux :
+    1. Valide les données
+    2. Crée l'adhésion (status: pending)
+    3. Génère le PDF du bordereau
+    4. Retourne les données avec lien paiement HelloAsso
+    """
+    try:
+        # Vérifier si l'utilisateur a déjà une adhésion pour l'année en cours
+        current_year = datetime.utcnow().year
+        existing = await db.memberships.find_one({
+            "user_id": current_user["id"],
+            "year": current_year,
+            "status": {"$ne": "cancelled"}
+        })
+        
+        if existing:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Vous avez déjà une adhésion pour l'année {current_year}"
+            )
+        
+        # Créer l'adhésion
+        membership = Membership(
+            user_id=current_user["id"],
+            year=current_year,
+            status="pending",
+            amount=membership_data.amount,
+            membership_type=membership_data.membership_type,
+            member_data=membership_data.member_data
+        )
+        
+        # Insérer dans MongoDB
+        membership_dict = membership.model_dump()
+        result = await db.memberships.insert_one(membership_dict)
+        
+        # Générer le PDF
+        pdf_data = {
+            "year": membership.year,
+            "membership_type": membership.membership_type,
+            "amount": membership.amount,
+            "member_data": membership.member_data.model_dump()
+        }
+        
+        try:
+            pdf_path = generate_membership_pdf(
+                membership_data=pdf_data,
+                membership_id=membership.id,
+                output_dir="pdf_memberships"
+            )
+            
+            # Mettre à jour l'adhésion avec le chemin du PDF
+            await db.memberships.update_one(
+                {"id": membership.id},
+                {
+                    "$set": {
+                        "pdf_path": pdf_path,
+                        "pdf_generated_at": datetime.utcnow(),
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+            
+            logger.info(f"PDF généré pour l'adhésion {membership.id}: {pdf_path}")
+        except Exception as e:
+            logger.error(f"Erreur lors de la génération du PDF: {str(e)}")
+            # Continue sans bloquer la création de l'adhésion
+        
+        # Retourner la réponse
+        return MembershipResponse(
+            id=membership.id,
+            year=membership.year,
+            status=membership.status,
+            amount=membership.amount,
+            membership_type=membership.membership_type,
+            member_data=membership.member_data,
+            pdf_available=pdf_path is not None if 'pdf_path' in locals() else False,
+            created_at=membership.created_at,
+            updated_at=membership.updated_at
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur lors de la création de l'adhésion: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la création de l'adhésion: {str(e)}")
+
+
+@api_router.get("/memberships/me", response_model=List[MembershipResponse])
+async def get_my_memberships(current_user: dict = Depends(get_current_user)):
+    """
+    Récupère toutes les adhésions de l'utilisateur connecté
+    """
+    try:
+        memberships = await db.memberships.find({
+            "user_id": current_user["id"]
+        }).sort("year", -1).to_list(100)
+        
+        result = []
+        for m in memberships:
+            result.append(MembershipResponse(
+                id=m["id"],
+                year=m["year"],
+                status=m["status"],
+                amount=m["amount"],
+                membership_type=m["membership_type"],
+                member_data=MemberData(**m["member_data"]),
+                pdf_available=m.get("pdf_path") is not None,
+                created_at=m["created_at"],
+                updated_at=m["updated_at"]
+            ))
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des adhésions: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erreur lors de la récupération des adhésions")
+
+
+@api_router.get("/memberships/{membership_id}")
+async def get_membership(
+    membership_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Récupère une adhésion spécifique"""
+    try:
+        membership = await db.memberships.find_one({
+            "id": membership_id,
+            "user_id": current_user["id"]
+        })
+        
+        if not membership:
+            raise HTTPException(status_code=404, detail="Adhésion non trouvée")
+        
+        return MembershipResponse(
+            id=membership["id"],
+            year=membership["year"],
+            status=membership["status"],
+            amount=membership["amount"],
+            membership_type=membership["membership_type"],
+            member_data=MemberData(**membership["member_data"]),
+            pdf_available=membership.get("pdf_path") is not None,
+            created_at=membership["created_at"],
+            updated_at=membership["updated_at"]
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération de l'adhésion: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erreur serveur")
+
+
+@api_router.get("/memberships/{membership_id}/pdf")
+async def download_membership_pdf(
+    membership_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Télécharge le PDF du bordereau d'adhésion
+    """
+    from fastapi.responses import FileResponse
+    
+    try:
+        membership = await db.memberships.find_one({
+            "id": membership_id,
+            "user_id": current_user["id"]
+        })
+        
+        if not membership:
+            raise HTTPException(status_code=404, detail="Adhésion non trouvée")
+        
+        pdf_path = membership.get("pdf_path")
+        if not pdf_path or not Path(pdf_path).exists():
+            raise HTTPException(status_code=404, detail="PDF non disponible")
+        
+        # Retourner le fichier
+        return FileResponse(
+            pdf_path,
+            media_type="application/pdf",
+            filename=f"adhesion_{membership['year']}_{membership_id[:8]}.pdf"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur lors du téléchargement du PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erreur lors du téléchargement du PDF")
+
 
 @api_router.get("/admin/members", response_model=List[MemberListItem])
 async def get_admin_members(

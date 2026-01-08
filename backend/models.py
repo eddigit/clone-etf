@@ -270,3 +270,59 @@ class MemberListItem(BaseModel):
     membershipEndDate: Optional[datetime]
     createdAt: datetime
     couponCode: Optional[str] = None
+
+# ===================== MEMBERSHIP MODELS =====================
+class MemberData(BaseModel):
+    """Données du membre pour l'adhésion"""
+    nom: str
+    prenom: str
+    adresse_commerciale: str
+    code_postal: str
+    ville: str
+    telephone: str
+    fax: Optional[str] = None
+    email: EmailStr
+    rcs: Optional[str] = None
+    type_activite: Optional[str] = None  # "commercant" | "artisan" | None pour individual/association
+    activite_detail: Optional[str] = None
+    is_franchise: Optional[bool] = False
+    franchise_status: Optional[str] = None  # "actif" | "ex" | None
+    enseigne: Optional[str] = None
+    date_creation_commerce: Optional[datetime] = None
+    # Pour associations
+    nom_association: Optional[str] = None
+    siret: Optional[str] = None
+
+class MembershipCreate(BaseModel):
+    """Création d'une adhésion"""
+    membership_type: str  # "individual" | "professional" | "professional_plus" | "association"
+    amount: float  # Montant de l'adhésion
+    member_data: MemberData
+
+class Membership(BaseModel):
+    """Adhésion complète"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    year: int  # 2026
+    status: str = "pending"  # "pending" | "paid" | "cancelled"
+    amount: float
+    membership_type: str  # "individual" | "professional" | "professional_plus" | "association"
+    payment_id: Optional[str] = None  # ID HelloAsso
+    helloasso_order_id: Optional[str] = None
+    member_data: MemberData
+    pdf_path: Optional[str] = None
+    pdf_generated_at: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class MembershipResponse(BaseModel):
+    """Réponse avec les données d'adhésion"""
+    id: str
+    year: int
+    status: str
+    amount: float
+    membership_type: str
+    member_data: MemberData
+    pdf_available: bool
+    created_at: datetime
+    updated_at: datetime
