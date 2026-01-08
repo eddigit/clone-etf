@@ -1,0 +1,26 @@
+{
+  "name": "en-toute-franchise",
+  "version": "1.0.0",
+  "description": "Plateforme Associative En Toute Franchise",
+  "private": true,
+  "scripts": {
+    "install:all": "cd backend && pip install -r requirements.txt && cd ../frontend && npm install",
+    "dev:backend": "cd backend && python -m uvicorn server:app --reload --host 0.0.0.0 --port 8001",
+    "dev:frontend": "cd frontend && npm start",
+    "seed": "cd backend && python seed_data.py",
+    "build:frontend": "cd frontend && npm run build",
+    "vercel-build": "cd frontend && npm install && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eddigit/clone-etf.git"
+  },
+  "keywords": [
+    "fastapi",
+    "react",
+    "mongodb",
+    "association"
+  ],
+  "author": "En Toute Franchise",
+  "license": "ISC"
+}
