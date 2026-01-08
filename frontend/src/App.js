@@ -15,6 +15,11 @@ import Documents from "./pages/dashboard/Documents";
 import Resources from "./pages/dashboard/Resources";
 import Subscription from "./pages/dashboard/Subscription";
 import Settings from "./pages/dashboard/Settings";
+// Admin imports
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminMembers from "./pages/admin/AdminMembers";
+import AdminHelloAsso from "./pages/admin/AdminHelloAsso";
 import { Toaster } from "./components/ui/toaster";
 
 // Protected Route Component
@@ -99,12 +104,44 @@ function App() {
             }
           />
           
-          {/* Admin route placeholder */}
+          {/* Admin Routes */}
           <Route
             path="/admin"
             element={
               <ProtectedRoute>
-                <DashboardHome />
+                <AdminLayout><AdminDashboard /></AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/members"
+            element={
+              <ProtectedRoute>
+                <AdminLayout><AdminMembers /></AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/helloasso"
+            element={
+              <ProtectedRoute>
+                <AdminLayout><AdminHelloAsso /></AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/coupons"
+            element={
+              <ProtectedRoute>
+                <AdminLayout><AdminDashboard /></AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings"
+            element={
+              <ProtectedRoute>
+                <AdminLayout><AdminDashboard /></AdminLayout>
               </ProtectedRoute>
             }
           />

@@ -10,7 +10,8 @@ import {
   Settings,
   LogOut,
   Menu,
-  X
+  X,
+  Shield
 } from 'lucide-react';
 
 const DashboardLayout = ({ children }) => {
@@ -33,6 +34,10 @@ const DashboardLayout = ({ children }) => {
     { icon: CreditCard, label: 'Abonnement', path: '/dashboard/subscription' },
     { icon: Settings, label: 'Paramètres', path: '/dashboard/settings' }
   ];
+
+  // Vérifier si l'utilisateur est admin
+  const userRole = localStorage.getItem('userRole');
+  const isAdmin = userRole === 'admin';
 
   const isActive = (path) => location.pathname === path;
 
@@ -69,6 +74,21 @@ const DashboardLayout = ({ children }) => {
               </Link>
             );
           })}
+          
+          {/* Lien Administration pour les admins */}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors mt-4 border-t border-gray-200 pt-4 ${
+                location.pathname.startsWith('/admin')
+                  ? 'bg-purple-50 text-purple-600'
+                  : 'text-purple-700 hover:bg-purple-50'
+              }`}
+            >
+              <Shield className="h-5 w-5" />
+              <span className="font-medium">Administration</span>
+            </Link>
+          )}
         </nav>
 
         <div className="p-4 border-t border-gray-200">
@@ -121,6 +141,22 @@ const DashboardLayout = ({ children }) => {
                   </Link>
                 );
               })}
+              
+              {/* Lien Administration pour les admins - Mobile */}
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  onClick={() => setSidebarOpen(false)}
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors mt-4 border-t border-gray-200 pt-4 ${
+                    location.pathname.startsWith('/admin')
+                      ? 'bg-purple-50 text-purple-600'
+                      : 'text-purple-700 hover:bg-purple-50'
+                  }`}
+                >
+                  <Shield className="h-5 w-5" />
+                  <span className="font-medium">Administration</span>
+                </Link>
+              )}
             </nav>
 
             <div className="p-4 border-t border-gray-200">
