@@ -39,10 +39,6 @@ const AdminHelloAsso = () => {
     'Content-Type': 'application/json'
   };
 
-  useEffect(() => {
-    fetchStatus();
-  }, []);
-
   const fetchStatus = async () => {
     setLoading(true);
     try {
@@ -57,6 +53,11 @@ const AdminHelloAsso = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fetchForms = async () => {
     setLoading(true);

@@ -336,6 +336,30 @@ class HelloAssoService:
             logger.error(f"HelloAsso get payments error: {str(e)}")
             return {"data": [], "pagination": {}}
     
+    async def get_organization_info(self) -> Optional[Dict[str, Any]]:
+        """
+        Récupère les informations détaillées de l'organisation
+        """
+        if not await self._ensure_authenticated():
+            return None
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{HELLOASSO_API_BASE}/organizations/{HELLOASSO_ORGANIZATION_SLUG}",
+                    headers=self._get_headers()
+                )
+                
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    logger.error(f"HelloAsso get org info error: {response.status_code}")
+                    return None
+                    
+        except Exception as e:
+            logger.error(f"HelloAsso get org info error: {str(e)}")
+            return None
+    
     async def check_connection(self) -> Dict[str, Any]:
         """
         Vérifie la connexion à HelloAsso et retourne le statut
@@ -353,32 +377,18 @@ class HelloAssoService:
         
         if await self._ensure_authenticated():
             # Essayer de récupérer les infos de l'organisation
-            try:
-                async with httpx.AsyncClient() as client:
-                    response = await client.get(
-                        f"{HELLOASSO_API_BASE}/organizations/{HELLOASSO_ORGANIZATION_SLUG}",
-                        headers=self._get_headers()
-                    )
-                    
-                    if response.status_code == 200:
-                        org_data = response.json()
-                        return {
-                            "connected": True,
-                            "organization": {
-                                "name": org_data.get("name"),
-                                "slug": org_data.get("organizationSlug"),
-                                "logo": org_data.get("logo")
-                            }
-                        }
-                    else:
-                        return {
-                            "connected": False,
-                            "error": f"Organization not found: {response.status_code}"
-                        }
-            except Exception as e:
+            org_info = await self.get_organization_info()
+            
+            if org_info:
+                return {
+                    "connected": True,
+                    "organization": org_info.get("name"),
+                    "token_expires_at": self.token_expires_at.isoformat() if self.token_expires_at else None
+                }
+            else:
                 return {
                     "connected": False,
-                    "error": str(e)
+                    "error": "Could not retrieve organization info"
                 }
         else:
             return {
