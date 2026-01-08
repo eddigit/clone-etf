@@ -168,3 +168,105 @@ class ConversationResponse(BaseModel):
     conversationId: str
     title: str
     createdAt: datetime
+
+# ===================== COUPON MODELS =====================
+class Coupon(BaseModel):
+    """Coupon de réduction pour les adhérents (Boîte à Outils Digitale)"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    code: str  # Ex: ETF2026-XXXXX
+    userId: str  # Adhérent propriétaire du coupon
+    userEmail: str
+    discountType: str = "percentage"  # percentage ou fixed
+    discountValue: float = 20.0  # 20% ou 20€
+    applicableTo: List[str] = ["website", "coaching"]  # Services concernés
+    maxUses: int = 1  # Nombre d'utilisations max
+    currentUses: int = 0
+    isActive: bool = True
+    validFrom: datetime = Field(default_factory=datetime.utcnow)
+    validUntil: Optional[datetime] = None  # None = valide jusqu'à fin adhésion
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+
+class CouponCreate(BaseModel):
+    userId: str
+    discountType: str = "percentage"
+    discountValue: float = 20.0
+    applicableTo: List[str] = ["website", "coaching"]
+    maxUses: int = 1
+
+class CouponValidation(BaseModel):
+    code: str
+    email: str
+    service: Optional[str] = None  # website, coaching, etc.
+
+class CouponValidationResponse(BaseModel):
+    valid: bool
+    discount: Optional[float] = None
+    discountType: Optional[str] = None
+    applicableTo: Optional[List[str]] = None
+    message: str
+
+# ===================== API KEY MODELS =====================
+class ApiKey(BaseModel):
+    """Clé API pour authentification externe (Boîte à Outils)"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str  # Ex: "Boîte à Outils Digitale"
+    key: str  # Clé secrète hashée
+    keyPrefix: str  # Premiers caractères pour identification (ex: "etf_")
+    permissions: List[str] = ["verify_membership", "validate_coupon"]
+    isActive: bool = True
+    lastUsed: Optional[datetime] = None
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    createdBy: str  # Admin qui a créé la clé
+
+# ===================== HELLOASSO MODELS =====================
+class HelloAssoPayment(BaseModel):
+    """Données reçues du webhook HelloAsso"""
+    eventType: str  # Payment, Order
+    data: dict  # Données brutes HelloAsso
+
+class HelloAssoMember(BaseModel):
+    """Membre créé/mis à jour via HelloAsso"""
+    email: str
+    firstName: str
+    lastName: str
+    phone: Optional[str] = None
+    membershipType: str
+    amount: float
+    paymentDate: datetime
+    helloAssoOrderId: str
+    helloAssoPaymentId: Optional[str] = None
+
+# ===================== MEMBERSHIP VERIFICATION =====================
+class MembershipVerification(BaseModel):
+    """Réponse de vérification d'adhésion pour API externe"""
+    isMember: bool
+    membershipType: Optional[str] = None
+    membershipStatus: Optional[str] = None
+    membershipEndDate: Optional[datetime] = None
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    discount: Optional[dict] = None  # {percentage: 20, code: "ETF2026-XXX"}
+
+# ===================== ADMIN MODELS =====================
+class AdminStats(BaseModel):
+    """Statistiques pour le dashboard admin"""
+    totalMembers: int = 0
+    activeMembers: int = 0
+    expiredMembers: int = 0
+    newMembersThisMonth: int = 0
+    totalCoupons: int = 0
+    usedCoupons: int = 0
+    revenue: float = 0.0
+
+class MemberListItem(BaseModel):
+    """Item de la liste des membres pour l'admin"""
+    id: str
+    email: str
+    firstName: str
+    lastName: str
+    businessName: Optional[str]
+    membershipType: str
+    membershipStatus: str
+    membershipEndDate: Optional[datetime]
+    createdAt: datetime
+    couponCode: Optional[str] = None

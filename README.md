@@ -2,6 +2,55 @@
 
 Plateforme web complète pour l'association En Toute Franchise, offrant des services d'accompagnement juridique, administratif et numérique à ses membres.
 
+---
+
+## 🚀 Démarrage Rapide
+
+### ⚡ Installation Express
+
+```powershell
+# 1. Vérifier l'environnement
+.\check-env.ps1
+
+# 2. Installer les dépendances
+cd backend && python -m venv venv && .\venv\Scripts\Activate.ps1 && pip install -r requirements.txt
+cd ..\frontend && npm install
+
+# 3. Démarrer MongoDB
+mongod --dbpath=C:\data\db
+
+# 4. Initialiser la base
+cd ..\backend && python seed_data.py
+
+# 5. Lancer l'application
+cd .. && .\start-local.ps1
+```
+
+### 📚 Documentation Complète
+
+| Guide | Description |
+|-------|-------------|
+| **[PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)** | 📦 Vue d'ensemble complète du projet |
+| **[QUICKSTART.md](QUICKSTART.md)** | ⚡ Démarrage en 5 minutes |
+| **[SETUP_LOCAL.md](SETUP_LOCAL.md)** | 🔧 Configuration locale détaillée |
+| **[DEPLOY_VERCEL.md](DEPLOY_VERCEL.md)** | 🌐 Déploiement sur Vercel |
+| **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** | ✅ Checklist de déploiement |
+| **[COMMANDS.md](COMMANDS.md)** | ⚡ Commandes utiles |
+| **[DATABASE_INFO.md](DATABASE_INFO.md)** | 🗄️ Schéma de la base de données |
+
+### 🌐 Accès Local
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8001  
+- **API Docs**: http://localhost:8001/docs
+
+### 👥 Comptes de Test
+
+- **User**: test@example.fr / password123
+- **Admin**: admin@example.fr / admin123
+
+---
+
 ## 🎯 Fonctionnalités Principales
 
 ### Site Public
@@ -61,24 +110,37 @@ Plateforme web complète pour l'association En Toute Franchise, offrant des serv
 
 ### Installation et Lancement
 
-Les services sont gérés par Supervisor et démarrent automatiquement.
+**🎯 Voir le guide complet**: [QUICKSTART.md](QUICKSTART.md)
 
-#### Vérifier le statut
-```bash
-sudo supervisorctl status
+```powershell
+# Script automatique (Windows)
+.\start-local.ps1
+
+# Ou manuellement:
+
+# 1. MongoDB
+mongod --dbpath=C:\data\db
+
+# 2. Backend
+cd backend
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python seed_data.py
+python -m uvicorn server:app --reload --port 8001
+
+# 3. Frontend
+cd frontend
+npm install
+npm start
 ```
 
-#### Redémarrer les services
-```bash
-# Redémarrer le frontend
-sudo supervisorctl restart frontend
+### 📚 Documentation
 
-# Redémarrer le backend
-sudo supervisorctl restart backend
-
-# Redémarrer tout
-sudo supervisorctl restart all
-```
+- **[QUICKSTART.md](QUICKSTART.md)** - Démarrage rapide (5 min)
+- **[SETUP_LOCAL.md](SETUP_LOCAL.md)** - Configuration locale détaillée
+- **[DEPLOY_VERCEL.md](DEPLOY_VERCEL.md)** - Déploiement sur Vercel
+- **[DATABASE_INFO.md](DATABASE_INFO.md)** - Schéma de la base de données
 
 ### Accès à l'application
 
@@ -200,19 +262,26 @@ Les données suivantes sont actuellement mockées (frontend/src/mockData.js):
 
 ## 📝 Variables d'Environnement
 
-### Backend (.env)
+### Backend (backend/.env)
 ```
-MONGO_URL=mongodb://localhost:27017/
-DB_NAME=etf_platform
-JWT_SECRET_KEY=your-secret-key-change-in-production
+MONGO_URL=mongodb://localhost:27017
+DB_NAME=test_database
+JWT_SECRET=dev_secret_key_change_in_production_1234567890
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION_MINUTES=10080
+API_HOST=0.0.0.0
+API_PORT=8001
+FRONTEND_URL=http://localhost:3000
+ENVIRONMENT=development
 ```
 
-### Frontend (.env)
+### Frontend (frontend/.env)
 ```
+REACT_APP_API_URL=http://localhost:8001
 REACT_APP_BACKEND_URL=http://localhost:8001
 ```
 
-⚠️ **Important**: Ne modifiez pas ces URLs, elles sont préconfigurées pour l'environnement de développement.
+⚠️ **Important**: Pour la production, utilisez MongoDB Atlas et changez JWT_SECRET.
 
 ## 🎨 Design & UI
 
