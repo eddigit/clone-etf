@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, UploadFile, File, Query, Request
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, UploadFile, File, Query, Request, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -23,6 +23,7 @@ from models import (
     AdminStats, MemberListItem
 )
 from auth_utils import hash_password, verify_password, create_access_token, decode_access_token
+from helloasso_service import helloasso_service
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -940,6 +941,209 @@ async def revoke_api_key(
     
     logger.info(f"Admin {current_user['email']} revoked API key {key_id}")
     return {"status": "success"}
+
+# ===================== HELLOASSO ADMIN ROUTES =====================
+@api_router.get("/admin/helloasso/status")
+async def get_helloasso_status(current_user: dict = Depends(get_admin_user)):
+    """Vérifie le statut de la connexion HelloAsso"""
+    status = await helloasso_service.check_connection()
+    return status
+
+@api_router.get("/admin/helloasso/forms")
+async def get_helloasso_forms(current_user: dict = Depends(get_admin_user)):
+    """Récupère la liste des formulaires HelloAsso"""
+    forms = await helloasso_service.get_organization_forms()
+    return {"forms": forms, "count": len(forms)}
+
+@api_router.get("/admin/helloasso/members")
+async def get_helloasso_members(
+    current_user: dict = Depends(get_admin_user),
+    from_date: Optional[str] = Query(None, description="Date début YYYY-MM-DD"),
+    to_date: Optional[str] = Query(None, description="Date fin YYYY-MM-DD")
+):
+    """Récupère tous les adhérents depuis HelloAsso (prévisualisation)"""
+    from_dt = datetime.strptime(from_date, "%Y-%m-%d") if from_date else None
+    to_dt = datetime.strptime(to_date, "%Y-%m-%d") if to_date else None
+    
+    members = await helloasso_service.get_all_members(from_date=from_dt, to_date=to_dt)
+    return {"members": members, "count": len(members)}
+
+@api_router.post("/admin/helloasso/sync")
+async def sync_helloasso_members(
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_admin_user),
+    from_date: Optional[str] = Query(None, description="Date début YYYY-MM-DD"),
+    force: bool = Query(False, description="Forcer la mise à jour même si l'adhérent existe")
+):
+    """
+    Synchronise les adhérents HelloAsso avec la base de données.
+    - Crée les nouveaux adhérents
+    - Met à jour les adhésions existantes
+    - Génère les coupons
+    """
+    from_dt = datetime.strptime(from_date, "%Y-%m-%d") if from_date else None
+    
+    # Récupérer les membres HelloAsso
+    helloasso_members = await helloasso_service.get_all_members(from_date=from_dt)
+    
+    stats = {
+        "total": len(helloasso_members),
+        "created": 0,
+        "updated": 0,
+        "skipped": 0,
+        "errors": []
+    }
+    
+    # Mapping des formulaires aux types d'adhésion
+    membership_mapping = {
+        "adhesion-2025-particuliers": "individual",
+        "adhesion-2025-commercants-artisans": "professional",
+        "adhesion-2025-entreprises": "professional_plus",
+        "adhesion-2025-associations": "association",
+        "adhesion-2026-particuliers": "individual",
+        "adhesion-2026-commercants-artisans": "professional",
+        "adhesion-2026-entreprises": "professional_plus",
+        "adhesion-2026-associations": "association",
+        # Fallback par défaut
+        "adhesion": "individual",
+    }
+    
+    now = datetime.utcnow()
+    
+    for member in helloasso_members:
+        try:
+            email = member.get("email", "").lower().strip()
+            if not email:
+                stats["skipped"] += 1
+                continue
+            
+            # Vérifier si l'utilisateur existe
+            existing_user = await db.users.find_one({"email": email})
+            
+            # Déterminer le type d'adhésion
+            form_slug = member.get("formSlug", "")
+            membership_type = "individual"
+            for key, value in membership_mapping.items():
+                if key in form_slug.lower():
+                    membership_type = value
+                    break
+            
+            # Calculer la date de fin (1 an après paiement)
+            payment_date_str = member.get("paymentDate")
+            if payment_date_str:
+                try:
+                    payment_date = datetime.fromisoformat(payment_date_str.replace("Z", "+00:00"))
+                except:
+                    payment_date = now
+            else:
+                payment_date = now
+            
+            end_date = payment_date + timedelta(days=365)
+            
+            if existing_user:
+                if force or existing_user.get("membershipStatus") != "active":
+                    # Mettre à jour l'adhésion
+                    await db.users.update_one(
+                        {"email": email},
+                        {
+                            "$set": {
+                                "membershipStatus": "active",
+                                "membershipType": membership_type,
+                                "membershipStartDate": payment_date,
+                                "membershipEndDate": end_date,
+                                "updatedAt": now,
+                                "helloAssoSyncedAt": now
+                            }
+                        }
+                    )
+                    stats["updated"] += 1
+                else:
+                    stats["skipped"] += 1
+                user_id = existing_user["id"]
+            else:
+                # Créer un nouvel utilisateur
+                temp_password = secrets.token_urlsafe(12)
+                
+                new_user = User(
+                    email=email,
+                    firstName=member.get("firstName", ""),
+                    lastName=member.get("lastName", ""),
+                    phone=member.get("phone"),
+                    address=member.get("address"),
+                    city=member.get("city"),
+                    postalCode=member.get("zipCode"),
+                    password=hash_password(temp_password),
+                    membershipType=membership_type,
+                    membershipStatus="active",
+                    membershipStartDate=payment_date,
+                    membershipEndDate=end_date
+                )
+                await db.users.insert_one(new_user.model_dump())
+                user_id = new_user.id
+                stats["created"] += 1
+                
+                # TODO: Envoyer email de bienvenue avec mot de passe temporaire
+            
+            # Vérifier/créer le coupon
+            existing_coupon = await db.coupons.find_one({
+                "userId": user_id,
+                "isActive": True,
+                "validUntil": {"$gt": now}
+            })
+            
+            if not existing_coupon:
+                coupon = Coupon(
+                    code=generate_coupon_code(user_id),
+                    userId=user_id,
+                    userEmail=email,
+                    discountType="percentage",
+                    discountValue=20.0,
+                    applicableTo=["website", "coaching"],
+                    maxUses=10,
+                    validFrom=now,
+                    validUntil=end_date
+                )
+                await db.coupons.insert_one(coupon.model_dump())
+            
+            # Enregistrer la synchro HelloAsso
+            await db.helloasso_payments.update_one(
+                {"helloAssoOrderId": member.get("helloAssoOrderId")},
+                {
+                    "$set": {
+                        "email": email,
+                        "amount": member.get("amount", 0),
+                        "formSlug": form_slug,
+                        "membershipType": membership_type,
+                        "syncedAt": now,
+                        "rawData": member
+                    }
+                },
+                upsert=True
+            )
+            
+        except Exception as e:
+            stats["errors"].append({"email": member.get("email"), "error": str(e)})
+            logger.error(f"Error syncing HelloAsso member {member.get('email')}: {str(e)}")
+    
+    logger.info(f"HelloAsso sync completed by {current_user['email']}: {stats}")
+    return stats
+
+@api_router.get("/admin/helloasso/payments")
+async def get_helloasso_payments(
+    current_user: dict = Depends(get_admin_user),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0)
+):
+    """Liste les paiements HelloAsso synchronisés"""
+    payments = await db.helloasso_payments.find({}).sort("syncedAt", -1).skip(offset).limit(limit).to_list(limit)
+    total = await db.helloasso_payments.count_documents({})
+    
+    return {
+        "payments": payments,
+        "total": total,
+        "limit": limit,
+        "offset": offset
+    }
 
 # ===================== HEALTH CHECK =====================
 @api_router.get("/")
