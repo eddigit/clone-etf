@@ -63,10 +63,13 @@ const AdminMemberships = () => {
     membership_end_date: ''
   });
 
-  const token = localStorage.getItem('token');
-  const headers = {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+  // Fonction pour récupérer les headers avec le token actuel
+  const getHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
   };
 
   const fetchMemberships = async () => {
@@ -77,7 +80,7 @@ const AdminMemberships = () => {
       if (filters.status) params.append('status', filters.status);
       if (filters.payment_method) params.append('payment_method', filters.payment_method);
 
-      const response = await fetch(`${API_URL}/admin/memberships?${params}`, { headers });
+      const response = await fetch(`${API_URL}/admin/memberships?${params}`, { headers: getHeaders() });
       if (response.ok) {
         const data = await response.json();
         setMemberships(data.memberships || []);
@@ -92,7 +95,7 @@ const AdminMemberships = () => {
   const fetchRenewals = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/admin/memberships/renewals?days=60`, { headers });
+      const response = await fetch(`${API_URL}/admin/memberships/renewals?days=60`, { headers: getHeaders() });
       if (response.ok) {
         const data = await response.json();
         setRenewals(data);
@@ -118,7 +121,7 @@ const AdminMemberships = () => {
     try {
       const response = await fetch(`${API_URL}/admin/memberships`, {
         method: 'POST',
-        headers,
+        headers: getHeaders(),
         body: JSON.stringify(createForm)
       });
 
@@ -163,7 +166,7 @@ const AdminMemberships = () => {
 
       const response = await fetch(`${API_URL}/admin/memberships/${selectedMembership.id}`, {
         method: 'PUT',
-        headers,
+        headers: getHeaders(),
         body: JSON.stringify(updateData)
       });
 

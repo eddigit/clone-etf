@@ -33,16 +33,19 @@ const AdminHelloAsso = () => {
   const [fromDate, setFromDate] = useState('');
   const [activeTab, setActiveTab] = useState('status');
 
-  const token = localStorage.getItem('token');
-  const headers = {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+  // Fonction pour récupérer les headers avec le token actuel
+  const getHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
   };
 
   const fetchStatus = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/admin/helloasso/status`, { headers });
+      const response = await fetch(`${API_URL}/admin/helloasso/status`, { headers: getHeaders() });
       if (response.ok) {
         const data = await response.json();
         setStatus(data);
@@ -62,7 +65,7 @@ const AdminHelloAsso = () => {
   const fetchForms = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/admin/helloasso/forms`, { headers });
+      const response = await fetch(`${API_URL}/admin/helloasso/forms`, { headers: getHeaders() });
       if (response.ok) {
         const data = await response.json();
         setForms(data.forms || []);
@@ -81,7 +84,7 @@ const AdminHelloAsso = () => {
       if (fromDate) {
         url += `?from_date=${fromDate}`;
       }
-      const response = await fetch(url, { headers });
+      const response = await fetch(url, { headers: getHeaders() });
       if (response.ok) {
         const data = await response.json();
         setMembers(data.members || []);
@@ -96,7 +99,7 @@ const AdminHelloAsso = () => {
   const fetchPayments = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/admin/helloasso/payments`, { headers });
+      const response = await fetch(`${API_URL}/admin/helloasso/payments`, { headers: getHeaders() });
       if (response.ok) {
         const data = await response.json();
         setPayments(data.payments || []);
@@ -118,7 +121,7 @@ const AdminHelloAsso = () => {
       
       const response = await fetch(url, {
         method: 'POST',
-        headers
+        headers: getHeaders()
       });
 
       if (response.ok) {
