@@ -360,7 +360,8 @@ export const resources = [
 
 export const contactInfo = {
   phone: '07 56 97 44 19',
-  email: 'assistance@entoutefranchise.fr',
+  email: 'contact@en-toutefranchise.com',
+  website: 'en-toutefranchise.com',
   address: '1 rue François Boucher',
   city: '13700 Marignane',
   hours: 'Lun-Ven 9h-18h • Sam 9h-12h',

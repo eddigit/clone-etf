@@ -53,7 +53,7 @@ const Home = () => {
           <div className="text-center mb-12">
             <Badge className="mb-6 bg-green-700 text-white hover:bg-green-800 border-green-600">
               <Shield className="h-3 w-3 mr-1" />
-              Association Apolitique, Libre et Indépendante depuis 1994
+              Association Loi 1901 - Défense des Franchisés
             </Badge>
             
             {/* Logo Hero */}
@@ -72,9 +72,8 @@ const Home = () => {
               Défenseur de vos droits
             </p>
             <p className="text-lg text-gray-300 max-w-3xl mx-auto mb-8">
-              Association de Défense des Commerçants Artisans créée en janvier 1994, nous luttons pour faire
-              respecter votre <strong className="text-green-400">liberté de travailler librement</strong> et vos droits fondamentaux contre le
-              favoritisme d'État et la concurrence illicite organisée.
+              Association loi 1901 dédiée à la <strong className="text-green-400">défense et l'accompagnement des franchisés en France</strong>.
+              Nous luttons pour faire respecter vos droits face aux pratiques abusives et promouvoir des contrats de franchise équilibrés.
             </p>
             
             {/* Important Disclaimer */}
@@ -151,30 +150,137 @@ const Home = () => {
               <CardHeader>
                 <CardTitle className="flex items-center text-2xl text-white">
                   <Scale className="h-6 w-6 mr-2 text-green-400" />
-                  Notre Combat
+                  Nos 4 Combats
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
                   <li className="flex items-start">
-                    <Check className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-300">Faire respecter les décisions de justice</span>
+                    <Shield className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300"><strong>Défense des Franchisés :</strong> Protection face aux pratiques abusives et accompagnement dans les litiges</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-300">Promouvoir l'équité et la transparence</span>
+                    <Scale className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300"><strong>Transparence et Équité :</strong> Promotion de contrats équilibrés et lutte contre les clauses abusives</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-300">Lutter contre la concurrence déloyale</span>
+                    <Globe className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300"><strong>Représentation :</strong> Lobbying auprès des institutions pour faire évoluer la législation</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-300">Défendre votre droit de travailler librement</span>
+                    <AlertCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300"><strong>Information et Prévention :</strong> Sensibilisation sur les pièges à éviter et décryptage des DIP</span>
                   </li>
                 </ul>
               </CardContent>
             </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Pourquoi Adhérer Section */}
+      <section className="py-20 bg-slate-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-white mb-4">
+              Pourquoi Adhérer ?
+            </h2>
+            <p className="text-lg text-gray-400">
+              Rejoignez une communauté de franchisés et bénéficiez d'avantages exclusifs
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <Card className="bg-slate-800 border-slate-700">
+              <CardHeader>
+                <div className="w-12 h-12 bg-green-900/50 rounded-lg flex items-center justify-center mb-4">
+                  <Bot className="h-6 w-6 text-green-400" />
+                </div>
+                <CardTitle className="text-xl text-white">Accompagnement Personnalisé</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300">
+                  Un assistant IA disponible <strong className="text-green-400">24/7</strong> pour répondre à vos questions sur la franchise
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-800 border-slate-700">
+              <CardHeader>
+                <div className="w-12 h-12 bg-green-900/50 rounded-lg flex items-center justify-center mb-4">
+                  <Users className="h-6 w-6 text-green-400" />
+                </div>
+                <CardTitle className="text-xl text-white">Accès à la Communauté</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300">
+                  Échangez avec d'autres franchisés partageant les mêmes problématiques et bénéficiez de leur expérience
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-800 border-slate-700">
+              <CardHeader>
+                <div className="w-12 h-12 bg-green-900/50 rounded-lg flex items-center justify-center mb-4">
+                  <FileText className="h-6 w-6 text-green-400" />
+                </div>
+                <CardTitle className="text-xl text-white">Ressources Exclusives</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300">
+                  Documentation, guides pratiques et analyses juridiques pour vous accompagner dans votre activité
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-800 border-slate-700">
+              <CardHeader>
+                <div className="w-12 h-12 bg-green-900/50 rounded-lg flex items-center justify-center mb-4">
+                  <AlertCircle className="h-6 w-6 text-green-400" />
+                </div>
+                <CardTitle className="text-xl text-white">Alertes et Actualités</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300">
+                  Restez informé des évolutions législatives et des pratiques des réseaux de franchise
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-800 border-slate-700">
+              <CardHeader>
+                <div className="w-12 h-12 bg-green-900/50 rounded-lg flex items-center justify-center mb-4">
+                  <Award className="h-6 w-6 text-green-400" />
+                </div>
+                <CardTitle className="text-xl text-white">Code Promo Exclusif</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300">
+                  Accès privilégié à des outils digitaux partenaires pour développer votre activité
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-800 border-slate-700 border-2 border-green-600">
+              <CardHeader>
+                <div className="w-12 h-12 bg-green-900/50 rounded-lg flex items-center justify-center mb-4">
+                  <Heart className="h-6 w-6 text-green-400" />
+                </div>
+                <CardTitle className="text-xl text-white">Soutien à nos Actions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300">
+                  Votre cotisation finance nos actions collectives et nous aide à maintenir notre indépendance
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center mt-12">
+            <Button size="lg" className="bg-green-600 hover:bg-green-700" onClick={() => navigate('/register')}>
+              <Users className="mr-2 h-5 w-5" />
+              Adhérer maintenant
+            </Button>
           </div>
         </div>
       </section>
