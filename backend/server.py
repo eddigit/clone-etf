@@ -70,6 +70,25 @@ EXTERNAL_API_KEY = os.environ.get('EXTERNAL_API_KEY', 'dev_external_key_change_i
 HELLOASSO_WEBHOOK_SECRET = os.environ.get('HELLOASSO_WEBHOOK_SECRET', '')
 
 # ===================== UTILITY FUNCTIONS =====================
+def serialize_doc(doc):
+    """Sérialise un document MongoDB en supprimant/convertissant les ObjectId"""
+    if doc is None:
+        return None
+    if isinstance(doc, list):
+        return [serialize_doc(d) for d in doc]
+    if isinstance(doc, dict):
+        result = {}
+        for key, value in doc.items():
+            if key == '_id':
+                # Convertir ObjectId en string ou ignorer
+                result['_id'] = str(value)
+            elif hasattr(value, '__str__') and type(value).__name__ == 'ObjectId':
+                result[key] = str(value)
+            else:
+                result[key] = value
+        return result
+    return doc
+
 def generate_slug(title: str) -> str:
     """Génère un slug URL-friendly à partir d'un titre"""
     # Normaliser les caractères accentués
@@ -735,7 +754,7 @@ async def get_articles(
     total = await db.articles.count_documents(query)
 
     return {
-        "articles": articles,
+        "articles": serialize_doc(articles),
         "total": total,
         "limit": limit,
         "offset": offset
@@ -751,7 +770,7 @@ async def get_featured_articles(
     """
     query = {"status": "published", "publishTo": "featured"}
     articles = await db.articles.find(query).sort("publishedAt", -1).limit(limit).to_list(limit)
-    return {"articles": articles}
+    return {"articles": serialize_doc(articles)}
 
 
 @api_router.get("/articles/members")
@@ -780,7 +799,7 @@ async def get_members_articles(
     total = await db.articles.count_documents(query)
 
     return {
-        "articles": articles,
+        "articles": serialize_doc(articles),
         "total": total,
         "limit": limit,
         "offset": offset
@@ -814,7 +833,7 @@ async def get_article(slug_or_id: str):
         {"$inc": {"views": 1}}
     )
 
-    return article
+    return serialize_doc(article)
 
 
 # --- Routes Admin (CRUD complet) ---
@@ -845,7 +864,7 @@ async def admin_list_articles(
     total = await db.articles.count_documents(query)
 
     return {
-        "articles": articles,
+        "articles": serialize_doc(articles),
         "total": total,
         "limit": limit,
         "offset": offset
@@ -924,7 +943,7 @@ async def admin_get_article(
     article = await db.articles.find_one({"id": article_id})
     if not article:
         raise HTTPException(status_code=404, detail="Article non trouvé")
-    return article
+    return serialize_doc(article)
 
 
 @api_router.put("/admin/articles/{article_id}")
@@ -1004,7 +1023,7 @@ async def admin_update_article(
 
         return {
             "status": "success",
-            "article": updated_article,
+            "article": serialize_doc(updated_article),
             "message": "Article mis à jour avec succès"
         }
 
