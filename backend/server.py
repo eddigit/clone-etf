@@ -26,7 +26,9 @@ from models import (
     MemberData, MembershipCreate, Membership, MembershipResponse,
     AdminMembershipCreate, AdminMembershipUpdate,
     # Onboarding models
-    OnboardingData, OnboardingCreate, UserOnboarding, OnboardingResponse
+    OnboardingData, OnboardingCreate, UserOnboarding, OnboardingResponse,
+    # Categories
+    CASE_CATEGORIES, ARTICLE_CATEGORIES, CategoryManagement
 )
 import re
 import unicodedata
@@ -808,9 +810,18 @@ async def get_members_articles(
 
 @api_router.get("/articles/categories")
 async def get_article_categories():
-    """Récupère la liste des catégories d'articles"""
-    categories = await db.articles.distinct("category")
-    return {"categories": categories}
+    """Récupère la liste des catégories prédéfinies pour les articles"""
+    return {"categories": ARTICLE_CATEGORIES}
+
+@api_router.get("/admin/categories/articles")
+async def admin_get_article_categories(current_user: dict = Depends(get_admin_user)):
+    """Récupère les catégories d'articles (admin)"""
+    return {"categories": ARTICLE_CATEGORIES}
+
+@api_router.get("/admin/categories/cases")
+async def admin_get_case_categories(current_user: dict = Depends(get_admin_user)):
+    """Récupère les catégories de dossiers (admin)"""
+    return {"categories": CASE_CATEGORIES}
 
 
 @api_router.get("/articles/{slug_or_id}")

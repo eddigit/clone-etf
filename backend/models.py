@@ -498,7 +498,7 @@ class CaseStudyCreate(BaseModel):
     """Création d'un cas d'étude/dossier"""
     title: str
     description: str
-    category: str  # Ex: "litige", "conseil", "administratif"
+    category: str  # "Dossier gagné", "Dossier en cours", "Information", "Alerte", "Autre"
     documents: Optional[List[str]] = None  # IDs de documents partagés
 
 class CaseStudyComment(BaseModel):
@@ -518,8 +518,8 @@ class CaseStudy(BaseModel):
     userLastName: str
     title: str
     description: str
-    category: str
-    status: str = "en_cours"  # "en_cours" | "historique" | "gagne"
+    category: str  # "Dossier gagné", "Dossier en cours", "Information", "Alerte", "Autre"
+    status: str = "en_cours"  # "en_cours" | "gagne" | "archive"
     documents: Optional[List[str]] = None
     comments: List[CaseStudyComment] = []
     likes: List[str] = []  # Membres intéressés/solidaires
@@ -664,3 +664,35 @@ class OnboardingResponse(BaseModel):
     is_completed: bool
     created_at: datetime
     updated_at: datetime
+
+# ===================== CATEGORIES MODELS =====================
+
+# Catégories prédéfinies pour les dossiers
+CASE_CATEGORIES = [
+    "Dossier gagné",
+    "Dossier en cours",
+    "Information",
+    "Alerte",
+    "Autre"
+]
+
+# Catégories prédéfinies pour les articles/blog
+ARTICLE_CATEGORIES = [
+    "Juridique",
+    "Actualités",
+    "Conseils",
+    "Témoignages",
+    "Ressources",
+    "Autre"
+]
+
+class CategoryManagement(BaseModel):
+    """Gestion des catégories pour dossiers et articles"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: str  # "case" ou "article"
+    name: str
+    slug: str
+    description: Optional[str] = None
+    isActive: bool = True
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
