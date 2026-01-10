@@ -11,15 +11,15 @@ export const services = [
   {
     id: 1,
     icon: 'Shield',
-    title: 'Accompagnement Juridique',
-    description: 'Orientation et soutien pour vos démarches juridiques',
+    title: 'Conseil & Accompagnement',
+    description: 'Orientation et soutien basés sur 20 ans d\'expérience',
     features: [
       'Orientation vers avocats partenaires',
-      'Partage de connaissances jurisprudentielles',
-      'Accompagnement dans vos démarches',
-      'Conseils basés sur 30 ans d\'expérience'
+      'Conseil stratégique personnalisé',
+      'Assistance administrative',
+      'Retours d\'expérience sur dossiers gagnés'
     ],
-    disclaimer: 'L\'association n\'est pas un cabinet d\'avocats'
+    disclaimer: 'L\'association ne remplace pas un avocat et ne fournit pas de conseil juridique'
   },
   {
     id: 2,
@@ -49,15 +49,15 @@ export const services = [
     id: 4,
     icon: 'Bot',
     title: 'Assistant IA d\'Orientation 24/7',
-    description: 'Outil d\'information basé sur 30 ans d\'expérience',
+    description: 'Outil d\'information basé sur 20 ans d\'expérience',
     features: [
       'Disponible 24/7 pour information',
-      'Base de connaissances de 30 ans',
+      'Base de connaissances de 20 ans',
       'Orientation sur vos questions',
       'Ne remplace pas un avocat'
     ],
     isNew: true,
-    disclaimer: 'Outil d\'information uniquement, ne remplace pas un conseil juridique professionnel'
+    disclaimer: 'Outil d\'information uniquement, ne remplace pas la consultation d\'un avocat'
   }
 ];
 
@@ -145,11 +145,11 @@ export const aiPlans = [
       '1 000 tokens IA/mois',
       '10 minutes d\'assistance/mois',
       'Informations instantanées 24/7',
-      'Base de connaissances de 30 ans',
+      'Base de connaissances de 20 ans',
       'Outil d\'orientation, ne remplace pas un avocat'
     ],
     available: false,
-    disclaimer: 'Cet outil fournit des informations basées sur l\'expérience de l\'association. Il ne constitue pas un conseil juridique professionnel et ne remplace pas la consultation d\'un avocat.'
+    disclaimer: 'Cet outil fournit des informations basées sur l\'expérience de l\'association. Il ne remplace pas la consultation d\'un avocat.'
   },
   {
     id: 2,
@@ -169,7 +169,7 @@ export const aiPlans = [
     ],
     popular: true,
     available: false,
-    disclaimer: 'Cet outil fournit des informations basées sur l\'expérience de l\'association. Il ne constitue pas un conseil juridique professionnel et ne remplace pas la consultation d\'un avocat.'
+    disclaimer: 'Cet outil fournit des informations basées sur l\'expérience de l\'association. Il ne remplace pas la consultation d\'un avocat.'
   }
 ];
 

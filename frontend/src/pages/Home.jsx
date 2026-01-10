@@ -196,11 +196,11 @@ const Home = () => {
                 <div className="w-12 h-12 bg-green-900/50 rounded-lg flex items-center justify-center mb-4">
                   <Bot className="h-6 w-6 text-green-400" />
                 </div>
-                <CardTitle className="text-xl text-white">Accompagnement Personnalisé</CardTitle>
+                <CardTitle className="text-xl text-white">Accompagnement & Conseil</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-300">
-                  Un assistant IA disponible <strong className="text-green-400">24/7</strong> pour répondre à vos questions sur la franchise
+                  Assistant IA <strong className="text-green-400">24/7</strong>, conseil stratégique basé sur 20 ans d'expérience, et assistance administrative
                 </p>
               </CardContent>
             </Card>
@@ -228,7 +228,7 @@ const Home = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-300">
-                  Documentation, guides pratiques et analyses juridiques pour vous accompagner dans votre activité
+                  Documentation, guides pratiques et retours d'expérience pour vous accompagner dans votre activité
                 </p>
               </CardContent>
             </Card>
@@ -262,6 +262,27 @@ const Home = () => {
             </Card>
 
             <Card className="bg-slate-800 border-slate-700 border-2 border-green-600">
+              <CardHeader>
+                <div className="w-12 h-12 bg-green-900/50 rounded-lg flex items-center justify-center mb-4">
+                  <Rocket className="h-6 w-6 text-green-400" />
+                </div>
+                <CardTitle className="text-xl text-white">Ma Boîte Digitale</CardTitle>
+                <Badge className="bg-green-600 mt-2">NOUVEAU PARTENAIRE</Badge>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300 mb-3">
+                  <strong className="text-green-400">17€/mois au lieu de 39€</strong> avec votre code promo adhérent
+                </p>
+                <ul className="space-y-1 text-sm text-gray-400">
+                  <li>• Chat IA intégré</li>
+                  <li>• Création de site internet</li>
+                  <li>• Signature mail professionnelle</li>
+                  <li>• Et bien plus d'outils</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-800 border-slate-700">
               <CardHeader>
                 <div className="w-12 h-12 bg-green-900/50 rounded-lg flex items-center justify-center mb-4">
                   <Heart className="h-6 w-6 text-green-400" />
@@ -477,8 +498,8 @@ const Home = () => {
                     l'association
                   </li>
                   <li>
-                    <strong className="text-green-400">Outil d'information :</strong> L'assistant IA est un outil d'orientation basé sur 30 ans d'expérience. 
-                    Il ne remplace pas un conseil juridique professionnel ou la consultation d'un avocat.
+                    <strong className="text-green-400">Outil d'information :</strong> L'assistant IA est un outil d'orientation basé sur 20 ans d'expérience. 
+                    Il ne remplace pas la consultation d'un avocat.
                   </li>
                 </ul>
               </div>

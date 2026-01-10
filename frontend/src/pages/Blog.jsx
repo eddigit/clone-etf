@@ -13,10 +13,10 @@ const Blog = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Blog & Actualités Juridiques
+              Blog & Actualités
             </h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Découvrez nos guides pratiques, analyses juridiques et actualités pour mieux protéger votre activité
+              Découvrez nos guides pratiques, retours d'expérience et actualités pour mieux protéger votre activité
             </p>
           </div>
         </div>

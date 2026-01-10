@@ -245,18 +245,19 @@ async def send_message(
     # For now, return a mock response
     ai_response_content = """Bonjour ! Je suis l'assistant d'orientation d'En Toute Franchise.
 
-⚠️ **IMPORTANT** : Je suis un outil d'information basé sur 30 ans d'expérience de l'association. Je ne suis pas un avocat et mes réponses ne constituent pas un conseil juridique professionnel.
+⚠️ **IMPORTANT** : Je suis un outil d'information basé sur 20 ans d'expérience de l'association. Je ne suis pas un avocat et mes réponses ne constituent pas un conseil juridique.
 
 **Ce que je peux faire :**
-- Vous orienter sur la base de l'expérience de l'association
-- Partager des informations sur des situations similaires rencontrées
-- Vous aider à identifier les questions importantes à poser
-- Vous orienter vers les bonnes ressources ou avocats partenaires si nécessaire
+- Vous conseiller stratégiquement sur la base de l'expérience de l'association
+- Partager des retours d'expérience sur des dossiers gagnés
+- Vous aider à identifier les questions importantes
+- Vous orienter vers les avocats partenaires si nécessaire
+- Vous assister administrativement (sans rédaction)
 
 **Ce que je ne peux pas faire :**
-- Fournir un conseil juridique officiel
-- Remplacer un avocat dans votre situation
-- Garantir un résultat juridique
+- Fournir un conseil juridique ou une protection juridique
+- Remplacer un avocat
+- Rédiger des documents juridiques
 
 Pour des conseils juridiques professionnels, nous vous orienterons vers nos avocats partenaires.
 

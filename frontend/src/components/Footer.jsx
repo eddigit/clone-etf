@@ -58,7 +58,7 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Services</h3>
             <ul className="space-y-2 text-sm">
-              <li className="text-gray-400">Protection Juridique</li>
+              <li className="text-gray-400">Conseil & Accompagnement</li>
               <li className="text-gray-400">Assistance Administrative</li>
               <li className="text-gray-400">Conseil Stratégique</li>
               <li className="text-gray-400">Assistant IA 24/7</li>
