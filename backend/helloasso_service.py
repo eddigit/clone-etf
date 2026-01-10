@@ -262,6 +262,18 @@ class HelloAssoService:
                     # Extraire les infos du payeur
                     payer = order.get("payer", {})
                     
+                    # Vérifier le statut du paiement (dans payments[0].state)
+                    payments = order.get("payments", [])
+                    payment_state = None
+                    if payments:
+                        payment_state = payments[0].get("state")
+                    
+                    # Aussi vérifier le state des items
+                    items = order.get("items", [])
+                    item_state = None
+                    if items:
+                        item_state = items[0].get("state")
+                    
                     member_data = {
                         "email": payer.get("email", "").lower(),
                         "firstName": payer.get("firstName", ""),
@@ -275,20 +287,23 @@ class HelloAssoService:
                         "formSlug": form_slug,
                         "amount": order.get("amount", {}).get("total", 0) / 100,
                         "paymentDate": order.get("date"),
-                        "paymentState": order.get("paymentState"),
+                        "paymentState": payment_state,
+                        "itemState": item_state,
                         # Items pour déterminer le type d'adhésion
-                        "items": order.get("items", [])
+                        "items": items
                     }
                     
-                    # Ne garder que les paiements validés
-                    if member_data["paymentState"] == "Authorized":
+                    # Ne garder que les paiements validés (Authorized ou Processed)
+                    if payment_state in ("Authorized", "Processed") or item_state == "Processed":
                         all_members.append(member_data)
                 
-                # Vérifier s'il y a plus de pages
+                # Vérifier s'il y a plus de pages via continuationToken
                 pagination = result.get("pagination", {})
+                continuation_token = pagination.get("continuationToken")
                 total_pages = pagination.get("totalPages", 1)
                 
-                if page >= total_pages:
+                # Si pas de continuationToken ou page >= totalPages, on arrête
+                if not continuation_token or (total_pages > 0 and page >= total_pages):
                     break
                 page += 1
         
