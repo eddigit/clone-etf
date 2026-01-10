@@ -27,17 +27,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
-import { 
-  Search, 
-  RefreshCw, 
-  Eye, 
-  Edit, 
-  Trash2, 
+import {
+  Search,
+  RefreshCw,
+  Eye,
+  Edit,
+  Trash2,
   UserPlus,
   ChevronLeft,
   ChevronRight,
   Download,
-  Filter
+  Filter,
+  Mail,
+  Send
 } from 'lucide-react';
 import API_URL from '../../config/api';
 
@@ -154,11 +156,38 @@ const AdminMembers = () => {
 
       if (response.ok) {
         const data = await response.json();
-        alert(`Coupon créé: ${data.coupon.code}`);
+        alert(`Coupon cree: ${data.coupon.code}`);
         fetchMembers();
       }
     } catch (error) {
       console.error('Error generating coupon:', error);
+    }
+  };
+
+  const handleSendWelcomeEmail = async (memberId, memberEmail) => {
+    if (!window.confirm(`Envoyer un email de bienvenue a ${memberEmail} ?\n\nL'adherent recevra un lien pour creer son mot de passe.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/admin/members/${memberId}/send-welcome-email`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        alert(`Email de bienvenue envoye a ${memberEmail}`);
+      } else {
+        const data = await response.json();
+        alert(`Erreur: ${data.detail || 'Impossible d\'envoyer l\'email'}`);
+      }
+    } catch (error) {
+      console.error('Error sending welcome email:', error);
+      alert('Erreur lors de l\'envoi de l\'email');
     }
   };
 
@@ -308,38 +337,51 @@ const AdminMembers = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSendWelcomeEmail(member.id, member.email)}
+                            title="Envoyer email de bienvenue"
+                            className="text-blue-600"
+                          >
+                            <Mail className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
                             size="sm"
                             onClick={() => fetchMemberDetails(member.id)}
+                            title="Voir details"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="sm"
                             onClick={() => {
                               setEditForm(member);
                               setShowEditModal(true);
                             }}
+                            title="Modifier"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
                           {member.membershipStatus === 'active' ? (
-                            <Button 
-                              variant="ghost" 
+                            <Button
+                              variant="ghost"
                               size="sm"
                               onClick={() => handleStatusChange(member.id, 'expired')}
                               className="text-orange-600"
+                              title="Desactiver"
                             >
-                              Désactiver
+                              Desactiver
                             </Button>
                           ) : (
-                            <Button 
-                              variant="ghost" 
+                            <Button
+                              variant="ghost"
                               size="sm"
                               onClick={() => handleStatusChange(member.id, 'active')}
                               className="text-green-600"
+                              title="Activer"
                             >
                               Activer
                             </Button>

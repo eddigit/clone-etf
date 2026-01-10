@@ -93,14 +93,19 @@ const Login = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
+              <div className="flex justify-between items-center">
+                <Label htmlFor="password">Mot de passe</Label>
+                <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700">
+                  Mot de passe oublie ?
+                </Link>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  placeholder="********"
                   value={formData.password}
                   onChange={handleChange}
                   required

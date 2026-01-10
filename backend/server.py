@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, UploadFile, File, Query, Request, BackgroundTasks
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, UploadFile, File, Query, Request, BackgroundTasks, Body
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -29,6 +29,7 @@ from auth_utils import hash_password, verify_password, create_access_token, deco
 from helloasso_service import helloasso_service
 from pdf_service import generate_membership_pdf
 from community_routes import create_community_router
+from email_service import email_service
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -152,6 +153,13 @@ async def login(login_data: UserLogin):
     token = create_access_token({"user_id": user["id"]})
     
     logger.info(f"User logged in: {user['email']}")
+
+    # Mettre a jour lastLogin
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"lastLogin": datetime.utcnow()}}
+    )
+
     return {
         "token": token,
         "user": {
@@ -159,9 +167,115 @@ async def login(login_data: UserLogin):
             "email": user["email"],
             "firstName": user["firstName"],
             "lastName": user["lastName"],
-            "role": user["role"]
+            "role": user["role"],
+            "mustChangePassword": user.get("mustChangePassword", False)
         }
     }
+
+
+# ===================== PASSWORD RESET ROUTES =====================
+@api_router.post("/auth/forgot-password")
+async def forgot_password(email: EmailStr = Body(..., embed=True)):
+    """
+    Demande de reinitialisation de mot de passe.
+    Envoie un email avec un lien de reinitialisation.
+    """
+    user = await db.users.find_one({"email": email.lower()})
+
+    # Toujours retourner succes pour eviter enumeration d'emails
+    if not user:
+        logger.warning(f"Password reset requested for unknown email: {email}")
+        return {"message": "Si cet email existe, un lien de reinitialisation a ete envoye."}
+
+    # Generer un token de reinitialisation (valide 1 heure)
+    reset_token = secrets.token_urlsafe(32)
+    reset_expires = datetime.utcnow() + timedelta(hours=1)
+
+    await db.users.update_one(
+        {"id": user["id"]},
+        {
+            "$set": {
+                "resetToken": reset_token,
+                "resetTokenExpires": reset_expires,
+                "updatedAt": datetime.utcnow()
+            }
+        }
+    )
+
+    # Envoyer l'email
+    email_sent = await email_service.send_password_reset_email(
+        to_email=user["email"],
+        first_name=user["firstName"],
+        reset_token=reset_token
+    )
+
+    if email_sent:
+        logger.info(f"Password reset email sent to {email}")
+    else:
+        logger.error(f"Failed to send password reset email to {email}")
+
+    return {"message": "Si cet email existe, un lien de reinitialisation a ete envoye."}
+
+
+@api_router.post("/auth/reset-password")
+async def reset_password(
+    token: str = Body(...),
+    new_password: str = Body(...)
+):
+    """
+    Reinitialise le mot de passe avec un token valide.
+    """
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="Le mot de passe doit faire au moins 6 caracteres")
+
+    # Trouver l'utilisateur avec ce token
+    user = await db.users.find_one({
+        "resetToken": token,
+        "resetTokenExpires": {"$gt": datetime.utcnow()}
+    })
+
+    if not user:
+        raise HTTPException(status_code=400, detail="Lien invalide ou expire. Veuillez refaire une demande.")
+
+    # Mettre a jour le mot de passe
+    hashed_password = hash_password(new_password)
+
+    await db.users.update_one(
+        {"id": user["id"]},
+        {
+            "$set": {
+                "password": hashed_password,
+                "resetToken": None,
+                "resetTokenExpires": None,
+                "mustChangePassword": False,
+                "updatedAt": datetime.utcnow()
+            }
+        }
+    )
+
+    logger.info(f"Password reset successful for {user['email']}")
+    return {"message": "Mot de passe reinitialise avec succes. Vous pouvez maintenant vous connecter."}
+
+
+@api_router.get("/auth/verify-reset-token")
+async def verify_reset_token(token: str = Query(...)):
+    """
+    Verifie si un token de reinitialisation est valide.
+    """
+    user = await db.users.find_one({
+        "resetToken": token,
+        "resetTokenExpires": {"$gt": datetime.utcnow()}
+    })
+
+    if not user:
+        raise HTTPException(status_code=400, detail="Lien invalide ou expire")
+
+    return {
+        "valid": True,
+        "email": user["email"],
+        "firstName": user["firstName"]
+    }
+
 
 # ===================== USER ROUTES =====================
 @api_router.get("/users/profile", response_model=UserProfile)
@@ -1405,6 +1519,161 @@ async def admin_update_membership(
     except Exception as e:
         logger.error(f"Error updating membership: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/admin/members/{member_id}/send-welcome-email")
+async def admin_send_welcome_email(
+    member_id: str,
+    current_user: dict = Depends(get_admin_user)
+):
+    """
+    Envoie un email de bienvenue avec lien de creation de mot de passe.
+    Utile pour les adherents importes depuis HelloAsso.
+    """
+    user = await db.users.find_one({"id": member_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Membre non trouve")
+
+    # Generer un token de reinitialisation (valide 48h pour les nouveaux)
+    reset_token = secrets.token_urlsafe(32)
+    reset_expires = datetime.utcnow() + timedelta(hours=48)
+
+    await db.users.update_one(
+        {"id": member_id},
+        {
+            "$set": {
+                "resetToken": reset_token,
+                "resetTokenExpires": reset_expires,
+                "mustChangePassword": True,
+                "updatedAt": datetime.utcnow()
+            }
+        }
+    )
+
+    # Envoyer l'email de bienvenue
+    email_sent = await email_service.send_welcome_email(
+        to_email=user["email"],
+        first_name=user["firstName"],
+        last_name=user["lastName"],
+        reset_token=reset_token
+    )
+
+    if email_sent:
+        logger.info(f"Admin {current_user['email']} sent welcome email to {user['email']}")
+        return {"status": "success", "message": f"Email de bienvenue envoye a {user['email']}"}
+    else:
+        raise HTTPException(status_code=500, detail="Erreur lors de l'envoi de l'email. Verifiez la configuration SMTP.")
+
+
+@api_router.post("/admin/members/send-bulk-welcome-emails")
+async def admin_send_bulk_welcome_emails(
+    member_ids: List[str] = Body(...),
+    current_user: dict = Depends(get_admin_user)
+):
+    """
+    Envoie des emails de bienvenue a plusieurs adherents.
+    """
+    results = {"sent": 0, "failed": 0, "errors": []}
+
+    for member_id in member_ids:
+        user = await db.users.find_one({"id": member_id})
+        if not user:
+            results["failed"] += 1
+            results["errors"].append(f"Membre {member_id} non trouve")
+            continue
+
+        # Generer token
+        reset_token = secrets.token_urlsafe(32)
+        reset_expires = datetime.utcnow() + timedelta(hours=48)
+
+        await db.users.update_one(
+            {"id": member_id},
+            {
+                "$set": {
+                    "resetToken": reset_token,
+                    "resetTokenExpires": reset_expires,
+                    "mustChangePassword": True,
+                    "updatedAt": datetime.utcnow()
+                }
+            }
+        )
+
+        # Envoyer email
+        email_sent = await email_service.send_welcome_email(
+            to_email=user["email"],
+            first_name=user["firstName"],
+            last_name=user["lastName"],
+            reset_token=reset_token
+        )
+
+        if email_sent:
+            results["sent"] += 1
+        else:
+            results["failed"] += 1
+            results["errors"].append(f"Echec envoi a {user['email']}")
+
+    logger.info(f"Admin {current_user['email']} sent bulk welcome emails: {results['sent']} sent, {results['failed']} failed")
+    return results
+
+
+@api_router.post("/admin/members/send-renewal-reminders")
+async def admin_send_renewal_reminders(
+    days_threshold: int = Query(30, description="Envoyer aux adherents expirant dans X jours"),
+    include_expired: bool = Query(False, description="Inclure les adherents deja expires"),
+    current_user: dict = Depends(get_admin_user)
+):
+    """
+    Envoie des rappels de renouvellement aux adherents dont l'adhesion expire bientot.
+    """
+    now = datetime.utcnow()
+    expiry_threshold = now + timedelta(days=days_threshold)
+
+    # Trouver les adherents a relancer
+    query = {
+        "role": "user",
+        "membershipEndDate": {"$lte": expiry_threshold}
+    }
+
+    if not include_expired:
+        query["membershipEndDate"]["$gte"] = now
+
+    users_to_notify = await db.users.find(query).to_list(500)
+
+    results = {"sent": 0, "failed": 0, "skipped": 0}
+
+    for user in users_to_notify:
+        end_date = user.get("membershipEndDate")
+        if not end_date:
+            results["skipped"] += 1
+            continue
+
+        days_left = (end_date - now).days
+
+        email_sent = await email_service.send_renewal_reminder_email(
+            to_email=user["email"],
+            first_name=user["firstName"],
+            end_date=end_date,
+            days_left=days_left
+        )
+
+        if email_sent:
+            results["sent"] += 1
+        else:
+            results["failed"] += 1
+
+    logger.info(f"Admin {current_user['email']} sent renewal reminders: {results}")
+    return results
+
+
+@api_router.get("/admin/email/status")
+async def admin_get_email_status(current_user: dict = Depends(get_admin_user)):
+    """
+    Verifie si le service email est configure.
+    """
+    return {
+        "configured": email_service.is_configured(),
+        "message": "Service email configure et pret" if email_service.is_configured() else "Service email non configure. Ajoutez les variables SMTP dans .env"
+    }
 
 
 @api_router.get("/admin/memberships/renewals")

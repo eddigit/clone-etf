@@ -34,6 +34,12 @@ class User(UserBase):
     expertise: Optional[List[str]] = None
     location: Optional[str] = None
     isProfilePublic: bool = True
+    # Champs pour reinitialisation de mot de passe
+    resetToken: Optional[str] = None
+    resetTokenExpires: Optional[datetime] = None
+    # Flag premiere connexion (pour forcer mise a jour profil)
+    mustChangePassword: bool = False
+    lastLogin: Optional[datetime] = None
 
     class Config:
         json_schema_extra = {

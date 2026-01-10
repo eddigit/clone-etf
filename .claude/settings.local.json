@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nFeature: Systeme d''emails et reinitialisation mot de passe\n\nBackend:\n- Nouveau service email SMTP \\(email_service.py\\)\n- Routes /auth/forgot-password et /auth/reset-password\n- Route /auth/verify-reset-token\n- Routes admin pour envoi emails de bienvenue\n- Route admin pour rappels de renouvellement\n- Ajout champs resetToken, mustChangePassword dans User\n- Config SMTP dans .env.example\n\nFrontend:\n- Page ForgotPassword.jsx \\(demande de reinitialisation\\)\n- Page ResetPassword.jsx \\(creation nouveau mot de passe\\)\n- Lien \"Mot de passe oublie\" sur page Login\n- Bouton envoi email bienvenue dans AdminMembers\n- Routes /forgot-password et /reset-password\n\nWorkflow pour anciens adherents:\n1. Admin clique sur icone email dans liste membres\n2. Email de bienvenue envoye avec lien \\(48h valide\\)\n3. Adherent cree son mot de passe\n4. Acces a la plateforme\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+    ]
+  }
+}
