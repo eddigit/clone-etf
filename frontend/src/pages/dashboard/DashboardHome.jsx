@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -11,18 +11,83 @@ import {
   TrendingUp,
   Shield,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  AlertTriangle,
+  XCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import API_URL from '../../config/api';
 
 const DashboardHome = () => {
   const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/users/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setProfile(data);
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const getMembershipTypeLabel = (type) => {
+    const labels = {
+      individual: 'Particulier',
+      professional: 'Commercant - Artisan',
+      professional_plus: 'Entreprise',
+      association: 'Association'
+    };
+    return labels[type] || type || 'Non defini';
+  };
+
+  const getMembershipStatusBadge = (status) => {
+    if (status === 'active') {
+      return <Badge className="bg-green-600">Active</Badge>;
+    } else if (status === 'pending') {
+      return <Badge className="bg-yellow-500">En attente</Badge>;
+    } else {
+      return <Badge className="bg-red-500">Expiree</Badge>;
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'Non definie';
+    return new Date(dateStr).toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
+  const isAccessEnabled = profile?.membershipStatus === 'active';
 
   const stats = [
-    { label: 'Statut adhésion', value: 'Active', icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-100' },
-    { label: 'Documents', value: '12', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-100' },
-    { label: 'Ressources utilisées', value: '8', icon: BookOpen, color: 'text-purple-600', bg: 'bg-purple-100' },
-    { label: 'Requêtes IA', value: '23', icon: Bot, color: 'text-orange-600', bg: 'bg-orange-100' }
+    {
+      label: 'Statut adhesion',
+      value: profile?.membershipStatus === 'active' ? 'Active' : (profile?.membershipStatus === 'pending' ? 'En attente' : 'Expiree'),
+      icon: profile?.membershipStatus === 'active' ? CheckCircle2 : (profile?.membershipStatus === 'pending' ? AlertTriangle : XCircle),
+      color: profile?.membershipStatus === 'active' ? 'text-green-600' : (profile?.membershipStatus === 'pending' ? 'text-yellow-600' : 'text-red-600'),
+      bg: profile?.membershipStatus === 'active' ? 'bg-green-100' : (profile?.membershipStatus === 'pending' ? 'bg-yellow-100' : 'bg-red-100')
+    },
+    { label: 'Documents', value: '-', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-100' },
+    { label: 'Ressources', value: '-', icon: BookOpen, color: 'text-purple-600', bg: 'bg-purple-100' },
+    { label: 'Requetes IA', value: '-', icon: Bot, color: 'text-orange-600', bg: 'bg-orange-100' }
   ];
 
   const notifications = [
@@ -158,45 +223,66 @@ const DashboardHome = () => {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Shield className="h-5 w-5 mr-2" />
-                Statut de l'adhésion
+                Statut de l'adhesion
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Type d'adhésion</span>
-                <Badge className="bg-blue-600">Commerçant - Artisan</Badge>
+                <span className="text-sm text-gray-600">Type d'adhesion</span>
+                <Badge className="bg-blue-600">{getMembershipTypeLabel(profile?.membershipType)}</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Date d'échéance</span>
-                <span className="font-semibold text-gray-900">31 décembre 2025</span>
+                <span className="text-sm text-gray-600">Date d'echeance</span>
+                <span className="font-semibold text-gray-900">{formatDate(profile?.membershipEndDate)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Statut</span>
-                <Badge className="bg-green-600">Active</Badge>
+                {getMembershipStatusBadge(profile?.membershipStatus)}
               </div>
+
+              {/* Alerte si adhesion non active */}
+              {profile?.membershipStatus !== 'active' && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    <AlertTriangle className="h-4 w-4 inline mr-1" />
+                    {profile?.membershipStatus === 'pending'
+                      ? "Votre adhesion est en attente de paiement. Les outils seront accessibles apres confirmation."
+                      : "Votre adhesion a expire. Renouvelez-la pour acceder aux outils."}
+                  </p>
+                </div>
+              )}
+
               <div className="pt-4 border-t">
                 <p className="text-sm text-gray-600 mb-3">Services inclus :</p>
                 <ul className="space-y-2 text-sm">
-                  <li className="flex items-center text-gray-700">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                    Conseil & accompagnement
+                  <li className={`flex items-center ${isAccessEnabled ? 'text-gray-700' : 'text-gray-400'}`}>
+                    <CheckCircle2 className={`h-4 w-4 mr-2 ${isAccessEnabled ? 'text-green-500' : 'text-gray-300'}`} />
+                    Communaute et entraide
                   </li>
-                  <li className="flex items-center text-gray-700">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                    Assistance administrative
+                  <li className={`flex items-center ${isAccessEnabled ? 'text-gray-700' : 'text-gray-400'}`}>
+                    <CheckCircle2 className={`h-4 w-4 mr-2 ${isAccessEnabled ? 'text-green-500' : 'text-gray-300'}`} />
+                    Dossiers ETF collectifs
                   </li>
-                  <li className="flex items-center text-gray-700">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                  <li className={`flex items-center ${isAccessEnabled ? 'text-gray-700' : 'text-gray-400'}`}>
+                    <CheckCircle2 className={`h-4 w-4 mr-2 ${isAccessEnabled ? 'text-green-500' : 'text-gray-300'}`} />
                     Assistant IA d'orientation
                   </li>
-                  <li className="flex items-center text-gray-700">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                    Accès aux ressources
+                  <li className={`flex items-center ${isAccessEnabled ? 'text-gray-700' : 'text-gray-400'}`}>
+                    <CheckCircle2 className={`h-4 w-4 mr-2 ${isAccessEnabled ? 'text-green-500' : 'text-gray-300'}`} />
+                    Messagerie entre membres
+                  </li>
+                  <li className={`flex items-center ${isAccessEnabled ? 'text-gray-700' : 'text-gray-400'}`}>
+                    <CheckCircle2 className={`h-4 w-4 mr-2 ${isAccessEnabled ? 'text-green-500' : 'text-gray-300'}`} />
+                    Acces aux ressources et guides
                   </li>
                 </ul>
               </div>
-              <Button className="w-full mt-4" variant="outline">
-                Gérer mon abonnement
+              <Button
+                className="w-full mt-4"
+                variant="outline"
+                onClick={() => navigate('/dashboard/adhesions')}
+              >
+                {profile?.membershipStatus === 'active' ? 'Voir mes adhesions' : 'Renouveler mon adhesion'}
               </Button>
             </CardContent>
           </Card>

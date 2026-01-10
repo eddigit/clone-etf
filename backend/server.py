@@ -1192,23 +1192,56 @@ async def admin_create_membership(
 
         await db.memberships.insert_one(membership.model_dump())
 
-        # Si payé, mettre à jour le statut utilisateur
-        if data.status == "paid":
-            end_date = (data.payment_date or now) + timedelta(days=365)
-            await db.users.update_one(
-                {"id": user_id},
+        # Générer le PDF du bordereau d'adhésion
+        pdf_path = None
+        try:
+            pdf_data = {
+                "year": year,
+                "membership_type": data.membership_type,
+                "amount": data.amount,
+                "member_data": member_data.model_dump() if hasattr(member_data, 'model_dump') else member_data
+            }
+            pdf_path = generate_membership_pdf(
+                membership_data=pdf_data,
+                membership_id=membership.id,
+                output_dir="pdf_memberships"
+            )
+
+            # Mettre à jour l'adhésion avec le chemin du PDF
+            await db.memberships.update_one(
+                {"id": membership.id},
                 {
                     "$set": {
-                        "membershipStatus": "active",
-                        "membershipType": data.membership_type,
-                        "membershipStartDate": data.payment_date or now,
-                        "membershipEndDate": end_date,
-                        "updatedAt": now
+                        "pdf_path": pdf_path,
+                        "pdf_generated_at": now,
+                        "updated_at": now
                     }
                 }
             )
+            logger.info(f"PDF généré pour adhésion manuelle {membership.id}: {pdf_path}")
+        except Exception as e:
+            logger.error(f"Erreur génération PDF: {str(e)}")
 
-            # Générer un coupon
+        # Mettre à jour le profil utilisateur (type et statut)
+        end_date = (data.payment_date or now) + timedelta(days=365)
+        user_update = {
+            "membershipType": data.membership_type,
+            "updatedAt": now
+        }
+
+        if data.status == "paid":
+            user_update.update({
+                "membershipStatus": "active",
+                "membershipStartDate": data.payment_date or now,
+                "membershipEndDate": end_date
+            })
+        else:
+            user_update["membershipStatus"] = "pending"
+
+        await db.users.update_one({"id": user_id}, {"$set": user_update})
+
+        # Générer un coupon si payé
+        if data.status == "paid":
             existing_coupon = await db.coupons.find_one({
                 "userId": user_id,
                 "isActive": True,
@@ -1235,6 +1268,7 @@ async def admin_create_membership(
             "status": "success",
             "membership_id": membership.id,
             "user_id": user_id,
+            "pdf_generated": pdf_path is not None,
             "message": f"Adhésion créée pour {email}"
         }
 
