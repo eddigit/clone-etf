@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '../components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Eye, EyeOff, UserPlus, Mail, Lock, User, Building, Phone } from 'lucide-react';
 import axios from 'axios';
-import API_URL from '../config/api';
+import { API_URL } from '../config/api';
 
 const Register = () => {
   const navigate = useNavigate();

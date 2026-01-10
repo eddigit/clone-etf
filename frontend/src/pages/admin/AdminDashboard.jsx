@@ -14,7 +14,7 @@ import {
   Settings,
   ExternalLink
 } from 'lucide-react';
-import API_URL from '../../config/api';
+import { API_URL } from '../../config/api';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);

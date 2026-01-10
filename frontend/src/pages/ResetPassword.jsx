@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Lock, CheckCircle, AlertTriangle, Eye, EyeOff } from 'lucide-react';
-import API_URL from '../config/api';
+import { API_URL } from '../config/api';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();

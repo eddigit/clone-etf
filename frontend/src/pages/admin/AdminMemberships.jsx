@@ -24,7 +24,7 @@ import {
   Edit,
   Filter
 } from 'lucide-react';
-import API_URL from '../../config/api';
+import { API_URL } from '../../config/api';
 
 const AdminMemberships = () => {
   const [activeTab, setActiveTab] = useState('list');

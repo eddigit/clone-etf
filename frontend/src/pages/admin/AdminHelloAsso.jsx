@@ -21,7 +21,7 @@ import {
   Users,
   CreditCard
 } from 'lucide-react';
-import API_URL from '../../config/api';
+import { API_URL } from '../../config/api';
 
 const AdminHelloAsso = () => {
   const [status, setStatus] = useState(null);
