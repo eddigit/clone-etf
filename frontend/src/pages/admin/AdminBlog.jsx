@@ -57,6 +57,7 @@ const AdminBlog = () => {
     tags: '',
     author: '',
     status: 'draft',
+    publishTo: ['public'],  // Canaux de diffusion
     metaTitle: '',
     metaDescription: ''
   });
@@ -111,6 +112,7 @@ const AdminBlog = () => {
       tags: '',
       author: '',
       status: 'draft',
+      publishTo: ['public'],
       metaTitle: '',
       metaDescription: ''
     });
@@ -136,6 +138,7 @@ const AdminBlog = () => {
       tags: article.tags ? article.tags.join(', ') : '',
       author: article.author || '',
       status: article.status || 'draft',
+      publishTo: article.publishTo || ['public'],
       metaTitle: article.metaTitle || '',
       metaDescription: article.metaDescription || ''
     });
@@ -422,6 +425,18 @@ const AdminBlog = () => {
                         {article.views || 0} vues
                       </span>
                     </div>
+                    {/* Canaux de diffusion */}
+                    <div className="flex items-center gap-1 mt-2">
+                      {article.publishTo?.includes('public') && (
+                        <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">Public</Badge>
+                      )}
+                      {article.publishTo?.includes('members') && (
+                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">Adherents</Badge>
+                      )}
+                      {article.publishTo?.includes('featured') && (
+                        <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200">Accueil</Badge>
+                      )}
+                    </div>
                   </div>
 
                   {/* Actions */}
@@ -542,6 +557,71 @@ const AdminBlog = () => {
                   <option value="archived">Archive</option>
                 </select>
               </div>
+            </div>
+
+            {/* Canaux de diffusion */}
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <label className="block text-sm font-medium mb-3 text-blue-900">
+                Ou diffuser cet article ? (selectionnez un ou plusieurs)
+              </label>
+              <div className="space-y-3">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.publishTo.includes('public')}
+                    onChange={(e) => {
+                      const newChannels = e.target.checked
+                        ? [...formData.publishTo, 'public']
+                        : formData.publishTo.filter(c => c !== 'public');
+                      setFormData(prev => ({ ...prev, publishTo: newChannels }));
+                    }}
+                    className="mt-1 h-4 w-4 text-blue-600 rounded"
+                  />
+                  <div>
+                    <span className="font-medium text-gray-900">Blog public (visiteurs)</span>
+                    <p className="text-xs text-gray-500">Visible par tous sur la page /blog</p>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.publishTo.includes('members')}
+                    onChange={(e) => {
+                      const newChannels = e.target.checked
+                        ? [...formData.publishTo, 'members']
+                        : formData.publishTo.filter(c => c !== 'members');
+                      setFormData(prev => ({ ...prev, publishTo: newChannels }));
+                    }}
+                    className="mt-1 h-4 w-4 text-blue-600 rounded"
+                  />
+                  <div>
+                    <span className="font-medium text-gray-900">Espace adherents uniquement</span>
+                    <p className="text-xs text-gray-500">Reserve aux membres connectes avec adhesion active</p>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.publishTo.includes('featured')}
+                    onChange={(e) => {
+                      const newChannels = e.target.checked
+                        ? [...formData.publishTo, 'featured']
+                        : formData.publishTo.filter(c => c !== 'featured');
+                      setFormData(prev => ({ ...prev, publishTo: newChannels }));
+                    }}
+                    className="mt-1 h-4 w-4 text-blue-600 rounded"
+                  />
+                  <div>
+                    <span className="font-medium text-gray-900">Mise en avant (page d'accueil)</span>
+                    <p className="text-xs text-gray-500">Affiche dans la section "Actualites" de la page d'accueil</p>
+                  </div>
+                </label>
+              </div>
+              {formData.publishTo.length === 0 && (
+                <p className="text-xs text-orange-600 mt-2">
+                  Attention: Aucun canal selectionne. L'article ne sera visible nulle part.
+                </p>
+              )}
             </div>
 
             {/* Featured Image */}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -20,7 +20,9 @@ import {
   Scale,
   Globe,
   Rocket,
-  Play
+  Play,
+  ArrowRight,
+  Newspaper
 } from 'lucide-react';
 import {
   stats,
@@ -42,8 +44,35 @@ const iconMap = {
   Rocket
 };
 
+const API_URL = process.env.REACT_APP_API_URL || 'https://clone-etf.onrender.com';
+
 const Home = () => {
   const navigate = useNavigate();
+  const [featuredArticles, setFeaturedArticles] = useState([]);
+
+  useEffect(() => {
+    const fetchFeaturedArticles = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/articles/featured`);
+        if (response.ok) {
+          const data = await response.json();
+          setFeaturedArticles(data.articles || []);
+        }
+      } catch (error) {
+        console.error('Error fetching featured articles:', error);
+      }
+    };
+    fetchFeaturedArticles();
+  }, []);
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -177,6 +206,76 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Featured Articles Section */}
+      {featuredArticles.length > 0 && (
+        <section className="py-20 bg-slate-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <Badge className="mb-4 bg-green-700 text-white">
+                <Newspaper className="h-3 w-3 mr-1" />
+                Actualites
+              </Badge>
+              <h2 className="text-4xl font-bold text-white mb-4">
+                Nos Dernieres Actualites
+              </h2>
+              <p className="text-lg text-gray-400">
+                Restez informe des evolutions du secteur de la franchise
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredArticles.map((article) => (
+                <Card
+                  key={article.id}
+                  className="overflow-hidden hover:shadow-xl transition-all bg-slate-800 border-slate-700 cursor-pointer group"
+                  onClick={() => navigate(`/blog/${article.slug}`)}
+                >
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={article.featuredImage || 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800'}
+                      alt={article.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <Badge className="absolute top-4 left-4 bg-green-600">
+                      {article.category}
+                    </Badge>
+                  </div>
+                  <CardHeader>
+                    <CardTitle className="text-xl text-white line-clamp-2 group-hover:text-green-400 transition-colors">
+                      {article.title}
+                    </CardTitle>
+                    <CardDescription className="text-gray-400 line-clamp-2">
+                      {article.excerpt}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between text-sm text-gray-500">
+                      <span>{formatDate(article.publishedAt)}</span>
+                      <span className="flex items-center text-green-400">
+                        Lire plus
+                        <ArrowRight className="ml-1 h-4 w-4" />
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="text-center mt-10">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => navigate('/blog')}
+                className="border-green-600 text-green-400 hover:bg-green-900/50"
+              >
+                Voir tous les articles
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Pourquoi Adhérer Section */}
       <section className="py-20 bg-slate-900">

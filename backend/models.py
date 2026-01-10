@@ -172,6 +172,8 @@ class ArticleCreate(BaseModel):
     category: str  # Catégorie (Juridique, Actualités, etc.)
     tags: Optional[List[str]] = None  # Tags pour le SEO
     status: str = "draft"  # "draft" | "published" | "archived"
+    # Canaux de diffusion: "public" (blog visiteurs), "members" (espace adhérents), "featured" (page accueil)
+    publishTo: List[str] = ["public"]
     author: Optional[str] = None  # Nom de l'auteur (sinon admin connecté)
     readTime: Optional[str] = None  # Temps de lecture estimé
     # SEO
@@ -188,6 +190,7 @@ class ArticleUpdate(BaseModel):
     category: Optional[str] = None
     tags: Optional[List[str]] = None
     status: Optional[str] = None
+    publishTo: Optional[List[str]] = None  # Canaux de diffusion
     author: Optional[str] = None
     readTime: Optional[str] = None
     metaTitle: Optional[str] = None
@@ -206,6 +209,8 @@ class Article(BaseModel):
     category: str
     tags: Optional[List[str]] = None
     status: str = "draft"  # "draft" | "published" | "archived"
+    # Canaux de diffusion: "public" (blog visiteurs), "members" (espace adhérents), "featured" (page accueil)
+    publishTo: List[str] = ["public"]
     author: str
     authorId: Optional[str] = None  # ID de l'admin qui a créé
     readTime: str = "5 min"

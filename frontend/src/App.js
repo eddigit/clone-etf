@@ -24,6 +24,8 @@ import Community from "./pages/dashboard/Community";
 import Messages from "./pages/dashboard/Messages";
 import Cases from "./pages/dashboard/Cases";
 import OnboardingPage from "./pages/dashboard/Onboarding";
+import DashboardArticles from "./pages/dashboard/Articles";
+import DashboardArticleDetail from "./pages/dashboard/ArticleDetail";
 // Admin imports
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -168,7 +170,23 @@ function App() {
               </ProtectedRoute>
             }
           />
-          
+          <Route
+            path="/dashboard/articles"
+            element={
+              <ProtectedRoute>
+                <DashboardArticles />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/articles/:slug"
+            element={
+              <ProtectedRoute>
+                <DashboardArticleDetail />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Admin Routes */}
           <Route
             path="/admin"

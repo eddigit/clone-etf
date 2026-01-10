@@ -15,7 +15,8 @@ import {
   Users,
   MessageSquare,
   Briefcase,
-  UserCircle
+  UserCircle,
+  Newspaper
 } from 'lucide-react';
 
 const DashboardLayout = ({ children }) => {
@@ -38,6 +39,7 @@ const DashboardLayout = ({ children }) => {
     { icon: MessageSquare, label: 'Communauté', path: '/dashboard/community' },
     { icon: MessageSquare, label: 'Messagerie', path: '/dashboard/messages' },
     { icon: Briefcase, label: 'Dossiers', path: '/dashboard/cases' },
+    { icon: Newspaper, label: 'Articles Exclusifs', path: '/dashboard/articles' },
     { icon: FileText, label: 'Mes Documents', path: '/dashboard/documents' },
     { icon: BookOpen, label: 'Ressources', path: '/dashboard/resources' },
     { icon: CreditCard, label: 'Abonnement', path: '/dashboard/subscription' },

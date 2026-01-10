@@ -706,13 +706,59 @@ async def get_articles(
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
     category: Optional[str] = Query(None),
+    channel: str = Query("public", description="Canal: public, members, featured"),
     status: str = Query("published", description="Statut des articles (published par défaut)")
 ):
     """
     Récupère les articles du blog.
-    Par défaut, retourne uniquement les articles publiés.
+    Par défaut, retourne uniquement les articles publiés sur le canal public.
     """
-    query = {"status": status}
+    query = {"status": status, "publishTo": channel}
+    if category:
+        query["category"] = category
+
+    articles = await db.articles.find(query).sort("publishedAt", -1).skip(offset).limit(limit).to_list(limit)
+    total = await db.articles.count_documents(query)
+
+    return {
+        "articles": articles,
+        "total": total,
+        "limit": limit,
+        "offset": offset
+    }
+
+
+@api_router.get("/articles/featured")
+async def get_featured_articles(
+    limit: int = Query(3, ge=1, le=10)
+):
+    """
+    Récupère les articles mis en avant pour la page d'accueil.
+    """
+    query = {"status": "published", "publishTo": "featured"}
+    articles = await db.articles.find(query).sort("publishedAt", -1).limit(limit).to_list(limit)
+    return {"articles": articles}
+
+
+@api_router.get("/articles/members")
+async def get_members_articles(
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    category: Optional[str] = Query(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Récupère les articles réservés aux adhérents.
+    Nécessite une authentification.
+    """
+    # Vérifier que l'utilisateur a une adhésion active
+    if current_user.get("membershipStatus") != "active":
+        raise HTTPException(
+            status_code=403,
+            detail="Accès réservé aux adhérents avec une adhésion active"
+        )
+
+    query = {"status": "published", "publishTo": "members"}
     if category:
         query["category"] = category
 
@@ -829,6 +875,7 @@ async def admin_create_article(
             category=article_data.category,
             tags=article_data.tags,
             status=article_data.status,
+            publishTo=article_data.publishTo,
             author=author,
             authorId=current_user["id"],
             readTime=read_time,
@@ -913,6 +960,8 @@ async def admin_update_article(
             update_data["category"] = article_data.category
         if article_data.tags is not None:
             update_data["tags"] = article_data.tags
+        if article_data.publishTo is not None:
+            update_data["publishTo"] = article_data.publishTo
         if article_data.author is not None:
             update_data["author"] = article_data.author
         if article_data.readTime is not None:
@@ -1041,6 +1090,7 @@ async def admin_duplicate_article(
         category=article.get("category", ""),
         tags=article.get("tags"),
         status="draft",  # Toujours en brouillon
+        publishTo=article.get("publishTo", ["public"]),
         author=f"{current_user['firstName']} {current_user['lastName']}",
         authorId=current_user["id"],
         readTime=article.get("readTime", "5 min"),

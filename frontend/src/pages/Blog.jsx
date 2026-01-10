@@ -21,7 +21,8 @@ const Blog = () => {
     const fetchArticles = async () => {
       try {
         setLoading(true);
-        const params = new URLSearchParams({ status: 'published' });
+        // Recuperer uniquement les articles publics (blog visiteurs)
+        const params = new URLSearchParams({ status: 'published', channel: 'public' });
         if (selectedCategory) params.append('category', selectedCategory);
 
         const response = await fetch(`${API_URL}/api/articles?${params.toString()}`);
