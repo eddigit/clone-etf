@@ -2,6 +2,7 @@ from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, UploadFi
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from pydantic import EmailStr
 from dotenv import load_dotenv
 from pathlib import Path
 from typing import Optional, List
