@@ -26,6 +26,7 @@ import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminMembers from "./pages/admin/AdminMembers";
 import AdminHelloAsso from "./pages/admin/AdminHelloAsso";
+import NotFound from "./pages/NotFound";
 import { Toaster } from "./components/ui/toaster";
 
 // Protected Route Component
@@ -192,9 +193,17 @@ function App() {
               </ProtectedRoute>
             }
           />
-          
-          {/* Catch all - redirect to home */}
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route
+            path="/admin/payments"
+            element={
+              <ProtectedRoute>
+                <AdminLayout><AdminHelloAsso /></AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Catch all - 404 page */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
       <Toaster />
