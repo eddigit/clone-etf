@@ -7,7 +7,7 @@ import { Textarea } from '../../components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 import { Input } from '../../components/ui/input';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8001';
+const API_URL = process.env.REACT_APP_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8001' : 'https://etf-backend-t3j5.onrender.com');
 
 const Community = () => {
   const [posts, setPosts] = useState([]);

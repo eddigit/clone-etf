@@ -8,7 +8,7 @@ import { Badge } from '../../components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8001';
+const API_URL = process.env.REACT_APP_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8001' : 'https://etf-backend-t3j5.onrender.com');
 
 const Members = () => {
   const [members, setMembers] = useState([]);

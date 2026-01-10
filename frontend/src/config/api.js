@@ -1,6 +1,6 @@
 // Configuration de l'API
-// En production, utiliser une URL relative pour le même domaine, sinon localhost
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8001' : '');
+// En production, utiliser l'URL du backend Render
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8001' : 'https://etf-backend-t3j5.onrender.com');
 
 export const API_URL = `${API_BASE_URL}/api`;
 

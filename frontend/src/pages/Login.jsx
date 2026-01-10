@@ -7,9 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import axios from 'axios';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import API_URL from '../config/api';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -35,7 +33,7 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await axios.post(`${API}/auth/login`, formData);
+      const response = await axios.post(`${API_URL}/auth/login`, formData);
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('userRole', response.data.user.role);
       localStorage.setItem('userId', response.data.user.id);

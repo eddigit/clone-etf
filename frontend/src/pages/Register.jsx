@@ -8,9 +8,7 @@ import { Alert, AlertDescription } from '../components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Eye, EyeOff, UserPlus, Mail, Lock, User, Building, Phone } from 'lucide-react';
 import axios from 'axios';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import API_URL from '../config/api';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -51,7 +49,7 @@ const Register = () => {
     setError('');
 
     try {
-      await axios.post(`${API}/auth/register`, formData);
+      await axios.post(`${API_URL}/auth/register`, formData);
       setSuccess(true);
       setTimeout(() => {
         navigate('/login');

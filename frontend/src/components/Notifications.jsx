@@ -11,7 +11,7 @@ import {
 import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8001';
+const API_URL = process.env.REACT_APP_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8001' : 'https://etf-backend-t3j5.onrender.com');
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
