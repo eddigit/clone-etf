@@ -17,6 +17,10 @@ import Resources from "./pages/dashboard/Resources";
 import Subscription from "./pages/dashboard/Subscription";
 import Settings from "./pages/dashboard/Settings";
 import Adhesions from "./pages/dashboard/Adhesions";
+import Members from "./pages/dashboard/Members";
+import Community from "./pages/dashboard/Community";
+import Messages from "./pages/dashboard/Messages";
+import Cases from "./pages/dashboard/Cases";
 // Admin imports
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -103,6 +107,38 @@ function App() {
             element={
               <ProtectedRoute>
                 <Adhesions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/members"
+            element={
+              <ProtectedRoute>
+                <Members />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/community"
+            element={
+              <ProtectedRoute>
+                <Community />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/messages"
+            element={
+              <ProtectedRoute>
+                <Messages />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/cases"
+            element={
+              <ProtectedRoute>
+                <Cases />
               </ProtectedRoute>
             }
           />

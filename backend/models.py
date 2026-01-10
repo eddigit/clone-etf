@@ -28,6 +28,12 @@ class User(UserBase):
     membershipEndDate: Optional[datetime] = None
     createdAt: datetime = Field(default_factory=datetime.utcnow)
     updatedAt: datetime = Field(default_factory=datetime.utcnow)
+    # Nouveaux champs pour profil enrichi
+    profilePhoto: Optional[str] = None
+    bio: Optional[str] = None
+    expertise: Optional[List[str]] = None
+    location: Optional[str] = None
+    isProfilePublic: bool = True
 
     class Config:
         json_schema_extra = {
@@ -54,6 +60,12 @@ class UserProfile(BaseModel):
     membershipStartDate: datetime
     membershipEndDate: Optional[datetime]
     role: str
+    # Nouveaux champs pour profil enrichi
+    profilePhoto: Optional[str] = None  # URL ou path de la photo
+    bio: Optional[str] = None  # Description courte
+    expertise: Optional[List[str]] = None  # Ex: ["franchise", "restauration"]
+    location: Optional[str] = None  # Ville/Région
+    isProfilePublic: bool = True  # Visibilité dans l'annuaire
 
 # AI Conversation Models
 class ConversationCreate(BaseModel):
@@ -326,3 +338,189 @@ class MembershipResponse(BaseModel):
     pdf_available: bool
     created_at: datetime
     updated_at: datetime
+
+# ===================== COMMUNITY MODELS =====================
+
+# Post Models (Fil d'actualité)
+class PostCreate(BaseModel):
+    """Création d'un post sur le fil d'actualité"""
+    content: str
+    attachments: Optional[List[str]] = None  # URLs ou paths de fichiers
+
+class Comment(BaseModel):
+    """Commentaire sur un post"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    userId: str
+    userFirstName: str
+    userLastName: str
+    content: str
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+
+class Post(BaseModel):
+    """Post sur le fil d'actualité communautaire"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    userId: str
+    userFirstName: str
+    userLastName: str
+    userProfilePhoto: Optional[str] = None
+    content: str
+    attachments: Optional[List[str]] = None
+    likes: List[str] = []  # Liste des user IDs ayant liké
+    comments: List[Comment] = []
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+# Private Messaging Models
+class ConversationMember(BaseModel):
+    """Membre d'une conversation privée"""
+    userId: str
+    firstName: str
+    lastName: str
+    profilePhoto: Optional[str] = None
+
+class PrivateConversation(BaseModel):
+    """Conversation privée entre membres"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    members: List[ConversationMember]  # Liste des participants
+    lastMessage: Optional[str] = None
+    lastMessageAt: Optional[datetime] = None
+    unreadCount: dict = {}  # {userId: count} - messages non lus par membre
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+class PrivateMessageCreate(BaseModel):
+    """Création d'un message privé"""
+    recipientId: str
+    content: str
+
+class PrivateMessage(BaseModel):
+    """Message privé dans une conversation"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    conversationId: str
+    senderId: str
+    senderFirstName: str
+    senderLastName: str
+    content: str
+    isRead: bool = False
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+
+# Case Study Models (Dossiers collectifs)
+class CaseStudyCreate(BaseModel):
+    """Création d'un cas d'étude/dossier"""
+    title: str
+    description: str
+    category: str  # Ex: "litige", "conseil", "administratif"
+    documents: Optional[List[str]] = None  # IDs de documents partagés
+
+class CaseStudyComment(BaseModel):
+    """Commentaire sur un dossier"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    userId: str
+    userFirstName: str
+    userLastName: str
+    content: str
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+
+class CaseStudy(BaseModel):
+    """Dossier collectif partagé entre membres"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    userId: str  # Créateur du dossier
+    userFirstName: str
+    userLastName: str
+    title: str
+    description: str
+    category: str
+    status: str = "en_cours"  # "en_cours" | "historique" | "gagne"
+    documents: Optional[List[str]] = None
+    comments: List[CaseStudyComment] = []
+    likes: List[str] = []  # Membres intéressés/solidaires
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+class CaseStudyUpdate(BaseModel):
+    """Mise à jour d'un dossier"""
+    title: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+    category: Optional[str] = None
+
+# Notification Models
+class Notification(BaseModel):
+    """Notification pour un membre"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    userId: str  # Destinataire
+    type: str  # "message" | "like" | "comment" | "case_update" | "new_member"
+    title: str
+    message: str
+    relatedId: Optional[str] = None  # ID du post/message/case concerné
+    relatedUrl: Optional[str] = None  # URL de navigation
+    isRead: bool = False
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+
+class NotificationCreate(BaseModel):
+    """Création d'une notification"""
+    userId: str
+    type: str
+    title: str
+    message: str
+    relatedId: Optional[str] = None
+    relatedUrl: Optional[str] = None
+
+# Forum Models (Q&A / Entraide)
+class ForumReplyCreate(BaseModel):
+    """Création d'une réponse dans un thread"""
+    content: str
+
+class ForumReply(BaseModel):
+    """Réponse dans un thread de forum"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    threadId: str
+    userId: str
+    userFirstName: str
+    userLastName: str
+    userProfilePhoto: Optional[str] = None
+    content: str
+    votes: int = 0  # Score de la réponse (upvotes - downvotes)
+    votedBy: dict = {}  # {userId: 1 or -1} pour tracking
+    isBestAnswer: bool = False
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+class ForumThreadCreate(BaseModel):
+    """Création d'un thread de forum"""
+    title: str
+    content: str
+    category: str  # Ex: "juridique", "gestion", "franchise"
+    tags: Optional[List[str]] = None
+
+class ForumThread(BaseModel):
+    """Thread de discussion dans le forum Q&A"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    userId: str
+    userFirstName: str
+    userLastName: str
+    userProfilePhoto: Optional[str] = None
+    title: str
+    content: str
+    category: str
+    tags: Optional[List[str]] = None
+    replies: List[ForumReply] = []
+    views: int = 0
+    status: str = "open"  # "open" | "solved" | "closed"
+    bestAnswerId: Optional[str] = None  # ID de la meilleure réponse
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+# Member Profile Update
+class UserProfileUpdate(BaseModel):
+    """Mise à jour du profil utilisateur"""
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    phone: Optional[str] = None
+    businessName: Optional[str] = None
+    businessType: Optional[str] = None
+    profilePhoto: Optional[str] = None
+    bio: Optional[str] = None
+    expertise: Optional[List[str]] = None
+    location: Optional[str] = None
+    isProfilePublic: Optional[bool] = None

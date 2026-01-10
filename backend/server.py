@@ -27,6 +27,7 @@ from models import (
 from auth_utils import hash_password, verify_password, create_access_token, decode_access_token
 from helloasso_service import helloasso_service
 from pdf_service import generate_membership_pdf
+from community_routes import create_community_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -1380,6 +1381,10 @@ async def root():
 @api_router.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.utcnow()}
+
+# Créer et inclure le router communautaire avec les dépendances
+community_router = create_community_router(db, get_current_user)
+api_router.include_router(community_router)
 
 # Include the router in the main app
 app.include_router(api_router)

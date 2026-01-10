@@ -12,7 +12,10 @@ import {
   Menu,
   X,
   Shield,
-  Users
+  Users,
+  MessageSquare,
+  Briefcase,
+  UserCircle
 } from 'lucide-react';
 
 const DashboardLayout = ({ children }) => {
@@ -31,6 +34,10 @@ const DashboardLayout = ({ children }) => {
     { icon: LayoutDashboard, label: 'Tableau de bord', path: '/dashboard' },
     { icon: Bot, label: 'Assistant IA', path: '/dashboard/ai' },
     { icon: Users, label: 'Mes Adhésions', path: '/dashboard/adhesions' },
+    { icon: UserCircle, label: 'Annuaire Membres', path: '/dashboard/members' },
+    { icon: MessageSquare, label: 'Communauté', path: '/dashboard/community' },
+    { icon: MessageSquare, label: 'Messagerie', path: '/dashboard/messages' },
+    { icon: Briefcase, label: 'Dossiers', path: '/dashboard/cases' },
     { icon: FileText, label: 'Mes Documents', path: '/dashboard/documents' },
     { icon: BookOpen, label: 'Ressources', path: '/dashboard/resources' },
     { icon: CreditCard, label: 'Abonnement', path: '/dashboard/subscription' },

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Menu, X, LogIn, UserCircle } from 'lucide-react';
+import Notifications from './Notifications';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -80,6 +81,7 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
               <>
+                <Notifications />
                 <Button
                   onClick={() => navigate(userRole === 'admin' ? '/admin' : '/dashboard')}
                   variant="outline"
