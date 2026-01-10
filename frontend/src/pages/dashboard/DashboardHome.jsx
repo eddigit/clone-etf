@@ -53,7 +53,7 @@ const DashboardHome = () => {
     {
       icon: Bot,
       title: 'Poser une question à l\'IA',
-      description: 'Obtenez des réponses juridiques instantanées',
+      description: 'Obtenez conseils et orientation instantanés',
       action: () => navigate('/dashboard/ai'),
       color: 'bg-purple-600 hover:bg-purple-700'
     },
@@ -179,7 +179,7 @@ const DashboardHome = () => {
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center text-gray-700">
                     <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                    Protection juridique
+                    Conseil & accompagnement
                   </li>
                   <li className="flex items-center text-gray-700">
                     <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
@@ -187,7 +187,7 @@ const DashboardHome = () => {
                   </li>
                   <li className="flex items-center text-gray-700">
                     <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                    Assistant IA juridique
+                    Assistant IA d'orientation
                   </li>
                   <li className="flex items-center text-gray-700">
                     <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />

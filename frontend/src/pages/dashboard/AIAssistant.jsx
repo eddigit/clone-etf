@@ -67,7 +67,7 @@ const AIAssistant = () => {
         id: Date.now() + 1,
         conversationId: currentConversation,
         role: 'assistant',
-        content: "Bonjour ! Je suis l'assistant juridique IA d'En Toute Franchise. Je suis là pour répondre à vos questions juridiques et administratives. Comment puis-je vous aider aujourd'hui ? (Note : Pour le moment, les réponses sont mockées, l'intégration IA sera ajoutée avec les API).",
+        content: "Bonjour ! Je suis l'assistant d'orientation IA d'En Toute Franchise. Je suis là pour vous conseiller et vous orienter sur vos questions. Comment puis-je vous aider aujourd'hui ? (Note : Pour le moment, les réponses sont mockées, l'intégration IA sera ajoutée avec les API).",
         timestamp: new Date().toISOString()
       };
       setMessages((prev) => [...prev, aiMessage]);
@@ -226,7 +226,7 @@ const AIAssistant = () => {
                         handleSendMessage();
                       }
                     }}
-                    placeholder="Posez votre question juridique..."
+                    placeholder="Posez votre question..."
                     className="flex-1 min-h-[60px] max-h-32 resize-none"
                   />
                   <Button
@@ -248,7 +248,7 @@ const AIAssistant = () => {
                 <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Bot className="h-10 w-10 text-purple-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Assistant IA Juridique</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Assistant IA d'Orientation</h2>
                 <p className="text-gray-600 mb-6">Sélectionnez ou créez une conversation pour commencer</p>
                 <Button onClick={handleNewConversation} className="bg-blue-600 hover:bg-blue-700">
                   <Bot className="mr-2 h-4 w-4" />

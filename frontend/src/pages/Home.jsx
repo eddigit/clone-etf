@@ -408,7 +408,7 @@ const Home = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="flex items-center space-x-2">
                 <Check className="h-5 w-5 text-green-500" />
-                <span className="text-sm">Protection juridique complète</span>
+                <span className="text-sm">Conseil & accompagnement</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Check className="h-5 w-5 text-green-500" />

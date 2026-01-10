@@ -66,7 +66,7 @@ const Subscription = () => {
                 <ul className="space-y-2">
                   <li className="flex items-start text-sm">
                     <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Protection juridique complète</span>
+                    <span>Conseil & accompagnement</span>
                   </li>
                   <li className="flex items-start text-sm">
                     <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
@@ -118,7 +118,7 @@ const Subscription = () => {
                   <div>
                     <h3 className="font-semibold text-yellow-900 mb-1">Aucun plan IA actif</h3>
                     <p className="text-sm text-yellow-800">
-                      Souscrivez à un plan d'assistance IA pour bénéficier de réponses juridiques instantanées 24h/24
+                      Souscrivez à un plan d'assistance IA pour bénéficier de conseils et d'orientation instantanés 24h/24
                       et 7j/7.
                     </p>
                   </div>
