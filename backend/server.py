@@ -706,14 +706,28 @@ async def get_articles(
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
     category: Optional[str] = Query(None),
-    channel: str = Query("public", description="Canal: public, members, featured"),
+    channel: Optional[str] = Query(None, description="Canal: public, members, featured (optionnel)"),
     status: str = Query("published", description="Statut des articles (published par défaut)")
 ):
     """
     Récupère les articles du blog.
-    Par défaut, retourne uniquement les articles publiés sur le canal public.
+    Par défaut, retourne tous les articles publiés.
+    Si channel est specifie, filtre par canal.
     """
-    query = {"status": status, "publishTo": channel}
+    query = {"status": status}
+
+    # Si un canal est specifie, filtrer par canal
+    # Sinon, retourner tous les articles publies (y compris ceux sans publishTo ou avec publishTo contenant "public")
+    if channel:
+        query["publishTo"] = channel
+    else:
+        # Pour la compatibilite avec les anciens articles sans publishTo
+        query["$or"] = [
+            {"publishTo": {"$exists": False}},
+            {"publishTo": {"$in": ["public"]}},
+            {"publishTo": {"$size": 0}}
+        ]
+
     if category:
         query["category"] = category
 
