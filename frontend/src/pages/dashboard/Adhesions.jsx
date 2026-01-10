@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import API from '../../config/api';
 import { useNavigate } from 'react-router-dom';
+import DashboardLayout from '../../components/dashboard/DashboardLayout';
 
 const STATUS_CONFIG = {
   pending: {
@@ -104,17 +105,20 @@ export default function Adhesions() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement de vos adhésions...</p>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Chargement de vos adhésions...</p>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <DashboardLayout>
+      <div className="space-y-6">
       {/* En-tête */}
       <div className="flex items-center justify-between">
         <div>
@@ -322,5 +326,6 @@ export default function Adhesions() {
         </CardContent>
       </Card>
     </div>
+    </DashboardLayout>
   );
 }

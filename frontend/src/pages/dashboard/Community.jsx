@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/button';
 import { Textarea } from '../../components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 import { Input } from '../../components/ui/input';
+import DashboardLayout from '../../components/dashboard/DashboardLayout';
 
 const API_URL = process.env.REACT_APP_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8001' : 'https://etf-backend-t3j5.onrender.com');
 
@@ -125,14 +126,17 @@ const Community = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-96">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-3xl">
+    <DashboardLayout>
+      <div className="container mx-auto py-8 px-4 max-w-3xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Communauté</h1>
         <p className="text-gray-600">Partagez et échangez avec les autres membres</p>
@@ -288,6 +292,7 @@ const Community = () => {
         )}
       </div>
     </div>
+    </DashboardLayout>
   );
 };
 

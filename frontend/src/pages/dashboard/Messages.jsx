@@ -6,6 +6,7 @@ import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 import { ScrollArea } from '../../components/ui/scroll-area';
+import DashboardLayout from '../../components/dashboard/DashboardLayout';
 
 const API_URL = process.env.REACT_APP_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8001' : 'https://etf-backend-t3j5.onrender.com');
 
@@ -118,14 +119,17 @@ const Messages = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-96">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <DashboardLayout>
+      <div className="container mx-auto py-8 px-4">
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Messagerie</h1>
         <p className="text-gray-600">Communiquez en privé avec les membres</p>
@@ -293,6 +297,7 @@ const Messages = () => {
         </Card>
       </div>
     </div>
+    </DashboardLayout>
   );
 };
 
