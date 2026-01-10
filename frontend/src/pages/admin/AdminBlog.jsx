@@ -533,17 +533,17 @@ const AdminBlog = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Categorie *</label>
-                <Input
+                <select
                   value={formData.category}
                   onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                  placeholder="Ex: Juridique, Actualites, Guide..."
-                  list="categories"
-                />
-                <datalist id="categories">
+                  className="w-full px-3 py-2 border rounded-md"
+                  required
+                >
+                  <option value="">Selectionner une categorie</option>
                   {categories.map(cat => (
-                    <option key={cat} value={cat} />
+                    <option key={cat} value={cat}>{cat}</option>
                   ))}
-                </datalist>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Statut</label>

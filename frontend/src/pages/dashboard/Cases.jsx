@@ -119,7 +119,7 @@ const Cases = () => {
   const getStatusBadge = (status) => {
     const variants = {
       en_cours: { label: 'En cours', className: 'bg-blue-100 text-blue-800' },
-      historique: { label: 'Historique', className: 'bg-gray-100 text-gray-800' },
+      archive: { label: 'Archivé', className: 'bg-gray-100 text-gray-800' },
       gagne: { label: 'Gagné', className: 'bg-green-100 text-green-800' },
     };
     const variant = variants[status] || { label: status, className: '' };
@@ -127,14 +127,8 @@ const Cases = () => {
   };
 
   const getCategoryLabel = (category) => {
-    const categories = {
-      litige: 'Litige',
-      conseil: 'Conseil',
-      administratif: 'Administratif',
-      juridique: 'Juridique',
-      gestion: 'Gestion',
-    };
-    return categories[category] || category;
+    // Les catégories sont déjà dans le bon format depuis le backend
+    return category;
   };
 
   const getInitials = (firstName, lastName) => {
@@ -198,11 +192,11 @@ const Cases = () => {
                     <SelectValue placeholder="Sélectionnez une catégorie" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="litige">Litige</SelectItem>
-                    <SelectItem value="conseil">Conseil</SelectItem>
-                    <SelectItem value="administratif">Administratif</SelectItem>
-                    <SelectItem value="juridique">Juridique</SelectItem>
-                    <SelectItem value="gestion">Gestion</SelectItem>
+                    <SelectItem value="Dossier gagné">Dossier gagné</SelectItem>
+                    <SelectItem value="Dossier en cours">Dossier en cours</SelectItem>
+                    <SelectItem value="Information">Information</SelectItem>
+                    <SelectItem value="Alerte">Alerte</SelectItem>
+                    <SelectItem value="Autre">Autre</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -248,11 +242,11 @@ const Cases = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Toutes les catégories</SelectItem>
-                <SelectItem value="litige">Litige</SelectItem>
-                <SelectItem value="conseil">Conseil</SelectItem>
-                <SelectItem value="administratif">Administratif</SelectItem>
-                <SelectItem value="juridique">Juridique</SelectItem>
-                <SelectItem value="gestion">Gestion</SelectItem>
+                <SelectItem value="Dossier gagné">Dossier gagné</SelectItem>
+                <SelectItem value="Dossier en cours">Dossier en cours</SelectItem>
+                <SelectItem value="Information">Information</SelectItem>
+                <SelectItem value="Alerte">Alerte</SelectItem>
+                <SelectItem value="Autre">Autre</SelectItem>
               </SelectContent>
             </Select>
           </div>
