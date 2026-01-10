@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Bell } from 'lucide-react';
-import { Button } from '../ui/button';
+import { Button } from './ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
-import { Badge } from '../ui/badge';
-import { ScrollArea } from '../ui/scroll-area';
+} from './ui/dropdown-menu';
+import { Badge } from './ui/badge';
+import { ScrollArea } from './ui/scroll-area';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8001';
 
