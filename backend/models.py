@@ -162,15 +162,59 @@ class ContactMessageDB(ContactMessage):
     createdAt: datetime = Field(default_factory=datetime.utcnow)
 
 # Article Models
+class ArticleCreate(BaseModel):
+    """Création d'un article de blog"""
+    title: str
+    slug: Optional[str] = None  # Généré automatiquement si absent
+    excerpt: str  # Résumé court
+    content: str  # Contenu HTML complet (texte riche)
+    featuredImage: Optional[str] = None  # URL ou path de l'image principale
+    category: str  # Catégorie (Juridique, Actualités, etc.)
+    tags: Optional[List[str]] = None  # Tags pour le SEO
+    status: str = "draft"  # "draft" | "published" | "archived"
+    author: Optional[str] = None  # Nom de l'auteur (sinon admin connecté)
+    readTime: Optional[str] = None  # Temps de lecture estimé
+    # SEO
+    metaTitle: Optional[str] = None
+    metaDescription: Optional[str] = None
+
+class ArticleUpdate(BaseModel):
+    """Mise à jour d'un article"""
+    title: Optional[str] = None
+    slug: Optional[str] = None
+    excerpt: Optional[str] = None
+    content: Optional[str] = None
+    featuredImage: Optional[str] = None
+    category: Optional[str] = None
+    tags: Optional[List[str]] = None
+    status: Optional[str] = None
+    author: Optional[str] = None
+    readTime: Optional[str] = None
+    metaTitle: Optional[str] = None
+    metaDescription: Optional[str] = None
+
 class Article(BaseModel):
+    """Article de blog complet"""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str
-    excerpt: str
-    content: str
-    image: str
-    author: str
+    slug: str  # URL-friendly identifier
+    excerpt: str  # Résumé court pour les listes
+    content: str  # Contenu HTML complet
+    featuredImage: Optional[str] = None  # Image principale
+    gallery: Optional[List[str]] = None  # Images additionnelles
+    attachments: Optional[List[dict]] = None  # PDFs et autres fichiers [{name, url, type}]
     category: str
-    readTime: str
+    tags: Optional[List[str]] = None
+    status: str = "draft"  # "draft" | "published" | "archived"
+    author: str
+    authorId: Optional[str] = None  # ID de l'admin qui a créé
+    readTime: str = "5 min"
+    views: int = 0  # Nombre de vues
+    # SEO
+    metaTitle: Optional[str] = None
+    metaDescription: Optional[str] = None
+    # Dates
+    publishedAt: Optional[datetime] = None  # Date de publication
     createdAt: datetime = Field(default_factory=datetime.utcnow)
     updatedAt: datetime = Field(default_factory=datetime.utcnow)
 

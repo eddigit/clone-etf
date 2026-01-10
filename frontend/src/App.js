@@ -30,6 +30,8 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminMembers from "./pages/admin/AdminMembers";
 import AdminHelloAsso from "./pages/admin/AdminHelloAsso";
 import AdminMemberships from "./pages/admin/AdminMemberships";
+import AdminBlog from "./pages/admin/AdminBlog";
+import BlogArticle from "./pages/BlogArticle";
 import NotFound from "./pages/NotFound";
 import { Toaster } from "./components/ui/toaster";
 
@@ -59,6 +61,7 @@ function App() {
           <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
           <Route path="/services" element={<PublicLayout><Services /></PublicLayout>} />
           <Route path="/blog" element={<PublicLayout><Blog /></PublicLayout>} />
+          <Route path="/blog/:slug" element={<PublicLayout><BlogArticle /></PublicLayout>} />
           <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
           <Route path="/adhesion" element={<PublicLayout><Adhesion /></PublicLayout>} />
           
@@ -220,6 +223,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminLayout><AdminMemberships /></AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/blog"
+            element={
+              <ProtectedRoute>
+                <AdminLayout><AdminBlog /></AdminLayout>
               </ProtectedRoute>
             }
           />

@@ -17,7 +17,7 @@ from models import (
     UserCreate, UserLogin, User, UserProfile, TokenResponse, MessageResponse,
     ConversationCreate, Conversation, MessageCreate, Message, ConversationResponse,
     DocumentBase, Document, Resource, Subscription, Invoice,
-    ContactMessage, ContactMessageDB, Article,
+    ContactMessage, ContactMessageDB, Article, ArticleCreate, ArticleUpdate,
     # New models for HelloAsso, Coupons, External API
     Coupon, CouponCreate, CouponValidation, CouponValidationResponse,
     ApiKey, HelloAssoPayment, HelloAssoMember, MembershipVerification,
@@ -28,6 +28,8 @@ from models import (
     # Onboarding models
     OnboardingData, OnboardingCreate, UserOnboarding, OnboardingResponse
 )
+import re
+import unicodedata
 from auth_utils import hash_password, verify_password, create_access_token, decode_access_token
 from helloasso_service import helloasso_service
 from pdf_service import generate_membership_pdf
@@ -68,6 +70,27 @@ EXTERNAL_API_KEY = os.environ.get('EXTERNAL_API_KEY', 'dev_external_key_change_i
 HELLOASSO_WEBHOOK_SECRET = os.environ.get('HELLOASSO_WEBHOOK_SECRET', '')
 
 # ===================== UTILITY FUNCTIONS =====================
+def generate_slug(title: str) -> str:
+    """Génère un slug URL-friendly à partir d'un titre"""
+    # Normaliser les caractères accentués
+    slug = unicodedata.normalize('NFKD', title)
+    slug = slug.encode('ascii', 'ignore').decode('ascii')
+    # Convertir en minuscules
+    slug = slug.lower()
+    # Remplacer les espaces et caractères spéciaux par des tirets
+    slug = re.sub(r'[^a-z0-9]+', '-', slug)
+    # Supprimer les tirets en début/fin
+    slug = slug.strip('-')
+    # Limiter la longueur
+    return slug[:100]
+
+def estimate_read_time(content: str) -> str:
+    """Estime le temps de lecture basé sur le contenu"""
+    # Environ 200 mots par minute
+    words = len(content.split())
+    minutes = max(1, round(words / 200))
+    return f"{minutes} min"
+
 def generate_coupon_code(user_id: str) -> str:
     """Génère un code coupon unique pour un adhérent"""
     random_part = secrets.token_hex(4).upper()
@@ -675,21 +698,461 @@ async def send_contact_message(message_data: ContactMessage):
     logger.info(f"New contact message from: {message_data.email}")
     return {"message": "Message envoyé avec succès"}
 
-# ===================== ARTICLES ROUTES =====================
-@api_router.get("/articles", response_model=List[Article])
+# ===================== ARTICLES / BLOG ROUTES =====================
+
+# --- Routes publiques (lecture) ---
+@api_router.get("/articles")
 async def get_articles(
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    category: Optional[str] = Query(None)
+    category: Optional[str] = Query(None),
+    status: str = Query("published", description="Statut des articles (published par défaut)")
 ):
-    """Get blog articles"""
-    query = {}
+    """
+    Récupère les articles du blog.
+    Par défaut, retourne uniquement les articles publiés.
+    """
+    query = {"status": status}
     if category:
         query["category"] = category
-    
+
+    articles = await db.articles.find(query).sort("publishedAt", -1).skip(offset).limit(limit).to_list(limit)
+    total = await db.articles.count_documents(query)
+
+    return {
+        "articles": articles,
+        "total": total,
+        "limit": limit,
+        "offset": offset
+    }
+
+
+@api_router.get("/articles/categories")
+async def get_article_categories():
+    """Récupère la liste des catégories d'articles"""
+    categories = await db.articles.distinct("category")
+    return {"categories": categories}
+
+
+@api_router.get("/articles/{slug_or_id}")
+async def get_article(slug_or_id: str):
+    """
+    Récupère un article par son slug ou son ID.
+    Incrémente le compteur de vues.
+    """
+    # Chercher par slug d'abord, puis par ID
+    article = await db.articles.find_one({"slug": slug_or_id})
+    if not article:
+        article = await db.articles.find_one({"id": slug_or_id})
+
+    if not article:
+        raise HTTPException(status_code=404, detail="Article non trouvé")
+
+    # Incrémenter les vues
+    await db.articles.update_one(
+        {"id": article["id"]},
+        {"$inc": {"views": 1}}
+    )
+
+    return article
+
+
+# --- Routes Admin (CRUD complet) ---
+@api_router.get("/admin/articles")
+async def admin_list_articles(
+    current_user: dict = Depends(get_admin_user),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    status: Optional[str] = Query(None, description="draft, published, archived"),
+    category: Optional[str] = Query(None),
+    search: Optional[str] = Query(None)
+):
+    """Liste tous les articles (admin) avec filtres"""
+    query = {}
+
+    if status:
+        query["status"] = status
+    if category:
+        query["category"] = category
+    if search:
+        query["$or"] = [
+            {"title": {"$regex": search, "$options": "i"}},
+            {"excerpt": {"$regex": search, "$options": "i"}},
+            {"content": {"$regex": search, "$options": "i"}}
+        ]
+
     articles = await db.articles.find(query).sort("createdAt", -1).skip(offset).limit(limit).to_list(limit)
-    
-    return [Article(**article) for article in articles]
+    total = await db.articles.count_documents(query)
+
+    return {
+        "articles": articles,
+        "total": total,
+        "limit": limit,
+        "offset": offset
+    }
+
+
+@api_router.post("/admin/articles")
+async def admin_create_article(
+    article_data: ArticleCreate,
+    current_user: dict = Depends(get_admin_user)
+):
+    """
+    Crée un nouvel article.
+    Génère automatiquement le slug si non fourni.
+    """
+    try:
+        now = datetime.utcnow()
+
+        # Générer le slug si non fourni
+        slug = article_data.slug or generate_slug(article_data.title)
+
+        # Vérifier l'unicité du slug
+        existing = await db.articles.find_one({"slug": slug})
+        if existing:
+            # Ajouter un suffixe unique
+            slug = f"{slug}-{uuid.uuid4().hex[:6]}"
+
+        # Estimer le temps de lecture si non fourni
+        read_time = article_data.readTime or estimate_read_time(article_data.content)
+
+        # Auteur
+        author = article_data.author or f"{current_user['firstName']} {current_user['lastName']}"
+
+        # Créer l'article
+        article = Article(
+            title=article_data.title,
+            slug=slug,
+            excerpt=article_data.excerpt,
+            content=article_data.content,
+            featuredImage=article_data.featuredImage,
+            category=article_data.category,
+            tags=article_data.tags,
+            status=article_data.status,
+            author=author,
+            authorId=current_user["id"],
+            readTime=read_time,
+            metaTitle=article_data.metaTitle or article_data.title,
+            metaDescription=article_data.metaDescription or article_data.excerpt[:160] if article_data.excerpt else None,
+            publishedAt=now if article_data.status == "published" else None,
+            createdAt=now,
+            updatedAt=now
+        )
+
+        await db.articles.insert_one(article.model_dump())
+
+        logger.info(f"Article créé par {current_user['email']}: {article.title}")
+
+        return {
+            "status": "success",
+            "article": article.model_dump(),
+            "message": "Article créé avec succès"
+        }
+
+    except Exception as e:
+        logger.error(f"Erreur création article: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/admin/articles/{article_id}")
+async def admin_get_article(
+    article_id: str,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Récupère un article pour édition (admin)"""
+    article = await db.articles.find_one({"id": article_id})
+    if not article:
+        raise HTTPException(status_code=404, detail="Article non trouvé")
+    return article
+
+
+@api_router.put("/admin/articles/{article_id}")
+async def admin_update_article(
+    article_id: str,
+    article_data: ArticleUpdate,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Met à jour un article existant"""
+    try:
+        article = await db.articles.find_one({"id": article_id})
+        if not article:
+            raise HTTPException(status_code=404, detail="Article non trouvé")
+
+        now = datetime.utcnow()
+        update_data = {"updatedAt": now}
+
+        # Mettre à jour les champs fournis
+        if article_data.title is not None:
+            update_data["title"] = article_data.title
+            # Mettre à jour le slug si le titre change et pas de slug personnalisé
+            if article_data.slug is None:
+                new_slug = generate_slug(article_data.title)
+                if new_slug != article.get("slug"):
+                    existing = await db.articles.find_one({"slug": new_slug, "id": {"$ne": article_id}})
+                    if existing:
+                        new_slug = f"{new_slug}-{uuid.uuid4().hex[:6]}"
+                    update_data["slug"] = new_slug
+
+        if article_data.slug is not None:
+            # Vérifier l'unicité du slug
+            existing = await db.articles.find_one({"slug": article_data.slug, "id": {"$ne": article_id}})
+            if existing:
+                raise HTTPException(status_code=400, detail="Ce slug est déjà utilisé")
+            update_data["slug"] = article_data.slug
+
+        if article_data.excerpt is not None:
+            update_data["excerpt"] = article_data.excerpt
+        if article_data.content is not None:
+            update_data["content"] = article_data.content
+            # Recalculer le temps de lecture
+            if article_data.readTime is None:
+                update_data["readTime"] = estimate_read_time(article_data.content)
+        if article_data.featuredImage is not None:
+            update_data["featuredImage"] = article_data.featuredImage
+        if article_data.category is not None:
+            update_data["category"] = article_data.category
+        if article_data.tags is not None:
+            update_data["tags"] = article_data.tags
+        if article_data.author is not None:
+            update_data["author"] = article_data.author
+        if article_data.readTime is not None:
+            update_data["readTime"] = article_data.readTime
+        if article_data.metaTitle is not None:
+            update_data["metaTitle"] = article_data.metaTitle
+        if article_data.metaDescription is not None:
+            update_data["metaDescription"] = article_data.metaDescription
+
+        # Gérer le changement de statut
+        if article_data.status is not None:
+            update_data["status"] = article_data.status
+            # Si publié pour la première fois, définir la date de publication
+            if article_data.status == "published" and not article.get("publishedAt"):
+                update_data["publishedAt"] = now
+
+        await db.articles.update_one(
+            {"id": article_id},
+            {"$set": update_data}
+        )
+
+        # Récupérer l'article mis à jour
+        updated_article = await db.articles.find_one({"id": article_id})
+
+        logger.info(f"Article mis à jour par {current_user['email']}: {article_id}")
+
+        return {
+            "status": "success",
+            "article": updated_article,
+            "message": "Article mis à jour avec succès"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur mise à jour article: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.delete("/admin/articles/{article_id}")
+async def admin_delete_article(
+    article_id: str,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Supprime un article"""
+    article = await db.articles.find_one({"id": article_id})
+    if not article:
+        raise HTTPException(status_code=404, detail="Article non trouvé")
+
+    await db.articles.delete_one({"id": article_id})
+
+    logger.info(f"Article supprimé par {current_user['email']}: {article['title']}")
+
+    return {"status": "success", "message": "Article supprimé"}
+
+
+@api_router.post("/admin/articles/{article_id}/publish")
+async def admin_publish_article(
+    article_id: str,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Publie un article (change le statut en 'published')"""
+    article = await db.articles.find_one({"id": article_id})
+    if not article:
+        raise HTTPException(status_code=404, detail="Article non trouvé")
+
+    now = datetime.utcnow()
+    update_data = {
+        "status": "published",
+        "updatedAt": now
+    }
+
+    # Définir la date de publication si c'est la première publication
+    if not article.get("publishedAt"):
+        update_data["publishedAt"] = now
+
+    await db.articles.update_one(
+        {"id": article_id},
+        {"$set": update_data}
+    )
+
+    logger.info(f"Article publié par {current_user['email']}: {article['title']}")
+
+    return {"status": "success", "message": "Article publié"}
+
+
+@api_router.post("/admin/articles/{article_id}/unpublish")
+async def admin_unpublish_article(
+    article_id: str,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Dépublie un article (change le statut en 'draft')"""
+    result = await db.articles.update_one(
+        {"id": article_id},
+        {"$set": {"status": "draft", "updatedAt": datetime.utcnow()}}
+    )
+
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Article non trouvé")
+
+    return {"status": "success", "message": "Article dépublié"}
+
+
+@api_router.post("/admin/articles/{article_id}/duplicate")
+async def admin_duplicate_article(
+    article_id: str,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Duplique un article existant"""
+    article = await db.articles.find_one({"id": article_id})
+    if not article:
+        raise HTTPException(status_code=404, detail="Article non trouvé")
+
+    now = datetime.utcnow()
+
+    # Créer un nouveau slug
+    new_slug = f"{article['slug']}-copie-{uuid.uuid4().hex[:6]}"
+
+    # Créer le nouvel article
+    new_article = Article(
+        title=f"{article['title']} (Copie)",
+        slug=new_slug,
+        excerpt=article.get("excerpt", ""),
+        content=article.get("content", ""),
+        featuredImage=article.get("featuredImage"),
+        category=article.get("category", ""),
+        tags=article.get("tags"),
+        status="draft",  # Toujours en brouillon
+        author=f"{current_user['firstName']} {current_user['lastName']}",
+        authorId=current_user["id"],
+        readTime=article.get("readTime", "5 min"),
+        metaTitle=article.get("metaTitle"),
+        metaDescription=article.get("metaDescription"),
+        createdAt=now,
+        updatedAt=now
+    )
+
+    await db.articles.insert_one(new_article.model_dump())
+
+    return {
+        "status": "success",
+        "article": new_article.model_dump(),
+        "message": "Article dupliqué"
+    }
+
+
+# --- Upload d'images pour les articles ---
+@api_router.post("/admin/articles/upload-image")
+async def admin_upload_article_image(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_admin_user)
+):
+    """
+    Upload une image pour un article.
+    Retourne l'URL de l'image uploadée.
+    """
+    try:
+        # Vérifier le type de fichier
+        allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+        if file.content_type not in allowed_types:
+            raise HTTPException(status_code=400, detail="Type de fichier non autorisé. Utilisez JPEG, PNG, GIF ou WebP.")
+
+        # Créer le dossier d'upload s'il n'existe pas
+        upload_dir = Path("uploads/articles")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+
+        # Générer un nom de fichier unique
+        file_extension = Path(file.filename).suffix
+        unique_filename = f"{uuid.uuid4().hex}{file_extension}"
+        file_path = upload_dir / unique_filename
+
+        # Sauvegarder le fichier
+        content = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+
+        # Retourner l'URL relative
+        image_url = f"/uploads/articles/{unique_filename}"
+
+        logger.info(f"Image uploadée par {current_user['email']}: {image_url}")
+
+        return {
+            "status": "success",
+            "url": image_url,
+            "filename": unique_filename
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur upload image: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/admin/articles/upload-file")
+async def admin_upload_article_file(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_admin_user)
+):
+    """
+    Upload un fichier (PDF, etc.) pour un article.
+    """
+    try:
+        # Vérifier le type de fichier
+        allowed_types = ["application/pdf", "application/msword",
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+        if file.content_type not in allowed_types:
+            raise HTTPException(status_code=400, detail="Type de fichier non autorisé. Utilisez PDF ou Word.")
+
+        # Créer le dossier d'upload
+        upload_dir = Path("uploads/articles/files")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+
+        # Générer un nom de fichier unique
+        file_extension = Path(file.filename).suffix
+        unique_filename = f"{uuid.uuid4().hex}{file_extension}"
+        file_path = upload_dir / unique_filename
+
+        # Sauvegarder le fichier
+        content = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+
+        # Calculer la taille
+        size = len(content)
+        size_str = f"{size / 1024:.0f} KB" if size < 1024 * 1024 else f"{size / (1024 * 1024):.1f} MB"
+
+        return {
+            "status": "success",
+            "url": f"/uploads/articles/files/{unique_filename}",
+            "filename": file.filename,
+            "size": size_str,
+            "type": file.content_type
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur upload fichier: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ===================== HELLOASSO WEBHOOK =====================
 @api_router.post("/webhooks/helloasso")
