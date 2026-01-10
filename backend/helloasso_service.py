@@ -397,7 +397,10 @@ class HelloAssoService:
             if org_info:
                 return {
                     "connected": True,
-                    "organization": org_info.get("name"),
+                    "organization": {
+                        "name": org_info.get("name"),
+                        "slug": org_info.get("organizationSlug", HELLOASSO_ORGANIZATION_SLUG)
+                    },
                     "token_expires_at": self.token_expires_at.isoformat() if self.token_expires_at else None
                 }
             else:

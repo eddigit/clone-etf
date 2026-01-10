@@ -161,9 +161,10 @@ const AdminDashboard = () => {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <img 
-                  src="https://www.helloasso.com/assets/img/logos/ha-logo.svg" 
+                  src="https://cdn.helloasso.com/img/logos/ha-logo.svg" 
                   alt="HelloAsso" 
                   className="h-6"
+                  onError={(e) => { e.target.style.display = 'none' }}
                 />
                 Connexion HelloAsso
               </CardTitle>

@@ -175,9 +175,10 @@ const AdminHelloAsso = () => {
           </div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
             <img 
-              src="https://www.helloasso.com/assets/img/logos/ha-logo.svg" 
+              src="https://cdn.helloasso.com/img/logos/ha-logo.svg" 
               alt="HelloAsso" 
               className="h-8"
+              onError={(e) => { e.target.style.display = 'none' }}
             />
             Intégration HelloAsso
           </h1>
