@@ -41,6 +41,7 @@ const Cases = () => {
 
   useEffect(() => {
     fetchCases();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, categoryFilter]);
 
   const fetchCases = async () => {

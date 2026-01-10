@@ -21,6 +21,7 @@ const Members = () => {
 
   useEffect(() => {
     fetchMembers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, membershipType, location]);
 
   const fetchMembers = async () => {
