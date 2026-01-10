@@ -515,6 +515,112 @@ const AdminMembers = () => {
                   </div>
                 </div>
               )}
+
+              {/* Onboarding Data */}
+              {selectedMember.onboarding?.onboarding_data && (
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-3 flex items-center">
+                    <span className="mr-2">📋</span> Profil Onboarding
+                  </h4>
+                  <div className="space-y-4 text-sm">
+                    {/* Statut et profil */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-gray-500">Type de membre</label>
+                        <p className="font-medium capitalize">
+                          {selectedMember.onboarding.onboarding_data.member_status?.replace('_', ' ') || '-'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-gray-500">Secteur d'activité</label>
+                        <p className="font-medium">
+                          {selectedMember.onboarding.onboarding_data.activity_sector || '-'}
+                        </p>
+                      </div>
+                      {selectedMember.onboarding.onboarding_data.company_size && (
+                        <div>
+                          <label className="text-gray-500">Taille entreprise</label>
+                          <p className="font-medium">
+                            {selectedMember.onboarding.onboarding_data.company_size}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Motivations */}
+                    {selectedMember.onboarding.onboarding_data.motivations?.length > 0 && (
+                      <div>
+                        <label className="text-gray-500">Motivations</label>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {selectedMember.onboarding.onboarding_data.motivations.map((m, i) => (
+                            <Badge key={i} variant="outline" className="text-xs">
+                              {m === 'besoin_aide' && '🆘 Besoin d\'aide'}
+                              {m === 'soutenir_cause' && '❤️ Soutenir la cause'}
+                              {m === 'reseau' && '🤝 Réseau'}
+                              {m === 'veille_juridique' && '⚖️ Veille juridique'}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Défis */}
+                    {selectedMember.onboarding.onboarding_data.main_challenges && (
+                      <div>
+                        <label className="text-gray-500">Situation / Défis</label>
+                        <p className="mt-1 p-2 bg-gray-50 rounded text-gray-700 italic">
+                          "{selectedMember.onboarding.onboarding_data.main_challenges}"
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Attentes */}
+                    {selectedMember.onboarding.onboarding_data.expectations?.length > 0 && (
+                      <div>
+                        <label className="text-gray-500">Attentes / Services souhaités</label>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {selectedMember.onboarding.onboarding_data.expectations.map((e, i) => (
+                            <Badge key={i} variant="secondary" className="text-xs">
+                              {e === 'ia_assistant' && '🤖 IA'}
+                              {e === 'soutien_numerique' && '💻 Numérique'}
+                              {e === 'dossiers' && '📁 Dossiers'}
+                              {e === 'litiges' && '⚖️ Litiges'}
+                              {e === 'formation' && '🎓 Formation'}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Comment découvert */}
+                    {selectedMember.onboarding.onboarding_data.how_discovered && (
+                      <div>
+                        <label className="text-gray-500">Comment nous a connu</label>
+                        <p className="font-medium capitalize">
+                          {selectedMember.onboarding.onboarding_data.how_discovered.replace('_', ' ')}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Date de complétion */}
+                    {selectedMember.onboarding.onboarding_data.completed_at && (
+                      <div className="text-xs text-gray-400 pt-2 border-t">
+                        Onboarding complété le {formatDate(selectedMember.onboarding.onboarding_data.completed_at)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Message si pas d'onboarding */}
+              {!selectedMember.onboarding?.is_completed && (
+                <div className="border-t pt-4">
+                  <div className="flex items-center p-3 bg-yellow-50 rounded-lg text-sm text-yellow-800">
+                    <span className="mr-2">⚠️</span>
+                    Cet adhérent n'a pas encore complété son profil d'onboarding
+                  </div>
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>

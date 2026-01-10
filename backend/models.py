@@ -564,3 +564,54 @@ class UserProfileUpdate(BaseModel):
     expertise: Optional[List[str]] = None
     location: Optional[str] = None
     isProfilePublic: Optional[bool] = None
+
+
+# ===================== ONBOARDING MODELS =====================
+class OnboardingData(BaseModel):
+    """Données d'onboarding de l'adhérent"""
+    # Slide 1: Statut/Profil
+    member_status: str  # "particulier" | "commercant" | "artisan" | "grande_entreprise" | "association"
+    activity_sector: Optional[str] = None  # Secteur d'activité
+    company_size: Optional[str] = None  # "solo" | "1-10" | "11-50" | "50+"
+    
+    # Slide 2: Motivations
+    motivations: List[str] = []  # ["besoin_aide", "soutenir_cause", "reseau", "veille_juridique"]
+    main_challenges: Optional[str] = None  # Description libre des défis
+    
+    # Slide 3: Attentes
+    expectations: List[str] = []  # ["ia_assistant", "soutien_numerique", "dossiers", "litiges", "formation"]
+    priority_services: Optional[List[str]] = None  # Services prioritaires classés
+    how_discovered: Optional[str] = None  # Comment a-t-il connu l'association
+    
+    # Métadonnées
+    completed_at: Optional[datetime] = None
+    version: str = "1.0"  # Pour gérer les évolutions futures
+
+class OnboardingCreate(BaseModel):
+    """Création/Mise à jour de l'onboarding"""
+    member_status: str
+    activity_sector: Optional[str] = None
+    company_size: Optional[str] = None
+    motivations: List[str] = []
+    main_challenges: Optional[str] = None
+    expectations: List[str] = []
+    priority_services: Optional[List[str]] = None
+    how_discovered: Optional[str] = None
+
+class UserOnboarding(BaseModel):
+    """Onboarding associé à un utilisateur"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    onboarding_data: OnboardingData
+    is_completed: bool = False
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class OnboardingResponse(BaseModel):
+    """Réponse avec les données d'onboarding"""
+    id: str
+    user_id: str
+    onboarding_data: OnboardingData
+    is_completed: bool
+    created_at: datetime
+    updated_at: datetime

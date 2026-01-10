@@ -3,6 +3,8 @@ import DashboardLayout from '../../components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import Onboarding from '../../components/Onboarding';
 import {
   Bot,
   FileText,
@@ -13,37 +15,43 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
-  XCircle
+  XCircle,
+  Sparkles
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import API_URL from '../../config/api';
+import API from '../../config/api';
 
 const DashboardHome = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(true);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/users/profile`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setProfile(data);
+        
+        // Récupérer le profil
+        const profileRes = await API.get('/api/users/profile');
+        setProfile(profileRes.data);
+        
+        // Vérifier l'onboarding
+        const onboardingRes = await API.get('/api/users/onboarding/check');
+        setOnboardingCompleted(onboardingRes.data.is_completed);
+        
+        // Si onboarding non complété, afficher le modal après un court délai
+        if (!onboardingRes.data.is_completed) {
+          setTimeout(() => setShowOnboarding(true), 1000);
         }
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchProfile();
+    fetchData();
   }, []);
 
   const getMembershipTypeLabel = (type) => {
@@ -138,9 +146,49 @@ const DashboardHome = () => {
     }
   ];
 
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    setOnboardingCompleted(true);
+  };
+
   return (
     <DashboardLayout>
+      {/* Modal d'onboarding */}
+      <Dialog open={showOnboarding} onOpenChange={setShowOnboarding}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <Onboarding onComplete={handleOnboardingComplete} isModal={true} />
+        </DialogContent>
+      </Dialog>
+
       <div className="p-6 md:p-8 space-y-8">
+        {/* Bannière d'onboarding si non complété */}
+        {!onboardingCompleted && !showOnboarding && (
+          <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+            <CardContent className="py-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                    <Sparkles className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Complétez votre profil !</h3>
+                    <p className="text-white/80 text-sm">
+                      Aidez-nous à personnaliser votre expérience en répondant à quelques questions
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  variant="secondary" 
+                  onClick={() => setShowOnboarding(true)}
+                  className="bg-white text-blue-600 hover:bg-blue-50"
+                >
+                  Compléter maintenant
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Tableau de bord</h1>

@@ -24,7 +24,9 @@ from models import (
     AdminStats, MemberListItem,
     # Membership models
     MemberData, MembershipCreate, Membership, MembershipResponse,
-    AdminMembershipCreate, AdminMembershipUpdate
+    AdminMembershipCreate, AdminMembershipUpdate,
+    # Onboarding models
+    OnboardingData, OnboardingCreate, UserOnboarding, OnboardingResponse
 )
 from auth_utils import hash_password, verify_password, create_access_token, decode_access_token
 from helloasso_service import helloasso_service
@@ -303,6 +305,118 @@ async def update_profile(
     
     updated_user = await db.users.find_one({"id": current_user["id"]})
     return UserProfile(**updated_user)
+
+
+# ===================== ONBOARDING ROUTES =====================
+@api_router.get("/users/onboarding")
+async def get_onboarding(current_user: dict = Depends(get_current_user)):
+    """Récupère les données d'onboarding de l'utilisateur"""
+    onboarding = await db.user_onboarding.find_one({"user_id": current_user["id"]})
+    
+    if not onboarding:
+        return {
+            "is_completed": False,
+            "onboarding_data": None
+        }
+    
+    return {
+        "id": onboarding.get("id"),
+        "user_id": onboarding.get("user_id"),
+        "onboarding_data": onboarding.get("onboarding_data"),
+        "is_completed": onboarding.get("is_completed", False),
+        "created_at": onboarding.get("created_at"),
+        "updated_at": onboarding.get("updated_at")
+    }
+
+
+@api_router.post("/users/onboarding")
+async def save_onboarding(
+    onboarding_data: OnboardingCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Sauvegarde ou met à jour les données d'onboarding"""
+    now = datetime.utcnow()
+    
+    # Préparer les données d'onboarding
+    data = OnboardingData(
+        member_status=onboarding_data.member_status,
+        activity_sector=onboarding_data.activity_sector,
+        company_size=onboarding_data.company_size,
+        motivations=onboarding_data.motivations,
+        main_challenges=onboarding_data.main_challenges,
+        expectations=onboarding_data.expectations,
+        priority_services=onboarding_data.priority_services,
+        how_discovered=onboarding_data.how_discovered,
+        completed_at=now
+    )
+    
+    # Vérifier si un onboarding existe déjà
+    existing = await db.user_onboarding.find_one({"user_id": current_user["id"]})
+    
+    if existing:
+        # Mise à jour
+        await db.user_onboarding.update_one(
+            {"user_id": current_user["id"]},
+            {
+                "$set": {
+                    "onboarding_data": data.model_dump(),
+                    "is_completed": True,
+                    "updated_at": now
+                }
+            }
+        )
+        logger.info(f"Onboarding updated for user: {current_user['email']}")
+    else:
+        # Création
+        onboarding = UserOnboarding(
+            user_id=current_user["id"],
+            onboarding_data=data,
+            is_completed=True,
+            created_at=now,
+            updated_at=now
+        )
+        await db.user_onboarding.insert_one(onboarding.model_dump())
+        logger.info(f"Onboarding created for user: {current_user['email']}")
+    
+    # Mettre à jour le profil utilisateur avec le statut membre
+    member_status_to_type = {
+        "particulier": "individual",
+        "commercant": "professional",
+        "artisan": "professional",
+        "grande_entreprise": "professional_plus",
+        "association": "association"
+    }
+    
+    membership_type = member_status_to_type.get(onboarding_data.member_status, "individual")
+    
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {
+            "$set": {
+                "membershipType": membership_type,
+                "businessType": onboarding_data.activity_sector,
+                "onboardingCompleted": True,
+                "updatedAt": now
+            }
+        }
+    )
+    
+    return {
+        "message": "Onboarding enregistré avec succès",
+        "is_completed": True
+    }
+
+
+@api_router.get("/users/onboarding/check")
+async def check_onboarding_status(current_user: dict = Depends(get_current_user)):
+    """Vérifie si l'utilisateur a complété l'onboarding"""
+    onboarding = await db.user_onboarding.find_one({"user_id": current_user["id"]})
+    
+    return {
+        "is_completed": onboarding.get("is_completed", False) if onboarding else False,
+        "user_id": current_user["id"]
+    }
+
 
 # ===================== AI ASSISTANT ROUTES =====================
 @api_router.post("/ai/conversations", response_model=ConversationResponse)
@@ -1155,7 +1269,7 @@ async def get_admin_member_detail(
     member_id: str,
     current_user: dict = Depends(get_admin_user)
 ):
-    """Détail complet d'un membre"""
+    """Détail complet d'un membre avec onboarding"""
     user = await db.users.find_one({"id": member_id})
     if not user:
         raise HTTPException(status_code=404, detail="Membre non trouvé")
@@ -1166,13 +1280,17 @@ async def get_admin_member_detail(
     # Récupérer les paiements HelloAsso
     payments = await db.helloasso_payments.find({"email": user["email"]}).to_list(100)
     
+    # Récupérer les données d'onboarding
+    onboarding = await db.user_onboarding.find_one({"user_id": member_id})
+    
     # Retirer le mot de passe
     user.pop("password", None)
     
     return {
         "user": user,
         "coupons": coupons,
-        "payments": payments
+        "payments": payments,
+        "onboarding": onboarding
     }
 
 @api_router.post("/admin/members/{member_id}/generate-coupon")

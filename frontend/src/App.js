@@ -23,6 +23,7 @@ import Members from "./pages/dashboard/Members";
 import Community from "./pages/dashboard/Community";
 import Messages from "./pages/dashboard/Messages";
 import Cases from "./pages/dashboard/Cases";
+import OnboardingPage from "./pages/dashboard/Onboarding";
 // Admin imports
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -153,6 +154,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/onboarding"
+            element={
+              <ProtectedRoute>
+                <OnboardingPage />
               </ProtectedRoute>
             }
           />
