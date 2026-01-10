@@ -316,14 +316,18 @@ class Membership(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
     year: int  # 2026
-    status: str = "pending"  # "pending" | "paid" | "cancelled"
+    status: str = "pending"  # "pending" | "paid" | "cancelled" | "expired"
     amount: float
     membership_type: str  # "individual" | "professional" | "professional_plus" | "association"
+    payment_method: str = "helloasso"  # "helloasso" | "cheque" | "virement" | "especes"
     payment_id: Optional[str] = None  # ID HelloAsso
     helloasso_order_id: Optional[str] = None
+    payment_reference: Optional[str] = None  # Référence chèque/virement
+    payment_date: Optional[datetime] = None  # Date de réception du paiement
     member_data: MemberData
     pdf_path: Optional[str] = None
     pdf_generated_at: Optional[datetime] = None
+    notes: Optional[str] = None  # Notes admin
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -334,10 +338,40 @@ class MembershipResponse(BaseModel):
     status: str
     amount: float
     membership_type: str
+    payment_method: str = "helloasso"
+    payment_reference: Optional[str] = None
+    payment_date: Optional[datetime] = None
     member_data: MemberData
     pdf_available: bool
+    notes: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+
+class AdminMembershipCreate(BaseModel):
+    """Création d'une adhésion par l'admin (paiement manuel)"""
+    user_email: EmailStr  # Email de l'adhérent (existant ou nouveau)
+    first_name: str
+    last_name: str
+    phone: Optional[str] = None
+    membership_type: str  # "individual" | "professional" | "professional_plus" | "association"
+    amount: float
+    payment_method: str = "cheque"  # "cheque" | "virement" | "especes"
+    payment_reference: Optional[str] = None  # Numéro chèque, référence virement
+    payment_date: Optional[datetime] = None
+    year: Optional[int] = None  # Année d'adhésion (défaut: année en cours)
+    status: str = "paid"  # Généralement "paid" pour paiement manuel
+    notes: Optional[str] = None
+    member_data: Optional[MemberData] = None  # Optionnel, sera créé si absent
+
+class AdminMembershipUpdate(BaseModel):
+    """Mise à jour d'une adhésion par l'admin"""
+    status: Optional[str] = None  # "pending" | "paid" | "cancelled" | "expired"
+    payment_method: Optional[str] = None
+    payment_reference: Optional[str] = None
+    payment_date: Optional[datetime] = None
+    amount: Optional[float] = None
+    notes: Optional[str] = None
+    membership_end_date: Optional[datetime] = None  # Pour prolonger l'adhésion
 
 # ===================== COMMUNITY MODELS =====================
 

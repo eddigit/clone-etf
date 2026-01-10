@@ -26,6 +26,7 @@ import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminMembers from "./pages/admin/AdminMembers";
 import AdminHelloAsso from "./pages/admin/AdminHelloAsso";
+import AdminMemberships from "./pages/admin/AdminMemberships";
 import NotFound from "./pages/NotFound";
 import { Toaster } from "./components/ui/toaster";
 
@@ -198,6 +199,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminLayout><AdminHelloAsso /></AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/adhesions"
+            element={
+              <ProtectedRoute>
+                <AdminLayout><AdminMemberships /></AdminLayout>
               </ProtectedRoute>
             }
           />

@@ -10,7 +10,8 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronLeft
+  ChevronLeft,
+  FileText
 } from 'lucide-react';
 
 const AdminLayout = ({ children }) => {
@@ -27,10 +28,11 @@ const AdminLayout = ({ children }) => {
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
-    { icon: Users, label: 'Adhérents', path: '/admin/members' },
+    { icon: Users, label: 'Adherents', path: '/admin/members' },
+    { icon: FileText, label: 'Adhesions', path: '/admin/adhesions' },
     { icon: Gift, label: 'Coupons', path: '/admin/coupons' },
     { icon: CreditCard, label: 'HelloAsso', path: '/admin/helloasso' },
-    { icon: Settings, label: 'Paramètres', path: '/admin/settings' }
+    { icon: Settings, label: 'Parametres', path: '/admin/settings' }
   ];
 
   const isActive = (path) => location.pathname === path;

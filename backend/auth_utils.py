@@ -4,8 +4,9 @@ from datetime import datetime, timedelta
 from typing import Optional
 import os
 
-SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your-secret-key-change-in-production')
-ALGORITHM = 'HS256'
+# Support both JWT_SECRET and JWT_SECRET_KEY for compatibility
+SECRET_KEY = os.environ.get('JWT_SECRET', os.environ.get('JWT_SECRET_KEY', 'your-secret-key-change-in-production'))
+ALGORITHM = os.environ.get('JWT_ALGORITHM', 'HS256')
 ACCESS_TOKEN_EXPIRE_DAYS = 7
 
 def hash_password(password: str) -> str:
@@ -37,5 +38,10 @@ def decode_access_token(token: str) -> Optional[dict]:
         return payload
     except jwt.ExpiredSignatureError:
         return None
-    except jwt.JWTError:
+    except jwt.InvalidSignatureError:
+        return None
+    except jwt.DecodeError:
+        return None
+    except Exception:
+        # Catch any other JWT related errors
         return None

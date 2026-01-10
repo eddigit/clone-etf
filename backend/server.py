@@ -15,14 +15,15 @@ import hashlib
 from models import (
     UserCreate, UserLogin, User, UserProfile, TokenResponse, MessageResponse,
     ConversationCreate, Conversation, MessageCreate, Message, ConversationResponse,
-    DocumentBase, Document, Resource, Subscription, Invoice, 
+    DocumentBase, Document, Resource, Subscription, Invoice,
     ContactMessage, ContactMessageDB, Article,
     # New models for HelloAsso, Coupons, External API
     Coupon, CouponCreate, CouponValidation, CouponValidationResponse,
     ApiKey, HelloAssoPayment, HelloAssoMember, MembershipVerification,
     AdminStats, MemberListItem,
     # Membership models
-    MemberData, MembershipCreate, Membership, MembershipResponse
+    MemberData, MembershipCreate, Membership, MembershipResponse,
+    AdminMembershipCreate, AdminMembershipUpdate
 )
 from auth_utils import hash_password, verify_password, create_access_token, decode_access_token
 from helloasso_service import helloasso_service
@@ -1099,17 +1100,355 @@ async def admin_update_member_status(
     """Met à jour le statut d'adhésion d'un membre"""
     if status not in ["active", "expired"]:
         raise HTTPException(status_code=400, detail="Statut invalide")
-    
+
     result = await db.users.update_one(
         {"id": member_id},
         {"$set": {"membershipStatus": status, "updatedAt": datetime.utcnow()}}
     )
-    
+
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Membre non trouvé")
-    
+
     logger.info(f"Admin {current_user['email']} updated status of {member_id} to {status}")
     return {"status": "success", "newStatus": status}
+
+# ===================== ADMIN MEMBERSHIP MANAGEMENT =====================
+
+@api_router.post("/admin/memberships")
+async def admin_create_membership(
+    data: AdminMembershipCreate,
+    current_user: dict = Depends(get_admin_user)
+):
+    """
+    Crée une adhésion manuellement (paiement chèque, virement, espèces).
+    Crée l'utilisateur s'il n'existe pas.
+    """
+    try:
+        now = datetime.utcnow()
+        year = data.year or now.year
+        email = data.user_email.lower().strip()
+
+        # Vérifier si l'utilisateur existe
+        existing_user = await db.users.find_one({"email": email})
+
+        if existing_user:
+            user_id = existing_user["id"]
+            # Vérifier s'il a déjà une adhésion pour cette année
+            existing_membership = await db.memberships.find_one({
+                "user_id": user_id,
+                "year": year,
+                "status": {"$nin": ["cancelled"]}
+            })
+            if existing_membership:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Cet adhérent a déjà une adhésion pour {year}"
+                )
+        else:
+            # Créer l'utilisateur
+            temp_password = secrets.token_urlsafe(12)
+            new_user = User(
+                email=email,
+                firstName=data.first_name,
+                lastName=data.last_name,
+                phone=data.phone,
+                password=hash_password(temp_password),
+                membershipType=data.membership_type,
+                membershipStatus="active" if data.status == "paid" else "pending",
+                membershipStartDate=data.payment_date or now,
+                membershipEndDate=(data.payment_date or now) + timedelta(days=365)
+            )
+            await db.users.insert_one(new_user.model_dump())
+            user_id = new_user.id
+            logger.info(f"Admin created new user {email} for manual membership")
+
+        # Créer les données membre si non fournies
+        if data.member_data:
+            member_data = data.member_data
+        else:
+            member_data = MemberData(
+                nom=data.last_name,
+                prenom=data.first_name,
+                email=email,
+                telephone=data.phone or "",
+                adresse_commerciale="",
+                code_postal="",
+                ville=""
+            )
+
+        # Créer l'adhésion
+        membership = Membership(
+            user_id=user_id,
+            year=year,
+            status=data.status,
+            amount=data.amount,
+            membership_type=data.membership_type,
+            payment_method=data.payment_method,
+            payment_reference=data.payment_reference,
+            payment_date=data.payment_date or now,
+            member_data=member_data,
+            notes=data.notes
+        )
+
+        await db.memberships.insert_one(membership.model_dump())
+
+        # Si payé, mettre à jour le statut utilisateur
+        if data.status == "paid":
+            end_date = (data.payment_date or now) + timedelta(days=365)
+            await db.users.update_one(
+                {"id": user_id},
+                {
+                    "$set": {
+                        "membershipStatus": "active",
+                        "membershipType": data.membership_type,
+                        "membershipStartDate": data.payment_date or now,
+                        "membershipEndDate": end_date,
+                        "updatedAt": now
+                    }
+                }
+            )
+
+            # Générer un coupon
+            existing_coupon = await db.coupons.find_one({
+                "userId": user_id,
+                "isActive": True,
+                "validUntil": {"$gt": now}
+            })
+
+            if not existing_coupon:
+                coupon = Coupon(
+                    code=generate_coupon_code(user_id),
+                    userId=user_id,
+                    userEmail=email,
+                    discountType="percentage",
+                    discountValue=20.0,
+                    applicableTo=["website", "coaching"],
+                    maxUses=10,
+                    validFrom=now,
+                    validUntil=end_date
+                )
+                await db.coupons.insert_one(coupon.model_dump())
+
+        logger.info(f"Admin {current_user['email']} created manual membership for {email} ({data.payment_method})")
+
+        return {
+            "status": "success",
+            "membership_id": membership.id,
+            "user_id": user_id,
+            "message": f"Adhésion créée pour {email}"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating manual membership: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/admin/memberships")
+async def admin_list_memberships(
+    current_user: dict = Depends(get_admin_user),
+    year: Optional[int] = Query(None, description="Année"),
+    status: Optional[str] = Query(None, description="pending, paid, cancelled, expired"),
+    payment_method: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0)
+):
+    """Liste toutes les adhésions avec filtres"""
+    query = {}
+
+    if year:
+        query["year"] = year
+    if status:
+        query["status"] = status
+    if payment_method:
+        query["payment_method"] = payment_method
+
+    memberships = await db.memberships.find(query).sort("created_at", -1).skip(offset).limit(limit).to_list(limit)
+    total = await db.memberships.count_documents(query)
+
+    # Enrichir avec les données utilisateur
+    result = []
+    for m in memberships:
+        user = await db.users.find_one({"id": m["user_id"]})
+        result.append({
+            **m,
+            "user_email": user["email"] if user else "N/A",
+            "user_name": f"{user['firstName']} {user['lastName']}" if user else "N/A"
+        })
+
+    return {
+        "memberships": result,
+        "total": total,
+        "limit": limit,
+        "offset": offset
+    }
+
+
+@api_router.put("/admin/memberships/{membership_id}")
+async def admin_update_membership(
+    membership_id: str,
+    data: AdminMembershipUpdate,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Met à jour une adhésion (statut, dates, paiement)"""
+    try:
+        membership = await db.memberships.find_one({"id": membership_id})
+        if not membership:
+            raise HTTPException(status_code=404, detail="Adhésion non trouvée")
+
+        now = datetime.utcnow()
+        update_data = {"updated_at": now}
+
+        if data.status:
+            update_data["status"] = data.status
+        if data.payment_method:
+            update_data["payment_method"] = data.payment_method
+        if data.payment_reference:
+            update_data["payment_reference"] = data.payment_reference
+        if data.payment_date:
+            update_data["payment_date"] = data.payment_date
+        if data.amount is not None:
+            update_data["amount"] = data.amount
+        if data.notes is not None:
+            update_data["notes"] = data.notes
+
+        await db.memberships.update_one(
+            {"id": membership_id},
+            {"$set": update_data}
+        )
+
+        # Si le statut passe à "paid", mettre à jour l'utilisateur
+        if data.status == "paid":
+            user = await db.users.find_one({"id": membership["user_id"]})
+            if user:
+                end_date = data.membership_end_date or (now + timedelta(days=365))
+                await db.users.update_one(
+                    {"id": membership["user_id"]},
+                    {
+                        "$set": {
+                            "membershipStatus": "active",
+                            "membershipEndDate": end_date,
+                            "updatedAt": now
+                        }
+                    }
+                )
+
+                # Générer coupon si nécessaire
+                existing_coupon = await db.coupons.find_one({
+                    "userId": user["id"],
+                    "isActive": True,
+                    "validUntil": {"$gt": now}
+                })
+
+                if not existing_coupon:
+                    coupon = Coupon(
+                        code=generate_coupon_code(user["id"]),
+                        userId=user["id"],
+                        userEmail=user["email"],
+                        discountType="percentage",
+                        discountValue=20.0,
+                        applicableTo=["website", "coaching"],
+                        maxUses=10,
+                        validFrom=now,
+                        validUntil=end_date
+                    )
+                    await db.coupons.insert_one(coupon.model_dump())
+
+        # Si prolongation de la date de fin
+        if data.membership_end_date:
+            await db.users.update_one(
+                {"id": membership["user_id"]},
+                {"$set": {"membershipEndDate": data.membership_end_date, "updatedAt": now}}
+            )
+
+        logger.info(f"Admin {current_user['email']} updated membership {membership_id}")
+        return {"status": "success", "message": "Adhésion mise à jour"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating membership: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/admin/memberships/renewals")
+async def admin_get_renewals(
+    current_user: dict = Depends(get_admin_user),
+    days: int = Query(30, description="Nombre de jours avant expiration")
+):
+    """
+    Liste les adhésions à renouveler (expirant dans X jours).
+    Utile pour les campagnes de renouvellement.
+    """
+    now = datetime.utcnow()
+    expiry_threshold = now + timedelta(days=days)
+
+    # Trouver les utilisateurs dont l'adhésion expire bientôt
+    expiring_users = await db.users.find({
+        "role": "user",
+        "membershipStatus": "active",
+        "membershipEndDate": {
+            "$gte": now,
+            "$lte": expiry_threshold
+        }
+    }).to_list(500)
+
+    # Trouver les utilisateurs déjà expirés
+    expired_users = await db.users.find({
+        "role": "user",
+        "membershipStatus": {"$in": ["active", "expired"]},
+        "membershipEndDate": {"$lt": now}
+    }).to_list(500)
+
+    # Mettre à jour les statuts des expirés
+    for user in expired_users:
+        if user.get("membershipStatus") == "active":
+            await db.users.update_one(
+                {"id": user["id"]},
+                {"$set": {"membershipStatus": "expired", "updatedAt": now}}
+            )
+
+    # Construire la réponse
+    result = {
+        "expiring_soon": [],
+        "expired": [],
+        "stats": {
+            "expiring_count": len(expiring_users),
+            "expired_count": len(expired_users),
+            "threshold_days": days
+        }
+    }
+
+    for user in expiring_users:
+        days_left = (user["membershipEndDate"] - now).days if user.get("membershipEndDate") else 0
+        result["expiring_soon"].append({
+            "user_id": user["id"],
+            "email": user["email"],
+            "name": f"{user['firstName']} {user['lastName']}",
+            "membership_type": user.get("membershipType"),
+            "end_date": user.get("membershipEndDate"),
+            "days_left": days_left
+        })
+
+    for user in expired_users:
+        days_expired = (now - user["membershipEndDate"]).days if user.get("membershipEndDate") else 0
+        result["expired"].append({
+            "user_id": user["id"],
+            "email": user["email"],
+            "name": f"{user['firstName']} {user['lastName']}",
+            "membership_type": user.get("membershipType"),
+            "end_date": user.get("membershipEndDate"),
+            "days_expired": days_expired
+        })
+
+    # Trier par urgence
+    result["expiring_soon"].sort(key=lambda x: x["days_left"])
+    result["expired"].sort(key=lambda x: x["days_expired"], reverse=True)
+
+    return result
+
 
 @api_router.post("/admin/api-keys")
 async def create_api_key(
