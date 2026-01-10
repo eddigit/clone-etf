@@ -99,6 +99,7 @@ const AdminMembers = () => {
   };
 
   const fetchMemberDetails = async (memberId) => {
+    console.log('fetchMemberDetails called with:', memberId);
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/admin/members/${memberId}`, {
@@ -110,15 +111,21 @@ const AdminMembers = () => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Member details:', data);
         setSelectedMember(data);
         setShowDetails(true);
+      } else {
+        console.error('Failed to fetch member:', response.status);
+        alert('Erreur lors du chargement des détails du membre');
       }
     } catch (error) {
       console.error('Error fetching member details:', error);
+      alert('Erreur: ' + error.message);
     }
   };
 
   const handleStatusChange = async (memberId, newStatus) => {
+    console.log('handleStatusChange called:', memberId, newStatus);
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/admin/members/${memberId}/status?status=${newStatus}`, {
@@ -130,14 +137,20 @@ const AdminMembers = () => {
       });
 
       if (response.ok) {
+        alert('Statut mis à jour avec succès');
         fetchMembers();
+      } else {
+        console.error('Failed to update status:', response.status);
+        alert('Erreur lors de la mise à jour du statut');
       }
     } catch (error) {
       console.error('Error updating status:', error);
+      alert('Erreur: ' + error.message);
     }
   };
 
   const handleGenerateCoupon = async (memberId) => {
+    console.log('handleGenerateCoupon called:', memberId);
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/admin/members/${memberId}/generate-coupon`, {
@@ -156,11 +169,15 @@ const AdminMembers = () => {
 
       if (response.ok) {
         const data = await response.json();
-        alert(`Coupon cree: ${data.coupon.code}`);
+        alert(`Coupon créé: ${data.coupon.code}`);
         fetchMembers();
+      } else {
+        console.error('Failed to generate coupon:', response.status);
+        alert('Erreur lors de la création du coupon');
       }
     } catch (error) {
       console.error('Error generating coupon:', error);
+      alert('Erreur: ' + error.message);
     }
   };
 
@@ -340,7 +357,11 @@ const AdminMembers = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleSendWelcomeEmail(member.id, member.email)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log('Mail button clicked');
+                              handleSendWelcomeEmail(member.id, member.email);
+                            }}
                             title="Envoyer email de bienvenue"
                             className="text-blue-600"
                           >
@@ -349,7 +370,11 @@ const AdminMembers = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => fetchMemberDetails(member.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log('Eye button clicked for member:', member.id);
+                              fetchMemberDetails(member.id);
+                            }}
                             title="Voir details"
                           >
                             <Eye className="h-4 w-4" />
@@ -357,7 +382,9 @@ const AdminMembers = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log('Edit button clicked');
                               setEditForm(member);
                               setShowEditModal(true);
                             }}
@@ -369,7 +396,11 @@ const AdminMembers = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleStatusChange(member.id, 'expired')}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log('Deactivate button clicked');
+                                handleStatusChange(member.id, 'expired');
+                              }}
                               className="text-orange-600"
                               title="Desactiver"
                             >
@@ -379,7 +410,11 @@ const AdminMembers = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleStatusChange(member.id, 'active')}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log('Activate button clicked');
+                                handleStatusChange(member.id, 'active');
+                              }}
                               className="text-green-600"
                               title="Activer"
                             >
