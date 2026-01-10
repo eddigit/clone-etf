@@ -1,6 +1,8 @@
 # Plateforme Associative En Toute Franchise
 
-Plateforme web complète pour l'association En Toute Franchise, offrant des services d'accompagnement juridique, administratif et numérique à ses membres.
+Plateforme web complète pour l'association En Toute Franchise, offrant des services de conseil stratégique, d'assistance administrative et d'accompagnement à ses membres.
+
+**🌐 Site web :** https://en-toutefranchise.com
 
 ---
 

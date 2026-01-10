@@ -6,8 +6,9 @@
 
 ## 📍 URLs de Production
 
-### Frontend (Vercel)
-- **URL principale :** https://clone-etf.vercel.app
+### Frontend
+- **🌐 Domaine principal :** https://en-toutefranchise.com
+- **URL Vercel :** https://clone-etf.vercel.app
 - **Status :** À vérifier
 - **Configuration :** `.env.production`
 
@@ -84,7 +85,7 @@ HELLOASSO_ORGANIZATION_SLUG=en-toute-franchise
 ```
 
 ### 2. Vérifier Vercel
-- Ouvrir https://clone-etf.vercel.app
+- Ouvrir https://en-toutefranchise.com
 - Tester la navigation
 - Tester la connexion admin
 - Vérifier que le backend Render est utilisé
@@ -102,7 +103,8 @@ HELLOASSO_ORGANIZATION_SLUG=en-toute-franchise
 | Service | Status | URL | Notes |
 |---------|--------|-----|-------|
 | **Backend Render** | ✅ En ligne | https://etf-backend-t3j5.onrender.com | Fonctionnel |
-| **Frontend Vercel** | ⏳ À vérifier | https://clone-etf.vercel.app | À tester |
+| **Frontend Principal** | ⏳ À vérifier | https://en-toutefranchise.com | Domaine principal |
+| **Frontend Vercel** | ⏳ À vérifier | https://clone-etf.vercel.app | URL technique |
 | **MongoDB Atlas** | ✅ Connecté | Paris (eu-west-3) | Base: test_database |
 | **HelloAsso API** | ⚠️ Partiel | - | Config Render manquante |
 | **Backend Local** | ✅ Running | http://localhost:8001 | Dev |
