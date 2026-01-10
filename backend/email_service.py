@@ -1,71 +1,41 @@
 """
 Service d'envoi d'emails pour En Toute Franchise
-Utilise fastapi-mail avec SMTP
+Utilise Resend API
 """
 import os
 import logging
+import httpx
 from typing import Optional, List
-from pathlib import Path
 from datetime import datetime
-
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
-from pydantic import EmailStr
 
 logger = logging.getLogger(__name__)
 
-# Configuration SMTP depuis les variables d'environnement
-MAIL_USERNAME = os.environ.get('SMTP_USER', '')
-MAIL_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
-MAIL_FROM = os.environ.get('SMTP_FROM', 'noreply@en-toutefranchise.com')
-MAIL_FROM_NAME = os.environ.get('SMTP_FROM_NAME', 'En Toute Franchise')
-MAIL_SERVER = os.environ.get('SMTP_HOST', 'smtp.gmail.com')
-MAIL_PORT = int(os.environ.get('SMTP_PORT', 587))
-MAIL_STARTTLS = os.environ.get('SMTP_STARTTLS', 'True').lower() == 'true'
-MAIL_SSL_TLS = os.environ.get('SMTP_SSL', 'False').lower() == 'true'
-
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
-
-
-def get_mail_config() -> Optional[ConnectionConfig]:
-    """Retourne la configuration mail si les credentials sont definis"""
-    if not MAIL_USERNAME or not MAIL_PASSWORD:
-        logger.warning("SMTP credentials not configured - emails will not be sent")
-        return None
-
-    return ConnectionConfig(
-        MAIL_USERNAME=MAIL_USERNAME,
-        MAIL_PASSWORD=MAIL_PASSWORD,
-        MAIL_FROM=MAIL_FROM,
-        MAIL_PORT=MAIL_PORT,
-        MAIL_SERVER=MAIL_SERVER,
-        MAIL_FROM_NAME=MAIL_FROM_NAME,
-        MAIL_STARTTLS=MAIL_STARTTLS,
-        MAIL_SSL_TLS=MAIL_SSL_TLS,
-        USE_CREDENTIALS=True,
-        VALIDATE_CERTS=True
-    )
+# Configuration Resend
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
+MAIL_FROM = os.environ.get('MAIL_FROM', 'En Toute Franchise <noreply@en-toutefranchise.com>')
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://www.en-toutefranchise.com')
 
 
 class EmailService:
-    """Service d'envoi d'emails"""
+    """Service d'envoi d'emails via Resend"""
 
     def __init__(self):
-        self.config = get_mail_config()
-        self.fastmail = FastMail(self.config) if self.config else None
+        self.api_key = RESEND_API_KEY
+        self.api_url = "https://api.resend.com/emails"
 
     def is_configured(self) -> bool:
         """Verifie si le service email est configure"""
-        return self.fastmail is not None
+        return bool(self.api_key)
 
     async def send_email(
         self,
-        to: List[EmailStr],
+        to: List[str],
         subject: str,
         body_html: str,
         body_text: Optional[str] = None
     ) -> bool:
         """
-        Envoie un email
+        Envoie un email via Resend
 
         Args:
             to: Liste des destinataires
@@ -77,20 +47,37 @@ class EmailService:
             True si envoi reussi, False sinon
         """
         if not self.is_configured():
-            logger.error("Email service not configured - cannot send email")
+            logger.warning("Resend API key not configured - email not sent")
             return False
 
         try:
-            message = MessageSchema(
-                subject=subject,
-                recipients=to,
-                body=body_html,
-                subtype=MessageType.html
-            )
+            async with httpx.AsyncClient() as client:
+                payload = {
+                    "from": MAIL_FROM,
+                    "to": to,
+                    "subject": subject,
+                    "html": body_html
+                }
+                
+                if body_text:
+                    payload["text"] = body_text
 
-            await self.fastmail.send_message(message)
-            logger.info(f"Email sent successfully to {to}")
-            return True
+                response = await client.post(
+                    self.api_url,
+                    json=payload,
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json"
+                    }
+                )
+
+                if response.status_code in [200, 201]:
+                    data = response.json()
+                    logger.info(f"Email sent successfully to {to}, id: {data.get('id')}")
+                    return True
+                else:
+                    logger.error(f"Failed to send email: {response.status_code} - {response.text}")
+                    return False
 
         except Exception as e:
             logger.error(f"Failed to send email to {to}: {str(e)}")
