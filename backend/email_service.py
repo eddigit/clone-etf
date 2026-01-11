@@ -323,6 +323,105 @@ class EmailService:
 
         return await self.send_email([to_email], subject, body_html)
 
+    async def send_invitation_email(
+        self,
+        to_email: str,
+        first_name: str,
+        last_name: str,
+        membership_type: str
+    ) -> bool:
+        """
+        Envoie un email d'invitation a adherer via HelloAsso
+
+        Args:
+            to_email: Email du destinataire
+            first_name: Prenom
+            last_name: Nom
+            membership_type: Type d'adhesion
+        """
+        helloasso_link = "https://www.helloasso.com/associations/en-toute-franchise/adhesions/adhesion-en-toute-franchise-2025"
+
+        membership_labels = {
+            'individual': 'Particulier (30€)',
+            'professional': 'Commerçant - Artisan (30€)',
+            'professional_plus': 'Commerçant +100m² (50€)',
+            'association': 'Association (50€)'
+        }
+        membership_label = membership_labels.get(membership_type, 'Adhésion')
+
+        subject = "Invitation à rejoindre En Toute Franchise Association"
+
+        body_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+                .content {{ background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }}
+                .button {{ display: inline-block; background: #16a34a; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }}
+                .button:hover {{ background: #15803d; }}
+                .footer {{ text-align: center; margin-top: 20px; color: #6b7280; font-size: 12px; }}
+                .highlight {{ background: #dbeafe; padding: 15px; border-radius: 5px; margin: 15px 0; }}
+                .benefits {{ background: #f0fdf4; padding: 15px; border-radius: 5px; border-left: 4px solid #16a34a; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🤝 Invitation a rejoindre<br>En Toute Franchise Association</h1>
+                </div>
+                <div class="content">
+                    <p>Bonjour <strong>{first_name} {last_name}</strong>,</p>
+
+                    <p>Vous avez ete invite(e) a rejoindre <strong>En Toute Franchise Association</strong>, 
+                    l'association nationale de defense des franchises et commercants.</p>
+
+                    <div class="highlight">
+                        <p><strong>Votre type d'adhesion :</strong> {membership_label}</p>
+                    </div>
+
+                    <p>Pour finaliser votre adhesion et acceder a tous les services de la plateforme, 
+                    cliquez sur le bouton ci-dessous :</p>
+
+                    <p style="text-align: center;">
+                        <a href="{helloasso_link}" class="button">✅ Finaliser mon adhesion</a>
+                    </p>
+
+                    <div class="benefits">
+                        <p><strong>En devenant adherent, vous aurez acces a :</strong></p>
+                        <ul>
+                            <li>🤖 L'assistant IA d'orientation juridique</li>
+                            <li>👥 La communaute des adherents</li>
+                            <li>📁 Les dossiers collectifs ETF</li>
+                            <li>💬 La messagerie entre membres</li>
+                            <li>📚 Les ressources et guides exclusifs</li>
+                            <li>🎁 20% de reduction sur la Boite a Outils Digitale</li>
+                        </ul>
+                    </div>
+
+                    <p>Le paiement est securise et gere par <strong>HelloAsso</strong>.</p>
+
+                    <p>Une fois votre paiement effectue, vous recevrez un email pour activer votre compte 
+                    et creer votre mot de passe.</p>
+
+                    <p>A tres bientot parmi nous !</p>
+                    <p><strong>L'equipe En Toute Franchise</strong></p>
+                </div>
+                <div class="footer">
+                    <p>En Toute Franchise Association - Loi 1901</p>
+                    <p>1 rue Francois Boucher, 13700 MARIGNANE</p>
+                    <p>Tel : 06 09 78 09 53 | Email : en.toutefranchise@wanadoo.fr</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        return await self.send_email([to_email], subject, body_html)
+
 
 # Instance globale du service
 email_service = EmailService()

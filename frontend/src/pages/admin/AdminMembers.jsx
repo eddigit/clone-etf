@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 import { Badge } from '../../components/ui/badge';
 import {
   Table,
@@ -39,7 +40,9 @@ import {
   Download,
   Filter,
   Mail,
-  Send
+  Send,
+  RotateCcw,
+  ExternalLink
 } from 'lucide-react';
 import { API_URL } from '../../config/api';
 
@@ -54,6 +57,20 @@ const AdminMembers = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editForm, setEditForm] = useState({});
+  
+  // Nouveaux états pour la création d'adhérent
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    first_name: '',
+    last_name: '',
+    user_email: '',
+    phone: '',
+    membership_type: 'individual',
+    payment_method: 'pending',
+    status: 'pending',
+    send_email: true
+  });
 
   const limit = 20;
 
@@ -181,6 +198,135 @@ const AdminMembers = () => {
     }
   };
 
+  // Créer un nouvel adhérent
+  const handleCreateMember = async (e) => {
+    e.preventDefault();
+    setCreateLoading(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/admin/memberships`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...createForm,
+          amount: createForm.status === 'paid' ? 30 : 0
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Envoyer l'email approprié si demandé
+        if (createForm.send_email && data.user_id) {
+          if (createForm.status === 'pending') {
+            // Email d'invitation à adhérer via HelloAsso
+            await handleSendInvitationEmail(data.user_id, createForm.user_email);
+          } else {
+            // Email de bienvenue (déjà payé)
+            await handleSendWelcomeEmailSilent(data.user_id, createForm.user_email);
+          }
+        }
+        
+        alert(`Adhérent créé avec succès !${createForm.send_email ? '\nL\'email a été envoyé.' : ''}`);
+        
+        setShowCreateModal(false);
+        setCreateForm({
+          first_name: '',
+          last_name: '',
+          user_email: '',
+          phone: '',
+          membership_type: 'individual',
+          payment_method: 'pending',
+          status: 'pending',
+          send_email: true
+        });
+        fetchMembers();
+      } else {
+        const data = await response.json();
+        alert(`Erreur: ${data.detail || 'Impossible de créer l\'adhérent'}`);
+      }
+    } catch (error) {
+      console.error('Error creating member:', error);
+      alert('Erreur: ' + error.message);
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
+  // Envoyer un email d'invitation à adhérer (pour les pending)
+  const handleSendInvitationEmail = async (memberId, memberEmail) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/admin/members/${memberId}/send-invitation-email`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        console.error('Failed to send invitation email:', data.detail);
+      }
+    } catch (error) {
+      console.error('Error sending invitation email:', error);
+    }
+  };
+
+  // Envoyer un email de bienvenue sans confirmation (appelé après création)
+  const handleSendWelcomeEmailSilent = async (memberId, memberEmail) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/admin/members/${memberId}/send-welcome-email`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        console.error('Failed to send welcome email:', data.detail);
+      }
+    } catch (error) {
+      console.error('Error sending welcome email:', error);
+    }
+  };
+
+  // Envoyer un email de renouvellement individuel
+  const handleSendRenewalEmail = async (memberId, memberEmail, firstName) => {
+    if (!window.confirm(`Envoyer un email de renouvellement à ${memberEmail} ?\n\nL'adhérent recevra un lien pour renouveler son adhésion via HelloAsso.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/admin/members/${memberId}/send-renewal-email`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        alert(`Email de renouvellement envoyé à ${memberEmail}`);
+      } else {
+        const data = await response.json();
+        alert(`Erreur: ${data.detail || 'Impossible d\'envoyer l\'email'}`);
+      }
+    } catch (error) {
+      console.error('Error sending renewal email:', error);
+      alert('Erreur: ' + error.message);
+    }
+  };
+
   const handleSendWelcomeEmail = async (memberId, memberEmail) => {
     if (!window.confirm(`Envoyer un email de bienvenue a ${memberEmail} ?\n\nL'adherent recevra un lien pour creer son mot de passe.`)) {
       return;
@@ -248,7 +394,7 @@ const AdminMembers = () => {
             <RefreshCw className="h-4 w-4 mr-2" />
             Actualiser
           </Button>
-          <Button>
+          <Button onClick={() => setShowCreateModal(true)}>
             <UserPlus className="h-4 w-4 mr-2" />
             Ajouter
           </Button>
@@ -656,11 +802,170 @@ const AdminMembers = () => {
                   </div>
                 </div>
               )}
+
+              {/* Actions CTA */}
+              <div className="border-t pt-4 mt-4">
+                <h4 className="font-semibold mb-3">Actions</h4>
+                <div className="flex flex-wrap gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleSendWelcomeEmail(selectedMember.user?.id, selectedMember.user?.email)}
+                    className="text-blue-600"
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Email de bienvenue
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleSendRenewalEmail(selectedMember.user?.id, selectedMember.user?.email, selectedMember.user?.firstName)}
+                    className="text-orange-600"
+                  >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Demander renouvellement
+                  </Button>
+                  <a 
+                    href="https://www.helloasso.com/associations/en-toute-franchise/adhesions/adhesion-en-toute-franchise-2025" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="outline" size="sm" className="text-green-600">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Page HelloAsso
+                    </Button>
+                  </a>
+                </div>
+              </div>
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDetails(false)}>Fermer</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Création Adhérent */}
+      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Créer un nouvel adhérent</DialogTitle>
+            <DialogDescription>
+              L'adhérent recevra un email pour créer son mot de passe et accéder à la plateforme.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateMember}>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="first_name">Prénom *</Label>
+                  <Input
+                    id="first_name"
+                    value={createForm.first_name}
+                    onChange={(e) => setCreateForm({...createForm, first_name: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="last_name">Nom *</Label>
+                  <Input
+                    id="last_name"
+                    value={createForm.last_name}
+                    onChange={(e) => setCreateForm({...createForm, last_name: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="user_email">Email *</Label>
+                <Input
+                  id="user_email"
+                  type="email"
+                  value={createForm.user_email}
+                  onChange={(e) => setCreateForm({...createForm, user_email: e.target.value})}
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="phone">Téléphone</Label>
+                <Input
+                  id="phone"
+                  value={createForm.phone}
+                  onChange={(e) => setCreateForm({...createForm, phone: e.target.value})}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="membership_type">Type d'adhésion</Label>
+                <Select 
+                  value={createForm.membership_type} 
+                  onValueChange={(value) => setCreateForm({...createForm, membership_type: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="individual">Particulier (30€)</SelectItem>
+                    <SelectItem value="professional">Commerçant - Artisan (30€)</SelectItem>
+                    <SelectItem value="professional_plus">Commerçant +100m² (50€)</SelectItem>
+                    <SelectItem value="association">Association (50€)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="status">Statut de paiement</Label>
+                <Select 
+                  value={createForm.status} 
+                  onValueChange={(value) => setCreateForm({...createForm, status: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">En attente de paiement</SelectItem>
+                    <SelectItem value="paid">Payé (chèque/virement/espèces)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex items-center space-x-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="send_email"
+                  checked={createForm.send_email}
+                  onChange={(e) => setCreateForm({...createForm, send_email: e.target.checked})}
+                  className="rounded border-gray-300"
+                />
+                <Label htmlFor="send_email" className="text-sm font-normal">
+                  Envoyer un email d'invitation à l'adhérent
+                </Label>
+              </div>
+
+              {createForm.status === 'pending' && (
+                <div className="p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                  <strong>💡 Mode invitation :</strong> L'adhérent recevra un email l'invitant à 
+                  finaliser son adhésion via HelloAsso.
+                </div>
+              )}
+            </div>
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>
+                Annuler
+              </Button>
+              <Button type="submit" disabled={createLoading}>
+                {createLoading ? (
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <UserPlus className="h-4 w-4 mr-2" />
+                )}
+                Créer l'adhérent
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

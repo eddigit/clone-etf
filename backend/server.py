@@ -2241,6 +2241,66 @@ async def admin_send_welcome_email(
         raise HTTPException(status_code=500, detail="Erreur lors de l'envoi de l'email. Verifiez la configuration SMTP.")
 
 
+@api_router.post("/admin/members/{member_id}/send-renewal-email")
+async def admin_send_renewal_email(
+    member_id: str,
+    current_user: dict = Depends(get_admin_user)
+):
+    """
+    Envoie un email de renouvellement individuel a un adherent.
+    L'email contient un lien vers HelloAsso pour le paiement.
+    """
+    user = await db.users.find_one({"id": member_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Membre non trouve")
+
+    end_date = user.get("membershipEndDate")
+    if end_date:
+        days_left = (end_date - datetime.utcnow()).days
+    else:
+        days_left = 0
+
+    email_sent = await email_service.send_renewal_reminder_email(
+        to_email=user["email"],
+        first_name=user["firstName"],
+        end_date=end_date or datetime.utcnow(),
+        days_left=days_left
+    )
+
+    if email_sent:
+        logger.info(f"Admin {current_user['email']} sent renewal email to {user['email']}")
+        return {"status": "success", "message": f"Email de renouvellement envoye a {user['email']}"}
+    else:
+        raise HTTPException(status_code=500, detail="Erreur lors de l'envoi de l'email. Verifiez la configuration SMTP.")
+
+
+@api_router.post("/admin/members/{member_id}/send-invitation-email")
+async def admin_send_invitation_email(
+    member_id: str,
+    current_user: dict = Depends(get_admin_user)
+):
+    """
+    Envoie un email d'invitation a adherer via HelloAsso.
+    Pour les utilisateurs en attente de paiement.
+    """
+    user = await db.users.find_one({"id": member_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Membre non trouve")
+
+    email_sent = await email_service.send_invitation_email(
+        to_email=user["email"],
+        first_name=user["firstName"],
+        last_name=user["lastName"],
+        membership_type=user.get("membershipType", "individual")
+    )
+
+    if email_sent:
+        logger.info(f"Admin {current_user['email']} sent invitation email to {user['email']}")
+        return {"status": "success", "message": f"Email d'invitation envoye a {user['email']}"}
+    else:
+        raise HTTPException(status_code=500, detail="Erreur lors de l'envoi de l'email. Verifiez la configuration SMTP.")
+
+
 @api_router.post("/admin/members/send-bulk-welcome-emails")
 async def admin_send_bulk_welcome_emails(
     member_ids: List[str] = Body(...),
