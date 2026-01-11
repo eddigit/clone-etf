@@ -95,7 +95,7 @@ const Home = () => {
                 className="h-40 md:h-56 w-auto"
               >
                 <source 
-                  src="https://res.cloudinary.com/dniurvpzd/video/upload/v1768122589/grok-video-b2a4c60b-e150-467f-ba41-dda2d79ee587_w6vtq8.mp4" 
+                  src="https://res.cloudinary.com/dniurvpzd/video/upload/v1768126330/grok-video-a163e853-3b19-4148-b975-c1b10bc74a11_m7ojb4.mp4" 
                   type="video/mp4" 
                 />
               </video>
