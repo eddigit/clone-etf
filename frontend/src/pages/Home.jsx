@@ -86,13 +86,17 @@ const Home = () => {
             </Badge>
             
             {/* Vidéo Hero - intégrée naturellement */}
-            <div className="flex justify-center mb-8">
+            <div className="flex justify-center mb-8 overflow-hidden" style={{ backgroundColor: '#182034' }}>
               <video 
                 autoPlay 
                 loop 
                 muted 
                 playsInline
-                className="h-40 md:h-56 w-auto"
+                className="h-40 md:h-56 w-auto block"
+                style={{ 
+                  backgroundColor: '#182034',
+                  objectFit: 'cover'
+                }}
               >
                 <source 
                   src="https://res.cloudinary.com/dniurvpzd/video/upload/v1768126879/grok-video-f27e8ee7-5b0b-40ac-b490-b486ee77001b_oz3gxk.mp4" 
