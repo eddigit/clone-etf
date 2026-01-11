@@ -1843,11 +1843,12 @@ async def get_admin_member_detail(
     # Retirer le mot de passe
     user.pop("password", None)
     
+    # Sérialiser tous les documents pour éviter les erreurs ObjectId
     return {
-        "user": user,
-        "coupons": coupons,
-        "payments": payments,
-        "onboarding": onboarding
+        "user": serialize_doc(user),
+        "coupons": serialize_doc(coupons),
+        "payments": serialize_doc(payments),
+        "onboarding": serialize_doc(onboarding)
     }
 
 @api_router.post("/admin/members/{member_id}/generate-coupon")
