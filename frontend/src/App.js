@@ -33,6 +33,7 @@ import AdminMembers from "./pages/admin/AdminMembers";
 import AdminHelloAsso from "./pages/admin/AdminHelloAsso";
 import AdminMemberships from "./pages/admin/AdminMemberships";
 import AdminBlog from "./pages/admin/AdminBlog";
+import AdminTestAgent from "./pages/admin/AdminTestAgent";
 import BlogArticle from "./pages/BlogArticle";
 import NotFound from "./pages/NotFound";
 import { Toaster } from "./components/ui/toaster";
@@ -249,6 +250,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminLayout><AdminBlog /></AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/test-agent"
+            element={
+              <ProtectedRoute>
+                <AdminTestAgent />
               </ProtectedRoute>
             }
           />

@@ -37,6 +37,7 @@ from helloasso_service import helloasso_service
 from pdf_service import generate_membership_pdf
 from community_routes import create_community_router
 from email_service import email_service
+from test_agent import run_user_test_agent, get_all_test_reports, get_test_report, test_reports_cache
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -1575,6 +1576,126 @@ async def get_admin_stats(current_user: dict = Depends(get_admin_user)):
         totalCoupons=total_coupons,
         usedCoupons=used_coupons
     )
+
+# ===================== TEST AGENT ROUTES =====================
+
+@api_router.post("/admin/test-agent/run")
+async def run_test_agent(
+    background_tasks: BackgroundTasks,
+    cleanup: bool = Query(True, description="Nettoyer l'utilisateur test après les tests"),
+    current_user: dict = Depends(get_admin_user)
+):
+    """
+    Lance l'agent de test utilisateur.
+    Crée un utilisateur test, teste le parcours complet et génère un rapport.
+    """
+    # Déterminer l'URL de base de l'API
+    api_base_url = os.environ.get('API_BASE_URL', 'https://etf-backend-t3j5.onrender.com')
+    
+    try:
+        report = await run_user_test_agent(api_base_url, cleanup=cleanup)
+        
+        # Si cleanup est activé, supprimer l'utilisateur test de la DB
+        if cleanup and report.get('test_user_email'):
+            await db.users.delete_one({"email": report['test_user_email']})
+            # Supprimer aussi les messages de contact de test
+            await db.contact_messages.delete_many({
+                "email": report['test_user_email']
+            })
+            logger.info(f"Test user {report['test_user_email']} cleaned up from database")
+        
+        # Sauvegarder le rapport dans la base de données
+        report['saved_at'] = datetime.utcnow().isoformat()
+        await db.test_reports.insert_one(report)
+        
+        return {
+            "success": True,
+            "message": "Tests terminés",
+            "report": report
+        }
+    except Exception as e:
+        logger.error(f"Test agent error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/admin/test-agent/reports")
+async def get_test_reports(
+    limit: int = Query(20, ge=1, le=100),
+    current_user: dict = Depends(get_admin_user)
+):
+    """Récupère l'historique des rapports de test"""
+    try:
+        # Récupérer depuis la DB
+        cursor = db.test_reports.find().sort("started_at", -1).limit(limit)
+        reports = await cursor.to_list(length=limit)
+        
+        # Sérialiser les ObjectId
+        for report in reports:
+            report['_id'] = str(report['_id'])
+        
+        return {
+            "success": True,
+            "reports": reports,
+            "total": len(reports)
+        }
+    except Exception as e:
+        logger.error(f"Error fetching test reports: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/admin/test-agent/reports/{report_id}")
+async def get_single_test_report(
+    report_id: str,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Récupère un rapport de test spécifique"""
+    try:
+        # Chercher dans le cache d'abord, puis dans la DB
+        report = get_test_report(report_id)
+        if not report:
+            report = await db.test_reports.find_one({"id": report_id})
+            if report:
+                report['_id'] = str(report['_id'])
+        
+        if not report:
+            raise HTTPException(status_code=404, detail="Rapport non trouvé")
+        
+        return {
+            "success": True,
+            "report": report
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching test report: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.delete("/admin/test-agent/cleanup")
+async def cleanup_test_data(
+    current_user: dict = Depends(get_admin_user)
+):
+    """Nettoie tous les utilisateurs et données de test"""
+    try:
+        # Supprimer tous les utilisateurs test
+        result_users = await db.users.delete_many({
+            "email": {"$regex": "^test_agent_.*@test-etf\\.com$"}
+        })
+        
+        # Supprimer les messages de contact de test
+        result_messages = await db.contact_messages.delete_many({
+            "email": {"$regex": "^test_agent_.*@test-etf\\.com$"}
+        })
+        
+        return {
+            "success": True,
+            "message": "Nettoyage terminé",
+            "deleted_users": result_users.deleted_count,
+            "deleted_messages": result_messages.deleted_count
+        }
+    except Exception as e:
+        logger.error(f"Error cleaning up test data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ===================== MEMBERSHIP ENDPOINTS (ADHESIONS) =====================
 

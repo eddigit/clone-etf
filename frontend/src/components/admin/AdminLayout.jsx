@@ -12,7 +12,8 @@ import {
   X,
   ChevronLeft,
   FileText,
-  Newspaper
+  Newspaper,
+  Zap
 } from 'lucide-react';
 
 const AdminLayout = ({ children }) => {
@@ -34,6 +35,7 @@ const AdminLayout = ({ children }) => {
     { icon: Newspaper, label: 'Blog', path: '/admin/blog' },
     { icon: Gift, label: 'Coupons', path: '/admin/coupons' },
     { icon: CreditCard, label: 'HelloAsso', path: '/admin/helloasso' },
+    { icon: Zap, label: 'Agent de Test', path: '/admin/test-agent' },
     { icon: Settings, label: 'Parametres', path: '/admin/settings' }
   ];
 
