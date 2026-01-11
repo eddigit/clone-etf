@@ -77,7 +77,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-slate-950">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 py-20 text-white">
+      <section className="py-20 text-white" style={{ backgroundColor: '#1a2436' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <Badge className="mb-6 bg-green-700 text-white hover:bg-green-800 border-green-600">
@@ -86,17 +86,13 @@ const Home = () => {
             </Badge>
             
             {/* Vidéo Hero - intégrée naturellement */}
-            <div className="flex justify-center mb-8" style={{ backgroundColor: '#1a2436' }}>
+            <div className="flex justify-center mb-8">
               <video 
                 autoPlay 
                 loop 
                 muted 
                 playsInline
                 className="h-40 md:h-56 w-auto"
-                style={{ 
-                  backgroundColor: '#1a2436',
-                  display: 'block'
-                }}
               >
                 <source 
                   src="https://res.cloudinary.com/dniurvpzd/video/upload/v1768122589/grok-video-b2a4c60b-e150-467f-ba41-dda2d79ee587_w6vtq8.mp4" 
