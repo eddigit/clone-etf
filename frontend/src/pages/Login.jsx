@@ -58,7 +58,7 @@ const Login = () => {
           <div className="mx-auto mb-6">
             <img 
               src="https://aide.en-toutefranchise.com/lovable-uploads/19dabfce-86c9-4793-beb5-bcf6cb7b9e7b.png" 
-              alt="En Toute Franchise Logo" 
+              alt="En Toute Franchise Association Logo" 
               className="h-20 w-auto mx-auto"
             />
           </div>

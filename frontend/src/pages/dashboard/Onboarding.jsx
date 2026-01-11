@@ -17,7 +17,7 @@ export default function OnboardingPage() {
         <div className="text-center mb-8">
           <img 
             src="/logo.png" 
-            alt="En Toute Franchise" 
+            alt="En Toute Franchise Association" 
             className="h-12 mx-auto mb-4"
             onError={(e) => { e.target.style.display = 'none'; }}
           />

@@ -67,7 +67,7 @@ const AIAssistant = () => {
         id: Date.now() + 1,
         conversationId: currentConversation,
         role: 'assistant',
-        content: "Bonjour ! Je suis l'assistant d'orientation IA d'En Toute Franchise. Je suis là pour vous conseiller et vous orienter sur vos questions. Comment puis-je vous aider aujourd'hui ? (Note : Pour le moment, les réponses sont mockées, l'intégration IA sera ajoutée avec les API).",
+        content: "Bonjour ! Je suis l'assistant d'orientation IA d'En Toute Franchise Association. Je suis là pour vous conseiller et vous orienter sur vos questions. Comment puis-je vous aider aujourd'hui ? (Note : Pour le moment, les réponses sont mockées, l'intégration IA sera ajoutée avec les API).",
         timestamp: new Date().toISOString()
       };
       setMessages((prev) => [...prev, aiMessage]);

@@ -27,10 +27,10 @@ const Navbar = () => {
           <Link to="/" className="flex items-center space-x-3">
             <img 
               src="https://aide.en-toutefranchise.com/lovable-uploads/19dabfce-86c9-4793-beb5-bcf6cb7b9e7b.png" 
-              alt="En Toute Franchise Logo" 
+              alt="En Toute Franchise Association Logo" 
               className="h-12 w-auto"
             />
-            <span className="text-xl font-bold text-white hidden sm:block">En Toute Franchise</span>
+            <span className="text-xl font-bold text-white hidden sm:block">En Toute Franchise Association</span>
           </Link>
 
           {/* Desktop Menu */}

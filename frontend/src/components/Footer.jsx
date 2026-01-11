@@ -13,7 +13,7 @@ const Footer = () => {
             <div className="flex items-center space-x-3 mb-4">
               <img 
                 src="https://aide.en-toutefranchise.com/lovable-uploads/19dabfce-86c9-4793-beb5-bcf6cb7b9e7b.png" 
-                alt="En Toute Franchise Logo" 
+                alt="En Toute Franchise Association Logo" 
                 className="h-14 w-auto"
               />
               <span className="text-lg font-bold">En Toute Franchise</span>

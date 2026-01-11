@@ -52,7 +52,7 @@ const AdminLayout = ({ children }) => {
             />
             <div>
               <span className="text-lg font-bold">Admin</span>
-              <span className="text-xs text-gray-400 block">En Toute Franchise</span>
+              <span className="text-xs text-gray-400 block">En Toute Franchise Association</span>
             </div>
           </Link>
         </div>

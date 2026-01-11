@@ -58,7 +58,7 @@ const Articles = () => {
             Articles reserves aux adherents
           </h1>
           <p className="text-gray-600">
-            Contenu exclusif pour les membres En Toute Franchise
+            Contenu exclusif pour les membres En Toute Franchise Association
           </p>
         </div>
 

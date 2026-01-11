@@ -318,7 +318,7 @@ export default function Adhesions() {
               </h3>
               <p className="mt-1 text-sm text-blue-800">
                 Votre bordereau d'adhésion est un document officiel qui atteste de votre adhésion
-                à l'association En Toute Franchise. Conservez-le précieusement, il peut vous être
+                à l'association En Toute Franchise Association. Conservez-le précieusement, il peut vous être
                 demandé lors de l'accès à certains services.
               </p>
             </div>

@@ -89,13 +89,13 @@ const Home = () => {
             <div className="flex justify-center mb-8">
               <img 
                 src="/logo-etf.svg" 
-                alt="En Toute Franchise Logo" 
+                alt="En Toute Franchise Association Logo" 
                 className="h-40 md:h-56 w-auto drop-shadow-2xl"
               />
             </div>
             
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
-              En Toute Franchise
+              En Toute Franchise Association
             </h1>
             <p className="text-xl md:text-2xl text-green-400 font-semibold mb-4">
               Défenseur de vos droits

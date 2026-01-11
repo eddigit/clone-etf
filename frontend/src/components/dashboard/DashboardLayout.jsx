@@ -60,7 +60,7 @@ const DashboardLayout = ({ children }) => {
           <Link to="/" className="flex items-center space-x-3">
             <img 
               src="https://aide.en-toutefranchise.com/lovable-uploads/19dabfce-86c9-4793-beb5-bcf6cb7b9e7b.png" 
-              alt="En Toute Franchise Logo" 
+              alt="En Toute Franchise Association Logo" 
               className="h-12 w-auto"
             />
             <span className="text-lg font-bold text-gray-900">Espace Membre</span>
@@ -123,10 +123,10 @@ const DashboardLayout = ({ children }) => {
               <Link to="/" className="flex items-center space-x-3">
                 <img 
                   src="https://aide.en-toutefranchise.com/lovable-uploads/19dabfce-86c9-4793-beb5-bcf6cb7b9e7b.png" 
-                  alt="En Toute Franchise Logo" 
+                  alt="En Toute Franchise Association Logo" 
                   className="h-12 w-auto"
                 />
-                <span className="text-lg font-bold text-gray-900">En Toute Franchise</span>
+                <span className="text-lg font-bold text-gray-900">En Toute Franchise Association</span>
               </Link>
               <button onClick={() => setSidebarOpen(false)}>
                 <X className="h-6 w-6" />

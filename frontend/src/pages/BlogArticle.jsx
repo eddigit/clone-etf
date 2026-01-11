@@ -255,7 +255,7 @@ const BlogArticle = () => {
             Besoin d'aide pour votre activite ?
           </h3>
           <p className="text-gray-600 mb-4">
-            En Toute Franchise accompagne les commercants et artisans depuis plus de 30 ans.
+            En Toute Franchise Association accompagne les commercants et artisans depuis plus de 30 ans.
           </p>
           <div className="flex justify-center gap-4 flex-wrap">
             <Link to="/adhesion">
