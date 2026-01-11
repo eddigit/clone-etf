@@ -25,6 +25,7 @@ from models import (
     # Membership models
     MemberData, MembershipCreate, Membership, MembershipResponse,
     AdminMembershipCreate, AdminMembershipUpdate,
+    generate_membership_reference,
     # Onboarding models
     OnboardingData, OnboardingCreate, UserOnboarding, OnboardingResponse,
     # Categories
@@ -1728,10 +1729,15 @@ async def create_membership(
                 detail=f"Vous avez déjà une adhésion pour l'année {current_year}"
             )
         
+        # Générer la référence pour inscription web
+        reference = generate_membership_reference(current_year, source="web")
+        
         # Créer l'adhésion
         membership = Membership(
             user_id=current_user["id"],
             year=current_year,
+            reference=reference,
+            source="web",
             status="pending",
             amount=membership_data.amount,
             membership_type=membership_data.membership_type,
@@ -2088,10 +2094,15 @@ async def admin_create_membership(
                 ville=""
             )
 
+        # Générer la référence pour création admin (manuelle)
+        reference = generate_membership_reference(year, source="admin")
+        
         # Créer l'adhésion
         membership = Membership(
             user_id=user_id,
             year=year,
+            reference=reference,
+            source="admin",
             status=data.status,
             amount=data.amount,
             membership_type=data.membership_type,

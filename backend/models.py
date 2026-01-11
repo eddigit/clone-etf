@@ -366,9 +366,27 @@ class MembershipCreate(BaseModel):
     amount: float  # Montant de l'adhésion
     member_data: MemberData
 
+
+def generate_membership_reference(year: int, source: str = "web") -> str:
+    """
+    Génère une référence d'adhésion unique
+    - Web: W-ETF2026-XXXX
+    - Admin (création manuelle): ETF2026-XXXX
+    """
+    import random
+    import string
+    suffix = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+    if source == "web":
+        return f"W-ETF{year}-{suffix}"
+    else:
+        return f"ETF{year}-{suffix}"
+
+
 class Membership(BaseModel):
     """Adhésion complète"""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    reference: Optional[str] = None  # Référence lisible: W-ETF2026-XXXX ou ETF2026-XXXX
+    source: str = "web"  # "web" (inscription en ligne) ou "admin" (création manuelle)
     user_id: str
     year: int  # 2026
     status: str = "pending"  # "pending" | "paid" | "cancelled" | "expired"
@@ -389,6 +407,8 @@ class Membership(BaseModel):
 class MembershipResponse(BaseModel):
     """Réponse avec les données d'adhésion"""
     id: str
+    reference: Optional[str] = None  # Référence lisible: W-ETF2026-XXXX ou ETF2026-XXXX
+    source: str = "web"  # "web" ou "admin"
     year: int
     status: str
     amount: float
