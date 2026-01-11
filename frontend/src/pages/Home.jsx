@@ -85,13 +85,24 @@ const Home = () => {
               Association Loi 1901 - Défense des Franchisés
             </Badge>
             
-            {/* Logo Hero */}
+            {/* Vidéo Hero - intégrée naturellement */}
             <div className="flex justify-center mb-8">
-              <img 
-                src="/logo-etf.svg" 
-                alt="En Toute Franchise Association Logo" 
-                className="h-40 md:h-56 w-auto drop-shadow-2xl"
-              />
+              <video 
+                autoPlay 
+                loop 
+                muted 
+                playsInline
+                className="h-40 md:h-56 w-auto"
+                style={{ 
+                  background: 'transparent',
+                  mixBlendMode: 'normal'
+                }}
+              >
+                <source 
+                  src="https://res.cloudinary.com/dniurvpzd/video/upload/v1768122589/grok-video-b2a4c60b-e150-467f-ba41-dda2d79ee587_w6vtq8.mp4" 
+                  type="video/mp4" 
+                />
+              </video>
             </div>
             
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
