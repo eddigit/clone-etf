@@ -70,8 +70,11 @@ const Contact = () => {
                   </div>
                   <h3 className="text-lg font-semibold mb-2">Téléphone</h3>
                   <p className="text-xl font-bold text-blue-600 mb-2">{contactInfo.phone}</p>
+                  {contactInfo.phone2 && (
+                    <p className="text-xl font-bold text-blue-600 mb-2">{contactInfo.phone2}</p>
+                  )}
                   <p className="text-sm text-gray-600">{contactInfo.hours}</p>
-                  <p className="text-xs text-gray-500 mt-1">Appel gratuit depuis un fixe</p>
+                  <p className="text-xs text-gray-500 mt-1">Appel non surtaxé</p>
                 </CardContent>
               </Card>
 
@@ -82,8 +85,7 @@ const Contact = () => {
                   </div>
                   <h3 className="text-lg font-semibold mb-2">Email</h3>
                   <p className="text-gray-700 mb-2">{contactInfo.email}</p>
-                  <p className="text-sm text-gray-600">Réponse garantie sous 4h</p>
-                  <p className="text-xs text-gray-500 mt-1">7j/7 pour les urgences</p>
+                  <p className="text-sm text-gray-600">Réponse garantie sous 24 heures</p>
                 </CardContent>
               </Card>
 

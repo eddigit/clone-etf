@@ -107,14 +107,10 @@ const Home = () => {
             </div>
             
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
-              En Toute Franchise Association
+              EN TOUTE FRANCHISE : L'association qui défend les commerçants et artisans
             </h1>
             <p className="text-xl md:text-2xl text-green-400 font-semibold mb-4">
-              Défenseur de vos droits
-            </p>
-            <p className="text-lg text-gray-300 max-w-3xl mx-auto mb-8">
-              Association loi 1901 dédiée à la <strong className="text-green-400">défense et l'accompagnement des franchisés en France</strong>.
-              Nous luttons pour faire respecter vos droits face aux pratiques abusives et promouvoir des contrats de franchise équilibrés.
+              Notre mission : lutter pour vos droits face aux abus, à la concurrence déloyale et aux excès de pouvoir.
             </p>
             
             {/* Important Disclaimer */}
@@ -797,8 +793,10 @@ const Home = () => {
                 </div>
                 <h3 className="text-xl font-semibold mb-2">Assistance Téléphonique</h3>
                 <p className="text-2xl font-bold text-blue-600 mb-2">{contactInfo.phone}</p>
+                <p className="text-2xl font-bold text-blue-600 mb-2">{contactInfo.phone2}</p>
                 <p className="text-sm text-gray-600">{contactInfo.hours}</p>
-                <p className="text-xs text-gray-500 mt-2">Appel gratuit depuis un fixe</p>
+                <p className="text-xs text-gray-500 mt-2">Appel non surtaxé</p>
+                <p className="text-sm text-green-600 mt-3 font-semibold">En cas d'urgence, contactez-nous directement sur ces lignes.</p>
               </CardContent>
             </Card>
 
@@ -809,8 +807,7 @@ const Home = () => {
                 </div>
                 <h3 className="text-xl font-semibold mb-2">Support Email</h3>
                 <p className="text-lg text-gray-700 mb-2">{contactInfo.email}</p>
-                <p className="text-sm text-gray-600">Réponse garantie sous 4h</p>
-                <p className="text-xs text-gray-500 mt-2">7j/7 pour les urgences</p>
+                <p className="text-sm text-gray-600">Réponse garantie sous 24 heures</p>
               </CardContent>
             </Card>
 
@@ -825,18 +822,6 @@ const Home = () => {
                 <p className="text-sm text-gray-600">Rendez-vous sur RDV uniquement</p>
               </CardContent>
             </Card>
-          </div>
-
-          <div className="mt-12 p-6 bg-red-50 border-2 border-red-200 rounded-xl text-center">
-            <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Urgence Juridique ?</h3>
-            <p className="text-gray-700 mb-4">
-              En cas de contrôle, mise en demeure ou situation d'urgence, contactez notre ligne directe :
-            </p>
-            <p className="text-3xl font-bold text-red-600 mb-2">{contactInfo.emergencyPhone}</p>
-            <p className="text-sm text-gray-600">
-              Disponible 24h/24 pour les membres • Intervention sous 2h en région PACA
-            </p>
           </div>
         </div>
       </section>

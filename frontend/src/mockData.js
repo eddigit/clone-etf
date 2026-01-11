@@ -359,13 +359,13 @@ export const resources = [
 ];
 
 export const contactInfo = {
-  phone: '07 56 97 44 19',
-  email: 'contact@en-toutefranchise.com',
+  phone: '06 09 78 09 63',
+  phone2: '07 56 97 44 19',
+  email: 'assoentoutefranchise@sfr.fr',
   website: 'en-toutefranchise.com',
   address: '1 rue François Boucher',
   city: '13700 Marignane',
-  hours: 'Lun-Ven 9h-18h • Sam 9h-12h',
-  emergencyPhone: '07 56 97 44 19'
+  hours: 'Lun-Ven 9h-18h • Sam 9h-12h'
 };
 
 export const mockConversations = [
