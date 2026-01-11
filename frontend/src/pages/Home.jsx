@@ -92,10 +92,11 @@ const Home = () => {
                 loop 
                 muted 
                 playsInline
-                className="h-40 md:h-56 w-auto block"
+                className="w-auto block"
                 style={{ 
                   backgroundColor: '#182034',
-                  objectFit: 'cover'
+                  objectFit: 'cover',
+                  height: '18em'
                 }}
               >
                 <source 
