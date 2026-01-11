@@ -99,7 +99,7 @@ const Home = () => {
                 }}
               >
                 <source 
-                  src="https://res.cloudinary.com/dniurvpzd/video/upload/v1768130964/grok-video-38ca4039-6e0e-46ef-afff-9bf998445010_obue2m.mp4" 
+                  src="https://res.cloudinary.com/dniurvpzd/video/upload/v1768131595/grok-video-9d48ca91-d8d8-4739-bf81-9a7d9ff29354_1_z57ca2.mp4" 
                   type="video/mp4" 
                 />
               </video>
