@@ -86,7 +86,7 @@ const Home = () => {
             </Badge>
             
             {/* Vidéo Hero - intégrée naturellement */}
-            <div className="flex justify-center mb-8">
+            <div className="flex justify-center mb-8" style={{ backgroundColor: '#1a2436' }}>
               <video 
                 autoPlay 
                 loop 
@@ -94,8 +94,8 @@ const Home = () => {
                 playsInline
                 className="h-40 md:h-56 w-auto"
                 style={{ 
-                  background: 'transparent',
-                  mixBlendMode: 'normal'
+                  backgroundColor: '#1a2436',
+                  display: 'block'
                 }}
               >
                 <source 
