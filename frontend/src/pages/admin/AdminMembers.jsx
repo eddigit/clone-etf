@@ -847,66 +847,74 @@ const AdminMembers = () => {
 
       {/* Modal Création Adhérent */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg bg-white">
           <DialogHeader>
-            <DialogTitle>Créer un nouvel adhérent</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-xl font-bold text-gray-900">Créer un nouvel adhérent</DialogTitle>
+            <DialogDescription className="text-gray-600">
               L'adhérent recevra un email pour créer son mot de passe et accéder à la plateforme.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateMember}>
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="first_name">Prénom *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="first_name" className="text-sm font-semibold text-gray-900">Prénom *</Label>
                   <Input
                     id="first_name"
                     value={createForm.first_name}
                     onChange={(e) => setCreateForm({...createForm, first_name: e.target.value})}
                     required
+                    className="border-gray-300 bg-white text-gray-900 placeholder:text-gray-400"
+                    placeholder="Jean"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="last_name">Nom *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="last_name" className="text-sm font-semibold text-gray-900">Nom *</Label>
                   <Input
                     id="last_name"
                     value={createForm.last_name}
                     onChange={(e) => setCreateForm({...createForm, last_name: e.target.value})}
                     required
+                    className="border-gray-300 bg-white text-gray-900 placeholder:text-gray-400"
+                    placeholder="Dupont"
                   />
                 </div>
               </div>
               
-              <div>
-                <Label htmlFor="user_email">Email *</Label>
+              <div className="space-y-2">
+                <Label htmlFor="user_email" className="text-sm font-semibold text-gray-900">Email *</Label>
                 <Input
                   id="user_email"
                   type="email"
                   value={createForm.user_email}
                   onChange={(e) => setCreateForm({...createForm, user_email: e.target.value})}
                   required
+                  className="border-gray-300 bg-white text-gray-900 placeholder:text-gray-400"
+                  placeholder="email@exemple.fr"
                 />
               </div>
               
-              <div>
-                <Label htmlFor="phone">Téléphone</Label>
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-sm font-semibold text-gray-900">Téléphone</Label>
                 <Input
                   id="phone"
                   value={createForm.phone}
                   onChange={(e) => setCreateForm({...createForm, phone: e.target.value})}
+                  className="border-gray-300 bg-white text-gray-900 placeholder:text-gray-400"
+                  placeholder="06 12 34 56 78"
                 />
               </div>
               
-              <div>
-                <Label htmlFor="membership_type">Type d'adhésion</Label>
+              <div className="space-y-2">
+                <Label htmlFor="membership_type" className="text-sm font-semibold text-gray-900">Type d'adhésion</Label>
                 <Select 
                   value={createForm.membership_type} 
                   onValueChange={(value) => setCreateForm({...createForm, membership_type: value})}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="border-gray-300 bg-white text-gray-900">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white">
                     <SelectItem value="individual">Particulier (30€)</SelectItem>
                     <SelectItem value="professional">Commerçant - Artisan (30€)</SelectItem>
                     <SelectItem value="professional_plus">Commerçant +100m² (50€)</SelectItem>
@@ -915,16 +923,16 @@ const AdminMembers = () => {
                 </Select>
               </div>
               
-              <div>
-                <Label htmlFor="status">Statut de paiement</Label>
+              <div className="space-y-2">
+                <Label htmlFor="status" className="text-sm font-semibold text-gray-900">Statut de paiement</Label>
                 <Select 
                   value={createForm.status} 
                   onValueChange={(value) => setCreateForm({...createForm, status: value})}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="border-gray-300 bg-white text-gray-900">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white">
                     <SelectItem value="pending">En attente de paiement</SelectItem>
                     <SelectItem value="paid">Payé (chèque/virement/espèces)</SelectItem>
                   </SelectContent>
@@ -937,26 +945,26 @@ const AdminMembers = () => {
                   id="send_email"
                   checked={createForm.send_email}
                   onChange={(e) => setCreateForm({...createForm, send_email: e.target.checked})}
-                  className="rounded border-gray-300"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <Label htmlFor="send_email" className="text-sm font-normal">
+                <Label htmlFor="send_email" className="text-sm font-normal text-gray-700 cursor-pointer">
                   Envoyer un email d'invitation à l'adhérent
                 </Label>
               </div>
 
               {createForm.status === 'pending' && (
-                <div className="p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
                   <strong>💡 Mode invitation :</strong> L'adhérent recevra un email l'invitant à 
                   finaliser son adhésion via HelloAsso.
                 </div>
               )}
             </div>
             
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)} className="border-gray-300 text-gray-700 hover:bg-gray-100">
                 Annuler
               </Button>
-              <Button type="submit" disabled={createLoading}>
+              <Button type="submit" disabled={createLoading} className="bg-blue-600 text-white hover:bg-blue-700">
                 {createLoading ? (
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
