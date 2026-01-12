@@ -50,6 +50,18 @@ const Home = () => {
   const navigate = useNavigate();
   const [featuredArticles, setFeaturedArticles] = useState([]);
 
+  // Fonction pour obtenir l'URL complète d'une image
+  const getFullImageUrl = (url) => {
+    if (!url) return 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    if (url.startsWith('/uploads/')) {
+      return `${API_URL}${url}`;
+    }
+    return url;
+  };
+
   useEffect(() => {
     const fetchFeaturedArticles = async () => {
       try {
@@ -241,9 +253,12 @@ const Home = () => {
                 >
                   <div className="relative h-48 overflow-hidden">
                     <img
-                      src={article.featuredImage || 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800'}
+                      src={getFullImageUrl(article.featuredImage)}
                       alt={article.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800';
+                      }}
                     />
                     <Badge className="absolute top-4 left-4 bg-green-600">
                       {article.category}

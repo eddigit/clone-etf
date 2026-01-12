@@ -773,7 +773,10 @@ async def get_featured_articles(
     """
     Récupère les articles mis en avant pour la page d'accueil.
     """
-    query = {"status": "published", "publishTo": "featured"}
+    query = {
+        "status": "published", 
+        "publishTo": {"$in": ["featured"]}
+    }
     articles = await db.articles.find(query).sort("publishedAt", -1).limit(limit).to_list(limit)
     return {"articles": serialize_doc(articles)}
 
