@@ -30,6 +30,9 @@ aiohttp>=3.9.0
 python-dotenv==1.2.1
 python-multipart==0.0.20
 
+# Image Storage (Cloudinary)
+cloudinary>=1.41.0
+
 # PDF Generation (reportlab inclut pillow automatiquement)
 reportlab>=4.0.0
 

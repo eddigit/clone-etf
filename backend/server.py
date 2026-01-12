@@ -40,6 +40,7 @@ from pdf_service import generate_membership_pdf
 from community_routes import create_community_router
 from email_service import email_service
 from test_agent import run_user_test_agent, get_all_test_reports, get_test_report, test_reports_cache
+from cloudinary_service import upload_image_to_cloudinary, is_cloudinary_enabled
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -1167,6 +1168,7 @@ async def admin_upload_article_image(
 ):
     """
     Upload une image pour un article.
+    Utilise Cloudinary si configuré, sinon stockage local (non persistant sur Render).
     Retourne l'URL de l'image uploadée.
     """
     try:
@@ -1175,29 +1177,43 @@ async def admin_upload_article_image(
         if file.content_type not in allowed_types:
             raise HTTPException(status_code=400, detail="Type de fichier non autorisé. Utilisez JPEG, PNG, GIF ou WebP.")
 
-        # Créer le dossier d'upload s'il n'existe pas
+        # Lire le contenu du fichier
+        content = await file.read()
+
+        # Essayer d'abord Cloudinary si configuré
+        if is_cloudinary_enabled():
+            cloudinary_url = await upload_image_to_cloudinary(content, file.filename, "etf-articles")
+            if cloudinary_url:
+                logger.info(f"Image uploadée vers Cloudinary par {current_user['email']}: {cloudinary_url}")
+                return {
+                    "status": "success",
+                    "url": cloudinary_url,
+                    "filename": file.filename,
+                    "storage": "cloudinary"
+                }
+
+        # Fallback: stockage local (non persistant sur Render!)
+        logger.warning("Cloudinary non disponible, utilisation du stockage local (non persistant)")
+        
         upload_dir = Path("uploads/articles")
         upload_dir.mkdir(parents=True, exist_ok=True)
 
-        # Générer un nom de fichier unique
         file_extension = Path(file.filename).suffix
         unique_filename = f"{uuid.uuid4().hex}{file_extension}"
         file_path = upload_dir / unique_filename
 
-        # Sauvegarder le fichier
-        content = await file.read()
         with open(file_path, "wb") as f:
             f.write(content)
 
-        # Retourner l'URL relative
         image_url = f"/uploads/articles/{unique_filename}"
-
-        logger.info(f"Image uploadée par {current_user['email']}: {image_url}")
+        logger.info(f"Image uploadée localement par {current_user['email']}: {image_url}")
 
         return {
             "status": "success",
             "url": image_url,
-            "filename": unique_filename
+            "filename": unique_filename,
+            "storage": "local",
+            "warning": "Stockage local non persistant. Configurez Cloudinary pour un stockage permanent."
         }
 
     except HTTPException:
