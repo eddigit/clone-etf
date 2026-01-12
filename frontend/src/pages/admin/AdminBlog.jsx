@@ -334,13 +334,13 @@ const AdminBlog = () => {
                 placeholder="Rechercher un article..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 text-gray-900"
               />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border rounded-md min-w-[150px]"
+              className="px-3 py-2 border rounded-md min-w-[150px] text-gray-900 bg-white"
             >
               <option value="">Tous les statuts</option>
               <option value="draft">Brouillons</option>
@@ -350,7 +350,7 @@ const AdminBlog = () => {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-3 py-2 border rounded-md min-w-[150px]"
+              className="px-3 py-2 border rounded-md min-w-[150px] text-gray-900 bg-white"
             >
               <option value="">Toutes les categories</option>
               {categories.map(cat => (
@@ -525,6 +525,7 @@ const AdminBlog = () => {
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="Titre de l'article"
+                className="text-gray-900"
               />
             </div>
 
@@ -535,6 +536,7 @@ const AdminBlog = () => {
                 value={formData.slug}
                 onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
                 placeholder="mon-article (genere automatiquement si vide)"
+                className="text-gray-900"
               />
               <p className="text-xs text-gray-600 mt-1">
                 URL: /blog/{formData.slug || 'mon-article'}
@@ -644,7 +646,7 @@ const AdminBlog = () => {
                   value={formData.featuredImage}
                   onChange={(e) => setFormData(prev => ({ ...prev, featuredImage: e.target.value }))}
                   placeholder="URL de l'image ou uploader"
-                  className="flex-1"
+                  className="flex-1 text-gray-900"
                 />
                 <label className="cursor-pointer">
                   <input
@@ -715,6 +717,7 @@ const AdminBlog = () => {
                   value={formData.author}
                   onChange={(e) => setFormData(prev => ({ ...prev, author: e.target.value }))}
                   placeholder="Nom de l'auteur (defaut: vous)"
+                  className="text-gray-900"
                 />
               </div>
               <div>
@@ -723,6 +726,7 @@ const AdminBlog = () => {
                   value={formData.tags}
                   onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
                   placeholder="franchise, juridique, conseil..."
+                  className="text-gray-900"
                 />
               </div>
             </div>
@@ -738,6 +742,7 @@ const AdminBlog = () => {
                     onChange={(e) => setFormData(prev => ({ ...prev, metaTitle: e.target.value }))}
                     placeholder="Titre pour les moteurs de recherche"
                     maxLength={70}
+                    className="text-gray-900"
                   />
                 </div>
                 <div>
