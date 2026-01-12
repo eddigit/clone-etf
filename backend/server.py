@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, UploadFile, File, Query, Request, BackgroundTasks, Body
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import EmailStr
@@ -2899,6 +2900,11 @@ api_router.include_router(community_router)
 
 # Include the router in the main app
 app.include_router(api_router)
+
+# Monter le dossier uploads pour servir les fichiers statiques
+uploads_dir = Path("uploads")
+uploads_dir.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # CORS middleware - Configuration dynamique selon l'environnement
 allowed_origins = ["*"] if ENVIRONMENT == "development" else [FRONTEND_URL]

@@ -188,7 +188,7 @@ const BlogArticle = () => {
 
         {/* Article Body */}
         <div
-          className="prose prose-lg max-w-none mb-12"
+          className="prose prose-lg max-w-none mb-12 prose-img:rounded-lg prose-img:shadow-md prose-img:w-full prose-img:h-auto"
           dangerouslySetInnerHTML={{ __html: article.content }}
         />
 
