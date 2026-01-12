@@ -24,6 +24,36 @@ const BlogArticle = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Fonction pour transformer les URLs relatives en URLs complètes
+  const processImageUrls = (html) => {
+    if (!html) return '';
+    // Remplacer les URLs relatives /uploads/ par l'URL complète
+    return html.replace(/src="\/uploads\//g, `src="${API_URL}/uploads/`);
+  };
+
+  // Fonction pour obtenir l'URL complète d'une image
+  const getFullImageUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    if (url.startsWith('/uploads/')) {
+      return `${API_URL}${url}`;
+    }
+    return url;
+  };
+
+  // Fonction pour préfixer les URLs relatives d'images dans le contenu HTML
+  const processImageUrls = (htmlContent) => {
+    if (!htmlContent) return '';
+    
+    // Remplacer les src d'images relatives par des URLs complètes
+    return htmlContent.replace(
+      /src="(\/uploads\/[^"]+)"/g, 
+      `src="${API_URL}$1"`
+    );
+  };
+
   useEffect(() => {
     const fetchArticle = async () => {
       try {
@@ -118,7 +148,7 @@ const BlogArticle = () => {
         {article.featuredImage && (
           <div className="h-64 md:h-96 overflow-hidden">
             <img
-              src={article.featuredImage}
+              src={article.featuredImage.startsWith('http') ? article.featuredImage : `${API_URL}${article.featuredImage}`}
               alt={article.title}
               className="w-full h-full object-cover"
             />
@@ -189,7 +219,7 @@ const BlogArticle = () => {
         {/* Article Body */}
         <div
           className="prose prose-lg max-w-none mb-12 prose-img:rounded-lg prose-img:shadow-md prose-img:w-full prose-img:h-auto"
-          dangerouslySetInnerHTML={{ __html: article.content }}
+          dangerouslySetInnerHTML={{ __html: processImageUrls(article.content) }}
         />
 
         {/* Share Section */}

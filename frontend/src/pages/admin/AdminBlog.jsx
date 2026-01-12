@@ -6,6 +6,7 @@ import { Badge } from '../../components/ui/badge';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter
@@ -31,6 +32,8 @@ import {
   RefreshCw
 } from 'lucide-react';
 import API from '../../config/api';
+
+const API_URL = process.env.REACT_APP_API_URL || 'https://clone-etf.onrender.com';
 
 const AdminBlog = () => {
   const { toast } = useToast();
@@ -515,6 +518,9 @@ const AdminBlog = () => {
             <DialogTitle>
               {editingArticle ? 'Modifier l\'article' : 'Nouvel article'}
             </DialogTitle>
+            <DialogDescription>
+              {editingArticle ? 'Modifiez les informations de l\'article' : 'Créez un nouvel article pour votre blog'}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
@@ -666,9 +672,13 @@ const AdminBlog = () => {
               {formData.featuredImage && (
                 <div className="mt-2 relative inline-block">
                   <img
-                    src={formData.featuredImage}
+                    src={formData.featuredImage.startsWith('http') ? formData.featuredImage : `${API_URL}${formData.featuredImage}`}
                     alt="Preview"
                     className="h-24 rounded-lg object-cover"
+                    onError={(e) => {
+                      console.error('Error loading preview image:', formData.featuredImage);
+                      e.target.style.display = 'none';
+                    }}
                   />
                   <button
                     onClick={() => setFormData(prev => ({ ...prev, featuredImage: '' }))}
