@@ -71,10 +71,7 @@ const Footer = () => {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start space-x-2 text-gray-400">
                 <Phone className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <div>
-                  <div>{contactInfo.phone}</div>
-                  {contactInfo.phone2 && <div>{contactInfo.phone2}</div>}
-                </div>
+                <span>{contactInfo.phone}</span>
               </li>
               <li className="flex items-start space-x-2 text-gray-400">
                 <Mail className="h-4 w-4 mt-0.5 flex-shrink-0" />

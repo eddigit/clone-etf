@@ -324,8 +324,8 @@ REACT_APP_BACKEND_URL=http://localhost:8001
 ## 🤝 Support
 
 Pour toute question ou problème:
-- Email: assistance@entoutefranchise.fr
-- Téléphone: 07 56 97 44 19
+- Email: assoentoutefranchise@sfr.fr
+- Téléphone: 06 09 78 09 53
 
 ## 📄 Licence
 

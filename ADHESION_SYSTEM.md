@@ -334,5 +334,5 @@ Dans le dashboard:
 ## Support
 
 Pour toute question:
-- Email: en.toutefranchise@wanadoo.fr
+- Email: assoentoutefranchise@sfr.fr
 - Téléphone: 06 09 78 09 53

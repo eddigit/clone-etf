@@ -161,7 +161,7 @@ frontend/src/
 
 ## 📞 Support
 
-- Email: en.toutefranchise@wanadoo.fr
+- Email: assoentoutefranchise@sfr.fr
 - Tel: 06 09 78 09 53
 
 ## 📚 Documentation

@@ -793,7 +793,6 @@ const Home = () => {
                 </div>
                 <h3 className="text-xl font-semibold mb-2">Assistance Téléphonique</h3>
                 <p className="text-2xl font-bold text-blue-600 mb-2">{contactInfo.phone}</p>
-                <p className="text-2xl font-bold text-blue-600 mb-2">{contactInfo.phone2}</p>
                 <p className="text-sm text-gray-600">{contactInfo.hours}</p>
                 <p className="text-xs text-gray-500 mt-2">Appel non surtaxé</p>
                 <p className="text-sm text-green-600 mt-3 font-semibold">En cas d'urgence, contactez-nous directement sur ces lignes.</p>

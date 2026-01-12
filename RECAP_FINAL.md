@@ -236,7 +236,7 @@ npm start
 
 ## 📞 SUPPORT
 
-**Email**: en.toutefranchise@wanadoo.fr  
+**Email**: assoentoutefranchise@sfr.fr  
 **Téléphone**: 06 09 78 09 53  
 **Documentation**: ADHESION_SYSTEM.md
 

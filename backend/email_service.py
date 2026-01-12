@@ -158,7 +158,7 @@ class EmailService:
                 <div class="footer">
                     <p>En Toute Franchise - Association loi 1901</p>
                     <p>1 rue Francois Boucher, 13700 MARIGNANE</p>
-                    <p>Tel : 06 09 78 09 53 | Email : en.toutefranchise@wanadoo.fr</p>
+                    <p>Tel : 06 09 78 09 53 | Email : assoentoutefranchise@sfr.fr</p>
                 </div>
             </div>
         </body>
@@ -314,7 +314,7 @@ class EmailService:
                 </div>
                 <div class="footer">
                     <p>En Toute Franchise - Association loi 1901</p>
-                    <p>Tel : 06 09 78 09 53 | Email : en.toutefranchise@wanadoo.fr</p>
+                    <p>Tel : 06 09 78 09 53 | Email : assoentoutefranchise@sfr.fr</p>
                 </div>
             </div>
         </body>
@@ -413,7 +413,7 @@ class EmailService:
                 <div class="footer">
                     <p>En Toute Franchise Association - Loi 1901</p>
                     <p>1 rue Francois Boucher, 13700 MARIGNANE</p>
-                    <p>Tel : 06 09 78 09 53 | Email : en.toutefranchise@wanadoo.fr</p>
+                    <p>Tel : 06 09 78 09 53 | Email : assoentoutefranchise@sfr.fr</p>
                 </div>
             </div>
         </body>

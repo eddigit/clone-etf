@@ -215,8 +215,8 @@ mongod --dbpath=...  # Démarrer MongoDB
 - **Vercel**: https://vercel.com/docs
 
 ### Contact
-- **Email**: assistance@entoutefranchise.fr
-- **Téléphone**: 07 56 97 44 19
+- **Email**: assoentoutefranchise@sfr.fr
+- **Téléphone**: 06 09 78 09 53
 
 ---
 

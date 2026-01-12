@@ -193,11 +193,11 @@ Pas de panique ! Connectez-vous à votre espace membre et téléchargez-le à no
 Un mois avant l'expiration, vous recevrez un rappel. Créez une nouvelle adhésion depuis votre espace membre.
 
 ### Puis-je payer en plusieurs fois ?
-Contactez-nous pour étudier les modalités : en.toutefranchise@wanadoo.fr
+Contactez-nous pour étudier les modalités : assoentoutefranchise@sfr.fr
 
 ## 📞 Besoin d'aide ?
 
-**Email :** en.toutefranchise@wanadoo.fr  
+**Email :** assoentoutefranchise@sfr.fr  
 **Téléphone :** 06 09 78 09 53  
 **Adresse :** 1 rue François Boucher, 13700 MARIGNANE
 

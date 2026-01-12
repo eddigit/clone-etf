@@ -70,9 +70,6 @@ const Contact = () => {
                   </div>
                   <h3 className="text-lg font-semibold mb-2">Téléphone</h3>
                   <p className="text-xl font-bold text-blue-600 mb-2">{contactInfo.phone}</p>
-                  {contactInfo.phone2 && (
-                    <p className="text-xl font-bold text-blue-600 mb-2">{contactInfo.phone2}</p>
-                  )}
                   <p className="text-sm text-gray-600">{contactInfo.hours}</p>
                   <p className="text-xs text-gray-500 mt-1">Appel non surtaxé</p>
                 </CardContent>

@@ -120,7 +120,7 @@ class MembershipPDFGenerator:
         <b>EN TOUTE FRANCHISE - Région PACA</b><br/>
         1 rue François Boucher – 13700 MARIGNANE<br/>
         Tél : 06 09 78 09 53<br/>
-        Email : en.toutefranchise@wanadoo.fr
+        Email : assoentoutefranchise@sfr.fr
         """
         story.append(Paragraph(header_text, self.styles['Header']))
         story.append(Spacer(1, 1*cm))

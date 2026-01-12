@@ -359,8 +359,7 @@ export const resources = [
 ];
 
 export const contactInfo = {
-  phone: '06 09 78 09 63',
-  phone2: '07 56 97 44 19',
+  phone: '06 09 78 09 53',
   email: 'assoentoutefranchise@sfr.fr',
   website: 'en-toutefranchise.com',
   address: '1 rue François Boucher',
