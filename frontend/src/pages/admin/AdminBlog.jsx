@@ -184,9 +184,21 @@ const AdminBlog = () => {
       fetchCategories();
     } catch (error) {
       console.error('Error saving article:', error);
+      console.error('Error details:', error.response?.data);
+      
+      let errorMessage = 'Impossible de sauvegarder l\'article';
+      
+      if (error.response?.status === 403) {
+        errorMessage = 'Accès refusé. Vérifiez que vous êtes bien administrateur.';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Session expirée. Veuillez vous reconnecter.';
+      } else if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      }
+      
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible de sauvegarder l\'article',
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {
@@ -508,7 +520,7 @@ const AdminBlog = () => {
           <div className="space-y-6 py-4">
             {/* Title */}
             <div>
-              <label className="block text-sm font-medium mb-1">Titre *</label>
+              <label className="block text-sm font-medium mb-1 text-gray-900">Titre *</label>
               <Input
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
@@ -518,13 +530,13 @@ const AdminBlog = () => {
 
             {/* Slug */}
             <div>
-              <label className="block text-sm font-medium mb-1">Slug (URL)</label>
+              <label className="block text-sm font-medium mb-1 text-gray-900">Slug (URL)</label>
               <Input
                 value={formData.slug}
                 onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
                 placeholder="mon-article (genere automatiquement si vide)"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-600 mt-1">
                 URL: /blog/{formData.slug || 'mon-article'}
               </p>
             </div>
@@ -532,11 +544,11 @@ const AdminBlog = () => {
             {/* Category & Status */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Categorie *</label>
+                <label className="block text-sm font-medium mb-1 text-gray-900">Categorie *</label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="w-full px-3 py-2 border rounded-md text-gray-900 bg-white"
                   required
                 >
                   <option value="">Selectionner une categorie</option>
@@ -546,11 +558,11 @@ const AdminBlog = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Statut</label>
+                <label className="block text-sm font-medium mb-1 text-gray-900">Statut</label>
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="w-full px-3 py-2 border rounded-md text-gray-900 bg-white"
                 >
                   <option value="draft">Brouillon</option>
                   <option value="published">Publie</option>
@@ -626,7 +638,7 @@ const AdminBlog = () => {
 
             {/* Featured Image */}
             <div>
-              <label className="block text-sm font-medium mb-1">Image principale</label>
+              <label className="block text-sm font-medium mb-1 text-gray-900">Image principale</label>
               <div className="flex gap-2">
                 <Input
                   value={formData.featuredImage}
@@ -668,29 +680,29 @@ const AdminBlog = () => {
 
             {/* Excerpt */}
             <div>
-              <label className="block text-sm font-medium mb-1">Resume *</label>
+              <label className="block text-sm font-medium mb-1 text-gray-900">Resume *</label>
               <textarea
                 value={formData.excerpt}
                 onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
                 placeholder="Court resume de l'article (affiche dans les listes)"
-                className="w-full px-3 py-2 border rounded-md min-h-[80px]"
+                className="w-full px-3 py-2 border rounded-md min-h-[80px] text-gray-900 bg-white"
                 maxLength={300}
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-600 mt-1">
                 {formData.excerpt.length}/300 caracteres
               </p>
             </div>
 
             {/* Content */}
             <div>
-              <label className="block text-sm font-medium mb-1">Contenu *</label>
+              <label className="block text-sm font-medium mb-1 text-gray-900">Contenu *</label>
               <textarea
                 value={formData.content}
                 onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
                 placeholder="Contenu de l'article (HTML supporte)"
-                className="w-full px-3 py-2 border rounded-md min-h-[300px] font-mono text-sm"
+                className="w-full px-3 py-2 border rounded-md min-h-[300px] font-mono text-sm text-gray-900 bg-white"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-600 mt-1">
                 Vous pouvez utiliser du HTML pour la mise en forme (titres, listes, liens, images...)
               </p>
             </div>
@@ -698,7 +710,7 @@ const AdminBlog = () => {
             {/* Author & Tags */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Auteur</label>
+                <label className="block text-sm font-medium mb-1 text-gray-900">Auteur</label>
                 <Input
                   value={formData.author}
                   onChange={(e) => setFormData(prev => ({ ...prev, author: e.target.value }))}
@@ -706,7 +718,7 @@ const AdminBlog = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Tags (separes par virgule)</label>
+                <label className="block text-sm font-medium mb-1 text-gray-900">Tags (separes par virgule)</label>
                 <Input
                   value={formData.tags}
                   onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
@@ -717,10 +729,10 @@ const AdminBlog = () => {
 
             {/* SEO */}
             <div className="border-t pt-4">
-              <h4 className="font-medium mb-3">SEO (optionnel)</h4>
+              <h4 className="font-medium mb-3 text-gray-900">SEO (optionnel)</h4>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Meta titre</label>
+                  <label className="block text-sm font-medium mb-1 text-gray-900">Meta titre</label>
                   <Input
                     value={formData.metaTitle}
                     onChange={(e) => setFormData(prev => ({ ...prev, metaTitle: e.target.value }))}
@@ -729,12 +741,12 @@ const AdminBlog = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Meta description</label>
+                  <label className="block text-sm font-medium mb-1 text-gray-900">Meta description</label>
                   <textarea
                     value={formData.metaDescription}
                     onChange={(e) => setFormData(prev => ({ ...prev, metaDescription: e.target.value }))}
                     placeholder="Description pour les moteurs de recherche"
-                    className="w-full px-3 py-2 border rounded-md min-h-[60px]"
+                    className="w-full px-3 py-2 border rounded-md min-h-[60px] text-gray-900 bg-white"
                     maxLength={160}
                   />
                 </div>
