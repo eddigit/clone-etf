@@ -716,3 +716,61 @@ class CategoryManagement(BaseModel):
     isActive: bool = True
     createdAt: datetime = Field(default_factory=datetime.utcnow)
     updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+
+# ===================== MABOITEDIGITALE MODELS =====================
+class MaBoiteDigitaleConfig(BaseModel):
+    """Configuration de l'intégration MaBoiteDigitale"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    api_url: str = "https://maboitedigitale.com/api"
+    partner_id: str = "etf"
+    discount_percentage: float = 20.0
+    is_active: bool = True
+    last_sync: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class MaBoiteDigitaleSSORequest(BaseModel):
+    """Requête de génération de token SSO"""
+    user_id: str
+    redirect_after: Optional[str] = None  # URL de redirection après connexion
+
+
+class MaBoiteDigitaleSSOResponse(BaseModel):
+    """Réponse de génération de token SSO"""
+    success: bool
+    token: Optional[str] = None
+    redirect_url: Optional[str] = None
+    expires_at: Optional[datetime] = None
+    error: Optional[str] = None
+    message: Optional[str] = None
+
+
+class MaBoiteDigitaleSubscriptionStatus(BaseModel):
+    """Statut d'abonnement IA sur MaBoiteDigitale"""
+    has_subscription: bool = False
+    plan_name: Optional[str] = None
+    plan_type: Optional[str] = None  # free, pro, premium
+    tokens_remaining: int = 0
+    subscription_end_date: Optional[datetime] = None
+    discount_applied: bool = False
+
+
+class MaBoiteDigitalePartnerStats(BaseModel):
+    """Statistiques du partenariat MaBoiteDigitale"""
+    total_members_registered: int = 0
+    active_subscriptions: int = 0
+    total_revenue_shared: float = 0.0
+    discount_usage: int = 0
+
+
+class MaBoiteDigitaleMemberSync(BaseModel):
+    """Données de synchronisation membre vers MaBoiteDigitale"""
+    email: str
+    member_number: str
+    first_name: str
+    last_name: str
+    membership_type: str
+    membership_end_date: datetime
+    discount_percentage: float = 20.0

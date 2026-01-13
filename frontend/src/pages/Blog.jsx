@@ -158,7 +158,7 @@ const Blog = () => {
             </div>
           ) : articles.length === 0 ? (
             <div className="text-center py-12">
-              <FileText className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+              <FileText className="h-16 w-16 mx-auto text-gray-400 mb-4" />
               <h3 className="text-xl font-semibold text-gray-700 mb-2">Aucun article disponible</h3>
               <p className="text-gray-500">Les articles arrivent bientot !</p>
             </div>

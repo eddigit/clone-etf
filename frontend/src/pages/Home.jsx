@@ -276,7 +276,7 @@ const Home = () => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex items-center justify-between text-sm text-gray-500">
+                      <div className="flex items-center justify-between text-sm text-gray-400">
                         <span>{formatDate(article.publishedAt)}</span>
                         <span className="flex items-center text-green-400">
                           Lire plus

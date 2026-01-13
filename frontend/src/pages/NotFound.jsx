@@ -7,11 +7,11 @@ const NotFound = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="text-center max-w-md">
-        <h1 className="text-9xl font-bold text-gray-200">404</h1>
-        <h2 className="text-2xl font-semibold text-gray-800 mt-4">
+        <h1 className="text-9xl font-bold text-gray-300">404</h1>
+        <h2 className="text-2xl font-semibold text-gray-900 mt-4">
           Page non trouvée
         </h2>
-        <p className="text-gray-600 mt-2">
+        <p className="text-gray-700 mt-2">
           La page que vous recherchez n'existe pas ou a été déplacée.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">

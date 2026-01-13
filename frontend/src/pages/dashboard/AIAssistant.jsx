@@ -20,21 +20,23 @@ import {
   CreditCard,
   Percent,
   Link2,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import API from '../../config/api';
 
 // URL de Ma Boîte Digitale
 const MABOITEDIGITALE_URL = 'https://maboitedigitale.com';
-// TODO: Endpoint API pour vérifier le statut IA sur maboitedigitale.com
-// const MABOITEDIGITALE_API = 'https://api.maboitedigitale.com';
 
 const AIAssistant = () => {
   const [user, setUser] = useState(null);
   const [membershipActive, setMembershipActive] = useState(false);
   const [iaSubscriptionActive, setIaSubscriptionActive] = useState(false);
+  const [iaSubscription, setIaSubscription] = useState(null);
   const [memberNumber, setMemberNumber] = useState('');
   const [loading, setLoading] = useState(true);
+  const [ssoLoading, setSsoLoading] = useState(false);
+  const [ssoError, setSsoError] = useState(null);
 
   useEffect(() => {
     const checkStatus = async () => {
@@ -49,28 +51,27 @@ const AIAssistant = () => {
               setUser(response.data);
               setMemberNumber(response.data.memberNumber || response.data.id || '');
               // Vérifier si l'adhésion est active
-              const hasActiveAdhesion = response.data.adhesionStatus === 'active' || 
-                                        response.data.hasActiveAdhesion === true;
-              setMembershipActive(hasActiveAdhesion);
+              const isActive = response.data.membershipStatus === 'active';
+              const notExpired = !response.data.membershipEndDate || 
+                                new Date(response.data.membershipEndDate) > new Date();
+              setMembershipActive(isActive && notExpired);
             }
           } catch (err) {
             console.error('Error fetching user profile:', err);
-            // Fallback: considérer l'adhésion comme active si connecté
-            setMembershipActive(true);
           }
 
-          // TODO: Vérifier le statut d'abonnement IA sur maboitedigitale.com
-          // Cette API sera implémentée côté maboitedigitale.com
-          // Exemple:
-          // const iaResponse = await fetch(`${MABOITEDIGITALE_API}/api/check-subscription`, {
-          //   method: 'POST',
-          //   headers: { 'Content-Type': 'application/json' },
-          //   body: JSON.stringify({ memberNumber: memberNumber, source: 'etf' })
-          // });
-          // const iaData = await iaResponse.json();
-          // setIaSubscriptionActive(iaData.isActive);
-          
-          setIaSubscriptionActive(false); // Pour l'instant, pas d'abonnement IA actif
+          // Vérifier le statut d'abonnement IA sur maboitedigitale.com
+          try {
+            const iaResponse = await API.get('/api/maboitedigitale/subscription');
+            if (iaResponse.data) {
+              setIaSubscription(iaResponse.data);
+              setIaSubscriptionActive(iaResponse.data.has_subscription === true);
+            }
+          } catch (err) {
+            console.error('Error fetching IA subscription:', err);
+            // Si erreur, on ne bloque pas l'interface
+            setIaSubscriptionActive(false);
+          }
         }
       } catch (error) {
         console.error('Error checking status:', error);
@@ -82,11 +83,38 @@ const AIAssistant = () => {
   }, []);
 
   // Fonction pour se connecter directement à Ma Boîte Digitale avec SSO
-  const handleConnectToMaBoiteDigitale = () => {
-    // TODO: Implémenter le SSO avec maboitedigitale.com
-    // Pour l'instant, redirection simple avec le numéro d'adhérent en paramètre
-    const ssoUrl = `${MABOITEDIGITALE_URL}/login?source=etf&member=${encodeURIComponent(memberNumber)}`;
-    window.open(ssoUrl, '_blank');
+  const handleConnectToMaBoiteDigitale = async () => {
+    setSsoLoading(true);
+    setSsoError(null);
+    
+    try {
+      // Appeler l'API backend pour générer un token SSO
+      const response = await API.post('/api/maboitedigitale/sso');
+      
+      if (response.data.success && response.data.redirect_url) {
+        // Redirection avec le token SSO
+        window.open(response.data.redirect_url, '_blank');
+      } else if (response.data.redirect_url) {
+        // Mode dev: redirection simple
+        window.open(response.data.redirect_url, '_blank');
+      } else {
+        // Erreur ou message
+        setSsoError(response.data.message || 'Impossible de générer le lien de connexion');
+        // Fallback: redirection simple
+        const fallbackUrl = `${MABOITEDIGITALE_URL}/login?source=etf&member=${encodeURIComponent(memberNumber)}`;
+        window.open(fallbackUrl, '_blank');
+      }
+    } catch (error) {
+      console.error('SSO error:', error);
+      setSsoError('Erreur de connexion. Redirection vers le site...');
+      // Fallback en cas d'erreur
+      setTimeout(() => {
+        const fallbackUrl = `${MABOITEDIGITALE_URL}/login?source=etf&member=${encodeURIComponent(memberNumber)}`;
+        window.open(fallbackUrl, '_blank');
+      }, 1000);
+    } finally {
+      setSsoLoading(false);
+    }
   };
 
   const features = [

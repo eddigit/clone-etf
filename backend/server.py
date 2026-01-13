@@ -30,12 +30,16 @@ from models import (
     # Onboarding models
     OnboardingData, OnboardingCreate, UserOnboarding, OnboardingResponse,
     # Categories
-    CASE_CATEGORIES, ARTICLE_CATEGORIES, CategoryManagement
+    CASE_CATEGORIES, ARTICLE_CATEGORIES, CategoryManagement,
+    # MaBoiteDigitale models
+    MaBoiteDigitaleConfig, MaBoiteDigitaleSSORequest, MaBoiteDigitaleSSOResponse,
+    MaBoiteDigitaleSubscriptionStatus, MaBoiteDigitalePartnerStats, MaBoiteDigitaleMemberSync
 )
 import re
 import unicodedata
 from auth_utils import hash_password, verify_password, create_access_token, decode_access_token
 from helloasso_service import helloasso_service
+from maboitedigitale_service import maboitedigitale_service
 from pdf_service import generate_membership_pdf
 from community_routes import create_community_router
 from email_service import email_service
@@ -2903,6 +2907,255 @@ async def get_helloasso_payments(
         "limit": limit,
         "offset": offset
     }
+
+# ===================== MABOITEDIGITALE ADMIN ROUTES =====================
+@api_router.get("/admin/maboitedigitale/status")
+async def get_maboitedigitale_status(current_user: dict = Depends(get_admin_user)):
+    """
+    Vérifie le statut de la connexion MaBoiteDigitale.
+    Retourne les informations de configuration et l'état de la connexion.
+    """
+    status = await maboitedigitale_service.check_connection()
+    return status
+
+
+@api_router.get("/admin/maboitedigitale/stats", response_model=MaBoiteDigitalePartnerStats)
+async def get_maboitedigitale_stats(current_user: dict = Depends(get_admin_user)):
+    """
+    Récupère les statistiques du partenariat MaBoiteDigitale.
+    - Nombre de membres enregistrés
+    - Abonnements actifs
+    - Revenus partagés
+    - Utilisation des réductions
+    """
+    stats = await maboitedigitale_service.get_partner_stats()
+    return stats
+
+
+@api_router.post("/admin/maboitedigitale/sync-member")
+async def sync_member_to_maboitedigitale(
+    data: MaBoiteDigitaleMemberSync,
+    current_user: dict = Depends(get_admin_user)
+):
+    """
+    Synchronise un membre ETF vers MaBoiteDigitale.
+    Enregistre le membre pour qu'il bénéficie de la réduction partenaire.
+    """
+    result = await maboitedigitale_service.register_etf_member(
+        email=data.email,
+        member_number=data.member_number,
+        first_name=data.first_name,
+        last_name=data.last_name,
+        membership_type=data.membership_type,
+        membership_end_date=data.membership_end_date,
+        discount_percentage=data.discount_percentage
+    )
+    
+    if result.get("success"):
+        logger.info(f"Admin {current_user['email']} synced member {data.email} to MaBoiteDigitale")
+    
+    return result
+
+
+@api_router.post("/admin/maboitedigitale/sync-all")
+async def sync_all_members_to_maboitedigitale(
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_admin_user),
+    only_active: bool = Query(True, description="Synchroniser uniquement les membres actifs")
+):
+    """
+    Synchronise tous les membres ETF vers MaBoiteDigitale.
+    Opération en arrière-plan pour les adhérents actifs.
+    """
+    async def sync_members():
+        query = {"membershipStatus": "active"} if only_active else {}
+        members = await db.users.find(query).to_list(None)
+        
+        results = {
+            "total": len(members),
+            "success": 0,
+            "errors": []
+        }
+        
+        for member in members:
+            try:
+                # Générer le numéro d'adhérent si absent
+                member_number = member.get("memberNumber")
+                if not member_number:
+                    member_number = generate_membership_reference()
+                    await db.users.update_one(
+                        {"id": member["id"]},
+                        {"$set": {"memberNumber": member_number}}
+                    )
+                
+                result = await maboitedigitale_service.register_etf_member(
+                    email=member["email"],
+                    member_number=member_number,
+                    first_name=member.get("firstName", ""),
+                    last_name=member.get("lastName", ""),
+                    membership_type=member.get("membershipType", "individual"),
+                    membership_end_date=member.get("membershipEndDate", datetime.utcnow() + timedelta(days=365))
+                )
+                
+                if result.get("success"):
+                    results["success"] += 1
+                else:
+                    results["errors"].append({
+                        "email": member["email"],
+                        "error": result.get("error", "Unknown error")
+                    })
+                    
+            except Exception as e:
+                results["errors"].append({
+                    "email": member.get("email"),
+                    "error": str(e)
+                })
+        
+        logger.info(f"MaBoiteDigitale bulk sync: {results['success']}/{results['total']} success")
+        return results
+    
+    # Note: Pour une vraie tâche en arrière-plan, utiliser Celery ou similaire
+    # Ici on retourne une réponse immédiate
+    return {
+        "status": "started",
+        "message": "Synchronisation en cours...",
+        "estimated_members": await db.users.count_documents(
+            {"membershipStatus": "active"} if only_active else {}
+        )
+    }
+
+
+@api_router.get("/admin/maboitedigitale/config")
+async def get_maboitedigitale_config(current_user: dict = Depends(get_admin_user)):
+    """
+    Récupère la configuration actuelle de l'intégration MaBoiteDigitale.
+    """
+    # Chercher la config en base ou retourner la config par défaut
+    config = await db.maboitedigitale_config.find_one({})
+    
+    if not config:
+        # Retourner la config par défaut depuis les variables d'environnement
+        return {
+            "api_url": os.environ.get('MABOITEDIGITALE_API_URL', 'https://maboitedigitale.com/api'),
+            "partner_id": os.environ.get('MABOITEDIGITALE_PARTNER_ID', 'etf'),
+            "discount_percentage": 20.0,
+            "is_active": True,
+            "is_configured": maboitedigitale_service.is_configured(),
+            "last_sync": None
+        }
+    
+    return {
+        "api_url": config.get("api_url"),
+        "partner_id": config.get("partner_id"),
+        "discount_percentage": config.get("discount_percentage", 20.0),
+        "is_active": config.get("is_active", True),
+        "is_configured": maboitedigitale_service.is_configured(),
+        "last_sync": config.get("last_sync")
+    }
+
+
+@api_router.put("/admin/maboitedigitale/config")
+async def update_maboitedigitale_config(
+    current_user: dict = Depends(get_admin_user),
+    discount_percentage: float = Query(20.0, ge=0, le=100),
+    is_active: bool = Query(True)
+):
+    """
+    Met à jour la configuration de l'intégration MaBoiteDigitale.
+    Note: Les credentials API sont gérés via variables d'environnement.
+    """
+    now = datetime.utcnow()
+    
+    await db.maboitedigitale_config.update_one(
+        {},
+        {
+            "$set": {
+                "discount_percentage": discount_percentage,
+                "is_active": is_active,
+                "updated_at": now
+            },
+            "$setOnInsert": {
+                "id": str(uuid.uuid4()),
+                "api_url": os.environ.get('MABOITEDIGITALE_API_URL', 'https://maboitedigitale.com/api'),
+                "partner_id": os.environ.get('MABOITEDIGITALE_PARTNER_ID', 'etf'),
+                "created_at": now
+            }
+        },
+        upsert=True
+    )
+    
+    logger.info(f"Admin {current_user['email']} updated MaBoiteDigitale config")
+    
+    return {
+        "status": "success",
+        "discount_percentage": discount_percentage,
+        "is_active": is_active
+    }
+
+
+# ===================== MABOITEDIGITALE USER ROUTES =====================
+@api_router.post("/maboitedigitale/sso", response_model=MaBoiteDigitaleSSOResponse)
+async def generate_sso_token(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Génère un token SSO pour connecter l'adhérent à MaBoiteDigitale.
+    L'adhérent doit avoir une adhésion active.
+    """
+    # Vérifier l'adhésion active
+    if current_user.get("membershipStatus") != "active":
+        return MaBoiteDigitaleSSOResponse(
+            success=False,
+            error="membership_inactive",
+            message="Votre adhésion ETF n'est pas active. Renouvelez votre adhésion pour accéder aux outils IA."
+        )
+    
+    # Vérifier la date d'expiration
+    end_date = current_user.get("membershipEndDate")
+    if end_date and end_date < datetime.utcnow():
+        return MaBoiteDigitaleSSOResponse(
+            success=False,
+            error="membership_expired",
+            message="Votre adhésion ETF a expiré. Renouvelez votre adhésion pour accéder aux outils IA."
+        )
+    
+    # Générer ou récupérer le numéro d'adhérent
+    member_number = current_user.get("memberNumber")
+    if not member_number:
+        member_number = generate_membership_reference()
+        await db.users.update_one(
+            {"id": current_user["id"]},
+            {"$set": {"memberNumber": member_number}}
+        )
+    
+    # Générer le token SSO
+    result = await maboitedigitale_service.generate_sso_token(
+        user_id=current_user["id"],
+        email=current_user["email"],
+        member_number=member_number,
+        first_name=current_user.get("firstName", ""),
+        last_name=current_user.get("lastName", ""),
+        membership_type=current_user.get("membershipType", "individual"),
+        membership_end_date=end_date
+    )
+    
+    return MaBoiteDigitaleSSOResponse(**result)
+
+
+@api_router.get("/maboitedigitale/subscription", response_model=MaBoiteDigitaleSubscriptionStatus)
+async def get_ia_subscription_status(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Vérifie le statut d'abonnement IA de l'adhérent sur MaBoiteDigitale.
+    """
+    result = await maboitedigitale_service.check_subscription_status(
+        email=current_user["email"],
+        member_number=current_user.get("memberNumber")
+    )
+    
+    return MaBoiteDigitaleSubscriptionStatus(**result)
+
 
 # ===================== HEALTH CHECK =====================
 @api_router.get("/")

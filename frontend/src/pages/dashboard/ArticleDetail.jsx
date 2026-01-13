@@ -161,7 +161,7 @@ const ArticleDetail = () => {
 
           {/* Article Body */}
           <div
-            className="prose prose-lg max-w-none mb-12"
+            className="prose prose-lg max-w-none mb-12 prose-headings:text-gray-900 prose-p:text-gray-700 prose-strong:text-gray-900 prose-ul:text-gray-700 prose-ol:text-gray-700"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
 
