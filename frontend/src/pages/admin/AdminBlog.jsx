@@ -29,7 +29,16 @@ import {
   Clock,
   User,
   Tag,
-  RefreshCw
+  RefreshCw,
+  Link,
+  Bold,
+  Italic,
+  List,
+  ListOrdered,
+  Heading1,
+  Heading2,
+  Youtube,
+  Type
 } from 'lucide-react';
 import API from '../../config/api';
 
@@ -102,6 +111,72 @@ const AdminBlog = () => {
     fetchArticles();
     fetchCategories();
   }, [fetchArticles]);
+
+  // Référence au textarea du contenu
+  const contentTextareaRef = React.useRef(null);
+
+  // Fonction pour insérer du texte à la position du curseur
+  const insertAtCursor = (before, after = '') => {
+    const textarea = contentTextareaRef.current;
+    if (!textarea) return;
+    
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = formData.content.substring(start, end);
+    const newText = formData.content.substring(0, start) + before + selectedText + after + formData.content.substring(end);
+    
+    setFormData(prev => ({ ...prev, content: newText }));
+    
+    // Repositionner le curseur
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = start + before.length + selectedText.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  };
+
+  // Fonctions de la barre d'outils
+  const insertBold = () => insertAtCursor('<strong>', '</strong>');
+  const insertItalic = () => insertAtCursor('<em>', '</em>');
+  const insertH2 = () => insertAtCursor('<h2>', '</h2>');
+  const insertH3 = () => insertAtCursor('<h3>', '</h3>');
+  const insertList = () => insertAtCursor('<ul>\n  <li>', '</li>\n</ul>');
+  const insertOrderedList = () => insertAtCursor('<ol>\n  <li>', '</li>\n</ol>');
+  const insertParagraph = () => insertAtCursor('<p>', '</p>');
+
+  const insertLink = () => {
+    const url = prompt('Entrez l\'URL du lien:', 'https://');
+    if (url) {
+      const text = prompt('Texte du lien (laissez vide pour utiliser l\'URL):', '');
+      const linkText = text || url;
+      insertAtCursor(`<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${linkText}</a>`, '');
+    }
+  };
+
+  const insertYouTube = () => {
+    const url = prompt('Entrez l\'URL YouTube de la vidéo:\n(Ex: https://www.youtube.com/watch?v=xxxxx)', '');
+    if (url) {
+      // Extraire l'ID de la vidéo
+      let videoId = url;
+      if (url.includes('youtube.com/watch')) {
+        const urlParams = new URLSearchParams(url.split('?')[1]);
+        videoId = urlParams.get('v') || url;
+      } else if (url.includes('youtu.be/')) {
+        videoId = url.split('youtu.be/')[1]?.split('?')[0] || url;
+      } else if (url.includes('youtube.com/embed/')) {
+        videoId = url.split('youtube.com/embed/')[1]?.split('?')[0] || url;
+      }
+      insertAtCursor(`[youtube:${videoId}]`, '');
+    }
+  };
+
+  const insertImage = () => {
+    const url = prompt('Entrez l\'URL de l\'image:', '');
+    if (url) {
+      const alt = prompt('Description de l\'image (alt text):', 'Image');
+      insertAtCursor(`<img src="${url}" alt="${alt}" class="rounded-lg shadow-md max-w-full" />`, '');
+    }
+  };
 
   // Reset form
   const resetForm = () => {
@@ -707,16 +782,56 @@ const AdminBlog = () => {
 
             {/* Content */}
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-900">Contenu *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-900">Contenu *</label>
+              
+              {/* Barre d'outils de l'éditeur */}
+              <div className="flex flex-wrap gap-1 p-2 bg-gray-100 border border-b-0 rounded-t-md">
+                <Button type="button" variant="ghost" size="sm" onClick={insertBold} title="Gras">
+                  <Bold className="h-4 w-4" />
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={insertItalic} title="Italique">
+                  <Italic className="h-4 w-4" />
+                </Button>
+                <div className="w-px bg-gray-300 mx-1"></div>
+                <Button type="button" variant="ghost" size="sm" onClick={insertH2} title="Titre H2">
+                  <Heading1 className="h-4 w-4" />
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={insertH3} title="Sous-titre H3">
+                  <Heading2 className="h-4 w-4" />
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={insertParagraph} title="Paragraphe">
+                  <Type className="h-4 w-4" />
+                </Button>
+                <div className="w-px bg-gray-300 mx-1"></div>
+                <Button type="button" variant="ghost" size="sm" onClick={insertList} title="Liste à puces">
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={insertOrderedList} title="Liste numérotée">
+                  <ListOrdered className="h-4 w-4" />
+                </Button>
+                <div className="w-px bg-gray-300 mx-1"></div>
+                <Button type="button" variant="ghost" size="sm" onClick={insertLink} title="Insérer un lien" className="text-blue-600">
+                  <Link className="h-4 w-4" />
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={insertImage} title="Insérer une image">
+                  <Image className="h-4 w-4" />
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={insertYouTube} title="Insérer une vidéo YouTube" className="text-red-600">
+                  <Youtube className="h-4 w-4" />
+                </Button>
+              </div>
+              
               <textarea
+                ref={contentTextareaRef}
                 value={formData.content}
                 onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                placeholder="Contenu de l'article (HTML supporte)"
-                className="w-full px-3 py-2 border rounded-md min-h-[300px] font-mono text-sm text-gray-900 bg-white"
+                placeholder="Contenu de l'article (HTML supporté)&#10;&#10;Utilisez la barre d'outils ci-dessus ou écrivez directement en HTML.&#10;Pour insérer une vidéo YouTube, utilisez le format: [youtube:ID_VIDEO]"
+                className="w-full px-3 py-2 border border-t-0 rounded-b-md min-h-[300px] font-mono text-sm text-gray-900 bg-white"
               />
-              <p className="text-xs text-gray-600 mt-1">
-                Vous pouvez utiliser du HTML pour la mise en forme (titres, listes, liens, images...)
-              </p>
+              <div className="flex justify-between text-xs text-gray-600 mt-1">
+                <p>Utilisez la barre d'outils ou écrivez directement en HTML</p>
+                <p>Pour YouTube: [youtube:VIDEO_ID] ou [youtube:URL_COMPLETE]</p>
+              </div>
             </div>
 
             {/* Author & Tags */}

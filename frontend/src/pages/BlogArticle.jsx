@@ -24,13 +24,6 @@ const BlogArticle = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fonction pour transformer les URLs relatives en URLs complètes
-  const processImageUrls = (html) => {
-    if (!html) return '';
-    // Remplacer les URLs relatives /uploads/ par l'URL complète
-    return html.replace(/src="\/uploads\//g, `src="${API_URL}/uploads/`);
-  };
-
   // Fonction pour obtenir l'URL complète d'une image
   const getFullImageUrl = (url) => {
     if (!url) return '';
@@ -44,14 +37,36 @@ const BlogArticle = () => {
   };
 
   // Fonction pour préfixer les URLs relatives d'images dans le contenu HTML
+  // et convertir les liens YouTube en iframes
   const processImageUrls = (htmlContent) => {
     if (!htmlContent) return '';
     
     // Remplacer les src d'images relatives par des URLs complètes
-    return htmlContent.replace(
+    let processed = htmlContent.replace(
       /src="(\/uploads\/[^"]+)"/g, 
       `src="${API_URL}$1"`
     );
+    
+    // Convertir les liens YouTube en iframes responsives
+    // Format: [youtube:VIDEO_ID] ou [youtube:URL_COMPLETE]
+    processed = processed.replace(
+      /\[youtube:([^\]]+)\]/g,
+      (match, videoIdOrUrl) => {
+        let videoId = videoIdOrUrl;
+        // Extraire l'ID de différents formats d'URL YouTube
+        if (videoIdOrUrl.includes('youtube.com/watch')) {
+          const urlParams = new URLSearchParams(videoIdOrUrl.split('?')[1]);
+          videoId = urlParams.get('v') || videoIdOrUrl;
+        } else if (videoIdOrUrl.includes('youtu.be/')) {
+          videoId = videoIdOrUrl.split('youtu.be/')[1]?.split('?')[0] || videoIdOrUrl;
+        } else if (videoIdOrUrl.includes('youtube.com/embed/')) {
+          videoId = videoIdOrUrl.split('youtube.com/embed/')[1]?.split('?')[0] || videoIdOrUrl;
+        }
+        return `<div class="youtube-embed my-6"><div class="relative w-full" style="padding-bottom: 56.25%;"><iframe src="https://www.youtube.com/embed/${videoId}" title="Vidéo YouTube" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="absolute top-0 left-0 w-full h-full rounded-lg shadow-md"></iframe></div></div>`;
+      }
+    );
+    
+    return processed;
   };
 
   useEffect(() => {
@@ -219,6 +234,24 @@ const BlogArticle = () => {
         {/* Article Body */}
         <div
           className="prose prose-lg max-w-none mb-12 prose-img:rounded-lg prose-img:shadow-md prose-img:w-full prose-img:h-auto"
+          style={{
+            color: '#1f2937',
+            '--tw-prose-body': '#1f2937',
+            '--tw-prose-headings': '#111827',
+            '--tw-prose-links': '#2563eb',
+            '--tw-prose-bold': '#111827',
+            '--tw-prose-counters': '#4b5563',
+            '--tw-prose-bullets': '#4b5563',
+            '--tw-prose-hr': '#e5e7eb',
+            '--tw-prose-quotes': '#1f2937',
+            '--tw-prose-quote-borders': '#2563eb',
+            '--tw-prose-captions': '#4b5563',
+            '--tw-prose-code': '#111827',
+            '--tw-prose-pre-code': '#e5e7eb',
+            '--tw-prose-pre-bg': '#1f2937',
+            '--tw-prose-th-borders': '#d1d5db',
+            '--tw-prose-td-borders': '#e5e7eb'
+          }}
           dangerouslySetInnerHTML={{ __html: processImageUrls(article.content) }}
         />
 
