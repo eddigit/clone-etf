@@ -134,31 +134,6 @@ code {
     margin: 0 auto !important;
 }
 
-/* FORCER LE TEXTE NOIR VISIBLE - Correction globale */
-h1, h2, h3, h4, h5, h6 {
-    color: #111827 !important;
-}
-
-p, span, div, li, td, th, label, a {
-    color: inherit;
-}
-
-/* Styles spécifiques pour les cards */
-.bg-card, [class*="bg-card"], .rounded-xl.border.shadow {
-    background-color: #ffffff !important;
-    color: #1f2937 !important;
-}
-
-/* Forcer le texte des titres de cards */
-[class*="CardTitle"], .font-semibold.leading-none {
-    color: #111827 !important;
-}
-
-/* Forcer le texte des descriptions */
-[class*="CardDescription"], .text-muted-foreground {
-    color: #6b7280 !important;
-}
-
 /* Blog articles - texte visible */
 .prose, .prose * {
     color: #1f2937;
