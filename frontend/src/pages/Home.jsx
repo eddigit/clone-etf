@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -246,42 +246,46 @@ const Home = () => {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {featuredArticles.map((article) => (
-                <Card
+                <Link
                   key={article.id}
-                  className="overflow-hidden hover:shadow-xl transition-all bg-slate-800 border-slate-700 cursor-pointer group"
-                  onClick={() => navigate(`/blog/${article.slug}`)}
+                  to={`/blog/${article.slug}`}
+                  className="block"
                 >
-                  <div className="relative h-48 overflow-hidden">
-                    <img
-                      src={getFullImageUrl(article.featuredImage)}
-                      alt={article.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800';
-                      }}
-                    />
-                    <Badge className="absolute top-4 left-4 bg-green-600">
-                      {article.category}
-                    </Badge>
-                  </div>
-                  <CardHeader>
-                    <CardTitle className="text-xl text-white line-clamp-2 group-hover:text-green-400 transition-colors">
-                      {article.title}
-                    </CardTitle>
-                    <CardDescription className="text-gray-400 line-clamp-2">
-                      {article.excerpt}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between text-sm text-gray-500">
-                      <span>{formatDate(article.publishedAt)}</span>
-                      <span className="flex items-center text-green-400">
-                        Lire plus
-                        <ArrowRight className="ml-1 h-4 w-4" />
-                      </span>
+                  <Card
+                    className="overflow-hidden hover:shadow-xl transition-all bg-slate-800 border-slate-700 cursor-pointer group h-full"
+                  >
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={getFullImageUrl(article.featuredImage)}
+                        alt={article.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          e.target.src = 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800';
+                        }}
+                      />
+                      <Badge className="absolute top-4 left-4 bg-green-600">
+                        {article.category}
+                      </Badge>
                     </div>
-                  </CardContent>
-                </Card>
+                    <CardHeader>
+                      <CardTitle className="text-xl text-white line-clamp-2 group-hover:text-green-400 transition-colors">
+                        {article.title}
+                      </CardTitle>
+                      <CardDescription className="text-gray-400 line-clamp-2">
+                        {article.excerpt}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between text-sm text-gray-500">
+                        <span>{formatDate(article.publishedAt)}</span>
+                        <span className="flex items-center text-green-400">
+                          Lire plus
+                          <ArrowRight className="ml-1 h-4 w-4" />
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
 

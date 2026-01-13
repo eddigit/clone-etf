@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -165,62 +165,58 @@ const Blog = () => {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {articles.map((article) => (
-                <Card
+                <Link 
                   key={article.id}
-                  className="overflow-hidden hover:shadow-xl transition-shadow group cursor-pointer"
-                  onClick={() => handleReadMore(article)}
+                  to={useMockData ? '#' : `/blog/${article.slug}`}
+                  className="block"
                 >
-                  <div className="relative h-48 overflow-hidden">
-                    <img
-                      src={getFullImageUrl(article.featuredImage || article.image)}
-                      alt={article.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800';
-                      }}
-                    />
-                    <Badge className="absolute top-4 left-4 bg-blue-600">
-                      {article.category}
-                    </Badge>
-                  </div>
-                  <CardHeader>
-                    <CardTitle className="text-xl line-clamp-2 group-hover:text-blue-600 transition-colors">
-                      {article.title}
-                    </CardTitle>
-                    <CardDescription className="line-clamp-3">
-                      {article.excerpt}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                      <div className="flex items-center space-x-2">
-                        <User className="h-4 w-4" />
-                        <span>{article.author}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Clock className="h-4 w-4" />
-                        <span>{article.readTime}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">
-                        {formatDate(article.publishedAt || article.date || article.createdAt)}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-blue-600 hover:text-blue-700"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleReadMore(article);
+                  <Card
+                    className="overflow-hidden hover:shadow-xl transition-shadow group cursor-pointer bg-white h-full"
+                  >
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={getFullImageUrl(article.featuredImage || article.image)}
+                        alt={article.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          e.target.src = 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800';
                         }}
-                      >
-                        Lire plus
-                        <ArrowRight className="ml-1 h-4 w-4" />
-                      </Button>
+                      />
+                      <Badge className="absolute top-4 left-4 bg-blue-600">
+                        {article.category}
+                      </Badge>
                     </div>
-                  </CardContent>
-                </Card>
+                    <CardHeader>
+                      <CardTitle className="text-xl line-clamp-2 group-hover:text-blue-600 transition-colors text-gray-900">
+                        {article.title}
+                      </CardTitle>
+                      <CardDescription className="line-clamp-3 text-gray-600">
+                        {article.excerpt}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                        <div className="flex items-center space-x-2">
+                          <User className="h-4 w-4" />
+                          <span>{article.author}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Clock className="h-4 w-4" />
+                          <span>{article.readTime}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500">
+                          {formatDate(article.publishedAt || article.date || article.createdAt)}
+                        </span>
+                        <span className="text-blue-600 hover:text-blue-700 flex items-center text-sm font-medium">
+                          Lire plus
+                          <ArrowRight className="ml-1 h-4 w-4" />
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           )}
