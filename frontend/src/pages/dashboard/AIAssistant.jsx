@@ -1,262 +1,291 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/dashboard/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Textarea } from '../../components/ui/textarea';
 import { Badge } from '../../components/ui/badge';
-import { Bot, Send, User, Loader2, AlertCircle } from 'lucide-react';
-import { mockConversations, mockMessages } from '../../mockData';
+import { 
+  Bot, 
+  ExternalLink, 
+  CheckCircle, 
+  ArrowRight, 
+  Sparkles, 
+  Shield, 
+  Clock, 
+  Users,
+  FileText,
+  MessageSquare,
+  Zap,
+  Star,
+  Info,
+  CreditCard
+} from 'lucide-react';
 
 const AIAssistant = () => {
-  const [conversations, setConversations] = useState(mockConversations);
-  const [currentConversation, setCurrentConversation] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const messagesEndRef = useRef(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const [user, setUser] = useState(null);
+  const [membershipActive, setMembershipActive] = useState(false);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleNewConversation = () => {
-    const newConv = {
-      id: Date.now(),
-      title: 'Nouvelle conversation',
-      date: new Date().toISOString().split('T')[0],
-      messagesCount: 0,
-      lastMessage: ''
+    // Récupérer les infos utilisateur depuis le localStorage ou l'API
+    const checkMembership = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          // Simuler la vérification du statut d'adhésion
+          // En production, cela devrait appeler l'API pour vérifier
+          setMembershipActive(true); // Pour l'instant on suppose que l'adhésion est active
+        }
+      } catch (error) {
+        console.error('Error checking membership:', error);
+      }
     };
-    setConversations([newConv, ...conversations]);
-    setCurrentConversation(newConv.id);
-    setMessages([]);
-  };
+    checkMembership();
+  }, []);
 
-  const handleSelectConversation = (convId) => {
-    setCurrentConversation(convId);
-    // Load mock messages for demo
-    if (convId === 1) {
-      setMessages(mockMessages);
-    } else {
-      setMessages([]);
+  const features = [
+    {
+      icon: MessageSquare,
+      title: 'Assistant IA Juridique',
+      description: 'Posez vos questions sur le droit de la franchise et obtenez des réponses instantanées basées sur 30 ans d\'expérience.'
+    },
+    {
+      icon: FileText,
+      title: 'Analyse de Documents',
+      description: 'Soumettez vos contrats et documents pour une analyse IA détaillée et des alertes sur les points de vigilance.'
+    },
+    {
+      icon: Zap,
+      title: 'Génération de Courriers',
+      description: 'Créez des courriers professionnels adaptés à votre situation en quelques clics.'
+    },
+    {
+      icon: Shield,
+      title: 'Veille Juridique',
+      description: 'Restez informé des évolutions légales et jurisprudentielles qui impactent votre activité.'
     }
-  };
+  ];
 
-  const handleSendMessage = async () => {
-    if (!input.trim() || loading) return;
-
-    const userMessage = {
-      id: Date.now(),
-      conversationId: currentConversation,
-      role: 'user',
-      content: input,
-      timestamp: new Date().toISOString()
-    };
-
-    setMessages([...messages, userMessage]);
-    setInput('');
-    setLoading(true);
-
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessage = {
-        id: Date.now() + 1,
-        conversationId: currentConversation,
-        role: 'assistant',
-        content: "Bonjour ! Je suis l'assistant d'orientation IA d'En Toute Franchise Association. Je suis là pour vous conseiller et vous orienter sur vos questions. Comment puis-je vous aider aujourd'hui ? (Note : Pour le moment, les réponses sont mockées, l'intégration IA sera ajoutée avec les API).",
-        timestamp: new Date().toISOString()
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-      setLoading(false);
-    }, 1500);
-  };
+  const steps = [
+    {
+      number: '1',
+      title: 'Créez votre compte',
+      description: 'Rendez-vous sur maboitedigital.com et créez votre compte utilisateur.'
+    },
+    {
+      number: '2',
+      title: 'Renseignez votre numéro ETF',
+      description: 'Indiquez votre numéro d\'adhérent En Toute Franchise pour valider votre accès.'
+    },
+    {
+      number: '3',
+      title: 'Souscrivez à l\'abonnement IA',
+      description: 'Choisissez votre formule d\'abonnement pour accéder à tous les outils IA.'
+    },
+    {
+      number: '4',
+      title: 'Accédez à vos outils',
+      description: 'Connectez-vous et profitez de l\'ensemble des assistants IA disponibles.'
+    }
+  ];
 
   return (
     <DashboardLayout>
-      <div className="h-[calc(100vh-64px)] md:h-screen flex">
-        {/* Conversations List */}
-        <div className="w-80 bg-white border-r border-gray-200 hidden lg:flex flex-col">
-          <div className="p-4 border-b border-gray-200">
-            <Button onClick={handleNewConversation} className="w-full bg-blue-600 hover:bg-blue-700">
-              <Bot className="mr-2 h-4 w-4" />
-              Nouvelle conversation
-            </Button>
+      <div className="max-w-6xl mx-auto p-6 space-y-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl mb-6 shadow-lg">
+            <Bot className="h-10 w-10 text-white" />
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Outils IA pour les Adhérents
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Accédez à une suite complète d'outils d'intelligence artificielle conçus spécialement 
+            pour les professionnels de la franchise.
+          </p>
+        </div>
+
+        {/* Statut d'adhésion */}
+        {membershipActive ? (
+          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-green-900">Votre adhésion ETF est active</h3>
+                  <p className="text-green-700 text-sm">
+                    Vous pouvez accéder aux outils IA en vous connectant à Ma Boîte Digitale.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                  <Info className="h-6 w-6 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-amber-900">Adhésion requise</h3>
+                  <p className="text-amber-700 text-sm">
+                    Pour accéder aux outils IA, votre adhésion ETF doit être à jour.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* CTA Principal */}
+        <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0 shadow-xl overflow-hidden">
+          <CardContent className="p-8">
+            <div className="flex flex-col lg:flex-row items-center gap-8">
+              <div className="flex-1 text-center lg:text-left">
+                <Badge className="bg-white/20 text-white mb-4 backdrop-blur-sm">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  Nouveau
+                </Badge>
+                <h2 className="text-3xl font-bold mb-4">
+                  Accédez à Ma Boîte Digitale
+                </h2>
+                <p className="text-blue-100 mb-6 text-lg">
+                  Votre plateforme d'outils IA dédiée aux adhérents En Toute Franchise. 
+                  Assistants intelligents, analyse de documents, génération de courriers et bien plus.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                  <Button 
+                    size="lg" 
+                    className="bg-white text-blue-700 hover:bg-blue-50 font-semibold shadow-lg"
+                    onClick={() => window.open('https://maboitedigital.com', '_blank')}
+                  >
+                    Accéder à Ma Boîte Digitale
+                    <ExternalLink className="ml-2 h-5 w-5" />
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="border-white/50 text-white hover:bg-white/10"
+                    onClick={() => window.open('https://maboitedigital.com/inscription', '_blank')}
+                  >
+                    Créer mon compte
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
+              <div className="hidden lg:block">
+                <div className="relative">
+                  <div className="w-48 h-48 bg-white/10 rounded-2xl backdrop-blur-sm flex items-center justify-center">
+                    <Bot className="h-24 w-24 text-white/80" />
+                  </div>
+                  <div className="absolute -top-4 -right-4 w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
+                    <Star className="h-6 w-6 text-yellow-900" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Comment ça marche */}
+        <div className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Comment accéder aux outils IA ?</h2>
+            <p className="text-gray-600">Suivez ces étapes simples pour commencer</p>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            {conversations.map((conv) => (
-              <div
-                key={conv.id}
-                onClick={() => handleSelectConversation(conv.id)}
-                className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                  currentConversation === conv.id ? 'bg-blue-50 border border-blue-200' : 'hover:bg-gray-50'
-                }`}
-              >
-                <h3 className="font-medium text-gray-900 text-sm mb-1">{conv.title}</h3>
-                <p className="text-xs text-gray-500">{conv.messagesCount} messages</p>
-                <p className="text-xs text-gray-400 mt-1">{conv.date}</p>
-              </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {steps.map((step, index) => (
+              <Card key={index} className="bg-white hover:shadow-lg transition-shadow">
+                <CardContent className="p-6 text-center">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-xl font-bold text-blue-600">{step.number}</span>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-2">{step.title}</h3>
+                  <p className="text-sm text-gray-600">{step.description}</p>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
 
-        {/* Chat Area */}
-        <div className="flex-1 flex flex-col bg-gray-50">
-          {currentConversation ? (
-            <>
-              {/* Chat Header */}
-              <div className="bg-white border-b border-gray-200 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                      <Bot className="h-6 w-6 text-purple-600" />
+        {/* Fonctionnalités */}
+        <div className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Ce qui vous attend</h2>
+            <p className="text-gray-600">Des outils puissants pour vous accompagner au quotidien</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <Card key={index} className="bg-white hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Icon className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 mb-2">{feature.title}</h3>
+                        <p className="text-sm text-gray-600">{feature.description}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="font-semibold text-gray-900">Assistant IA d'Orientation</h2>
-                      <p className="text-xs text-gray-500">Disponible 24/7 - Outil d'information</p>
-                    </div>
-                  </div>
-                  <Badge className="bg-green-100 text-green-700">En ligne</Badge>
-                </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Note importante */}
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <Info className="h-5 w-5 text-blue-600" />
               </div>
-
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.length === 0 && (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Bot className="h-8 w-8 text-purple-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      Assistant IA d'Orientation
-                    </h3>
-                    <p className="text-gray-600 mb-4">
-                      Outil d'information basé sur 30 ans d'expérience
-                    </p>
-                    <div className="max-w-md mx-auto bg-amber-50 border border-amber-300 rounded-lg p-4 mb-4">
-                      <p className="text-sm text-amber-900">
-                        <AlertCircle className="h-4 w-4 inline mr-1" />
-                        <strong>Important :</strong> Cet assistant fournit des informations et orientations basées sur l'expérience de l'association. 
-                        Il ne constitue pas un conseil juridique professionnel et ne remplace pas la consultation d'un avocat.
-                      </p>
-                    </div>
-                    <div className="max-w-md mx-auto bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <p className="text-sm text-blue-800">
-                        <AlertCircle className="h-4 w-4 inline mr-1" />
-                        <strong>Note technique :</strong> Les réponses IA sont actuellement mockées. L'intégration complète sera
-                        ajoutée lors de la configuration des API.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`flex items-start space-x-2 max-w-2xl ${
-                        message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''
-                      }`}
-                    >
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          message.role === 'user' ? 'bg-blue-600' : 'bg-purple-100'
-                        }`}
-                      >
-                        {message.role === 'user' ? (
-                          <User className="h-5 w-5 text-white" />
-                        ) : (
-                          <Bot className="h-5 w-5 text-purple-600" />
-                        )}
-                      </div>
-                      <div
-                        className={`rounded-lg p-4 ${
-                          message.role === 'user'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-white border border-gray-200 text-gray-900'
-                        }`}
-                      >
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                        <p
-                          className={`text-xs mt-2 ${
-                            message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
-                          }`}
-                        >
-                          {new Date(message.timestamp).toLocaleTimeString('fr-FR', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                {loading && (
-                  <div className="flex justify-start">
-                    <div className="flex items-start space-x-2">
-                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                        <Bot className="h-5 w-5 text-purple-600" />
-                      </div>
-                      <div className="bg-white border border-gray-200 rounded-lg p-4">
-                        <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Input Area */}
-              <div className="bg-white border-t border-gray-200 p-4">
-                <div className="flex items-end space-x-2">
-                  <Textarea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage();
-                      }
-                    }}
-                    placeholder="Posez votre question..."
-                    className="flex-1 min-h-[60px] max-h-32 resize-none"
-                  />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!input.trim() || loading}
-                    className="bg-blue-600 hover:bg-blue-700 h-[60px]"
-                  >
-                    <Send className="h-5 w-5" />
-                  </Button>
-                </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Appuyez sur Entrée pour envoyer, Shift + Entrée pour une nouvelle ligne
+              <div>
+                <h3 className="font-semibold text-blue-900 mb-2">Information importante</h3>
+                <p className="text-blue-800 text-sm mb-3">
+                  L'accès aux outils IA nécessite un abonnement séparé sur la plateforme Ma Boîte Digitale. 
+                  Votre numéro d'adhérent ETF vous permet de bénéficier de tarifs préférentiels réservés aux membres.
                 </p>
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Bot className="h-10 w-10 text-purple-600" />
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center text-blue-700">
+                    <CreditCard className="h-4 w-4 mr-1" />
+                    Paiement sécurisé
+                  </div>
+                  <div className="flex items-center text-blue-700">
+                    <Clock className="h-4 w-4 mr-1" />
+                    Activation immédiate
+                  </div>
+                  <div className="flex items-center text-blue-700">
+                    <Users className="h-4 w-4 mr-1" />
+                    Tarif adhérent ETF
+                  </div>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Assistant IA d'Orientation</h2>
-                <p className="text-gray-600 mb-6">Sélectionnez ou créez une conversation pour commencer</p>
-                <Button onClick={handleNewConversation} className="bg-blue-600 hover:bg-blue-700">
-                  <Bot className="mr-2 h-4 w-4" />
-                  Nouvelle conversation
-                </Button>
               </div>
             </div>
-          )}
+          </CardContent>
+        </Card>
+
+        {/* CTA Final */}
+        <div className="text-center py-8">
+          <Button 
+            size="lg" 
+            className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6"
+            onClick={() => window.open('https://maboitedigital.com', '_blank')}
+          >
+            <Bot className="mr-2 h-5 w-5" />
+            Découvrir Ma Boîte Digitale
+            <ExternalLink className="ml-2 h-5 w-5" />
+          </Button>
+          <p className="text-sm text-gray-500 mt-4">
+            En cas de question, contactez-nous à contact@en-toutefranchise.com
+          </p>
         </div>
       </div>
     </DashboardLayout>
