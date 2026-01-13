@@ -17,29 +17,77 @@ import {
   Zap,
   Star,
   Info,
-  CreditCard
+  CreditCard,
+  Percent,
+  Link2,
+  Loader2
 } from 'lucide-react';
+import API from '../../config/api';
+
+// URL de Ma Boîte Digitale
+const MABOITEDIGITALE_URL = 'https://maboitedigitale.com';
+// TODO: Endpoint API pour vérifier le statut IA sur maboitedigitale.com
+// const MABOITEDIGITALE_API = 'https://api.maboitedigitale.com';
 
 const AIAssistant = () => {
   const [user, setUser] = useState(null);
   const [membershipActive, setMembershipActive] = useState(false);
+  const [iaSubscriptionActive, setIaSubscriptionActive] = useState(false);
+  const [memberNumber, setMemberNumber] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Récupérer les infos utilisateur depuis le localStorage ou l'API
-    const checkMembership = async () => {
+    const checkStatus = async () => {
       try {
+        setLoading(true);
         const token = localStorage.getItem('token');
         if (token) {
-          // Simuler la vérification du statut d'adhésion
-          // En production, cela devrait appeler l'API pour vérifier
-          setMembershipActive(true); // Pour l'instant on suppose que l'adhésion est active
+          // Vérifier le statut d'adhésion ETF
+          try {
+            const response = await API.get('/api/user/profile');
+            if (response.data) {
+              setUser(response.data);
+              setMemberNumber(response.data.memberNumber || response.data.id || '');
+              // Vérifier si l'adhésion est active
+              const hasActiveAdhesion = response.data.adhesionStatus === 'active' || 
+                                        response.data.hasActiveAdhesion === true;
+              setMembershipActive(hasActiveAdhesion);
+            }
+          } catch (err) {
+            console.error('Error fetching user profile:', err);
+            // Fallback: considérer l'adhésion comme active si connecté
+            setMembershipActive(true);
+          }
+
+          // TODO: Vérifier le statut d'abonnement IA sur maboitedigitale.com
+          // Cette API sera implémentée côté maboitedigitale.com
+          // Exemple:
+          // const iaResponse = await fetch(`${MABOITEDIGITALE_API}/api/check-subscription`, {
+          //   method: 'POST',
+          //   headers: { 'Content-Type': 'application/json' },
+          //   body: JSON.stringify({ memberNumber: memberNumber, source: 'etf' })
+          // });
+          // const iaData = await iaResponse.json();
+          // setIaSubscriptionActive(iaData.isActive);
+          
+          setIaSubscriptionActive(false); // Pour l'instant, pas d'abonnement IA actif
         }
       } catch (error) {
-        console.error('Error checking membership:', error);
+        console.error('Error checking status:', error);
+      } finally {
+        setLoading(false);
       }
     };
-    checkMembership();
+    checkStatus();
   }, []);
+
+  // Fonction pour se connecter directement à Ma Boîte Digitale avec SSO
+  const handleConnectToMaBoiteDigitale = () => {
+    // TODO: Implémenter le SSO avec maboitedigitale.com
+    // Pour l'instant, redirection simple avec le numéro d'adhérent en paramètre
+    const ssoUrl = `${MABOITEDIGITALE_URL}/login?source=etf&member=${encodeURIComponent(memberNumber)}`;
+    window.open(ssoUrl, '_blank');
+  };
 
   const features = [
     {
@@ -68,22 +116,22 @@ const AIAssistant = () => {
     {
       number: '1',
       title: 'Créez votre compte',
-      description: 'Rendez-vous sur maboitedigital.com et créez votre compte utilisateur.'
+      description: 'Rendez-vous sur maboitedigitale.com et créez votre compte utilisateur.'
     },
     {
       number: '2',
       title: 'Renseignez votre numéro ETF',
-      description: 'Indiquez votre numéro d\'adhérent En Toute Franchise pour valider votre accès.'
+      description: `Indiquez votre numéro d'adhérent${memberNumber ? ` (${memberNumber})` : ''} pour débloquer la remise adhérent.`
     },
     {
       number: '3',
-      title: 'Souscrivez à l\'abonnement IA',
-      description: 'Choisissez votre formule d\'abonnement pour accéder à tous les outils IA.'
+      title: 'Profitez de la remise',
+      description: 'Bénéficiez de tarifs préférentiels exclusifs réservés aux adhérents ETF.'
     },
     {
       number: '4',
       title: 'Accédez à vos outils',
-      description: 'Connectez-vous et profitez de l\'ensemble des assistants IA disponibles.'
+      description: 'Connectez-vous directement depuis votre espace ETF ou maboitedigitale.com.'
     }
   ];
 
@@ -104,39 +152,113 @@ const AIAssistant = () => {
           </p>
         </div>
 
-        {/* Statut d'adhésion */}
-        {membershipActive ? (
-          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+        {/* Statut d'adhésion et abonnement IA */}
+        {loading ? (
+          <Card className="bg-gray-50 border-gray-200">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-green-900">Votre adhésion ETF est active</h3>
-                  <p className="text-green-700 text-sm">
-                    Vous pouvez accéder aux outils IA en vous connectant à Ma Boîte Digitale.
-                  </p>
-                </div>
+                <Loader2 className="h-6 w-6 text-gray-400 animate-spin" />
+                <p className="text-gray-600">Vérification de votre statut...</p>
               </div>
             </CardContent>
           </Card>
         ) : (
-          <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                  <Info className="h-6 w-6 text-amber-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-amber-900">Adhésion requise</h3>
-                  <p className="text-amber-700 text-sm">
-                    Pour accéder aux outils IA, votre adhésion ETF doit être à jour.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            {/* Statut adhésion ETF */}
+            {membershipActive ? (
+              <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <CheckCircle className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-green-900">Adhésion ETF active</h3>
+                        <p className="text-green-700 text-sm">
+                          {memberNumber && <span>N° adhérent: <strong>{memberNumber}</strong> • </span>}
+                          Vous bénéficiez de la remise adhérent sur maboitedigitale.com
+                        </p>
+                      </div>
+                    </div>
+                    <Badge className="bg-green-600 text-white">
+                      <Percent className="h-3 w-3 mr-1" />
+                      Remise active
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                      <Info className="h-6 w-6 text-amber-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-amber-900">Adhésion ETF requise</h3>
+                      <p className="text-amber-700 text-sm">
+                        Pour bénéficier de la remise adhérent, votre adhésion ETF doit être à jour.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Statut abonnement IA */}
+            {iaSubscriptionActive ? (
+              <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                        <Bot className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-purple-900">Abonnement IA actif</h3>
+                        <p className="text-purple-700 text-sm">
+                          Vous avez accès à tous les outils IA de Ma Boîte Digitale.
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      className="bg-purple-600 hover:bg-purple-700"
+                      onClick={handleConnectToMaBoiteDigitale}
+                    >
+                      <Link2 className="h-4 w-4 mr-2" />
+                      Accéder aux outils
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                        <Bot className="h-6 w-6 text-gray-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-700">Abonnement IA non actif</h3>
+                        <p className="text-gray-600 text-sm">
+                          Souscrivez sur maboitedigitale.com pour accéder aux outils IA.
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline"
+                      onClick={() => window.open(`${MABOITEDIGITALE_URL}/tarifs`, '_blank')}
+                    >
+                      Voir les tarifs
+                      <ExternalLink className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         )}
 
         {/* CTA Principal */}
@@ -159,20 +281,22 @@ const AIAssistant = () => {
                   <Button 
                     size="lg" 
                     className="bg-white text-blue-700 hover:bg-blue-50 font-semibold shadow-lg"
-                    onClick={() => window.open('https://maboitedigital.com', '_blank')}
+                    onClick={handleConnectToMaBoiteDigitale}
                   >
-                    Accéder à Ma Boîte Digitale
+                    {iaSubscriptionActive ? 'Accéder aux outils IA' : 'Découvrir Ma Boîte Digitale'}
                     <ExternalLink className="ml-2 h-5 w-5" />
                   </Button>
-                  <Button 
-                    size="lg" 
-                    variant="outline"
-                    className="border-white/50 text-white hover:bg-white/10"
-                    onClick={() => window.open('https://maboitedigital.com/inscription', '_blank')}
-                  >
-                    Créer mon compte
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
+                  {!iaSubscriptionActive && (
+                    <Button 
+                      size="lg" 
+                      variant="outline"
+                      className="border-white/50 text-white hover:bg-white/10"
+                      onClick={() => window.open(`${MABOITEDIGITALE_URL}/inscription?source=etf&member=${encodeURIComponent(memberNumber)}`, '_blank')}
+                    >
+                      Créer mon compte
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  )}
                 </div>
               </div>
               <div className="hidden lg:block">
@@ -241,30 +365,35 @@ const AIAssistant = () => {
         </div>
 
         {/* Note importante */}
-        <Card className="bg-blue-50 border-blue-200">
+        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <Info className="h-5 w-5 text-blue-600" />
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <Percent className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-blue-900 mb-2">Information importante</h3>
-                <p className="text-blue-800 text-sm mb-3">
-                  L'accès aux outils IA nécessite un abonnement séparé sur la plateforme Ma Boîte Digitale. 
-                  Votre numéro d'adhérent ETF vous permet de bénéficier de tarifs préférentiels réservés aux membres.
+                <h3 className="font-semibold text-green-900 mb-2">Avantage Adhérent ETF</h3>
+                <p className="text-green-800 text-sm mb-3">
+                  En tant qu'adhérent En Toute Franchise, vous bénéficiez d'une <strong>remise exclusive</strong> sur 
+                  l'abonnement aux outils IA de Ma Boîte Digitale. Utilisez votre numéro d'adhérent 
+                  {memberNumber && <strong> ({memberNumber})</strong>} lors de votre inscription pour activer la remise.
                 </p>
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center text-blue-700">
+                <div className="flex flex-wrap items-center gap-4 text-sm">
+                  <div className="flex items-center text-green-700">
+                    <Percent className="h-4 w-4 mr-1" />
+                    Remise adhérent
+                  </div>
+                  <div className="flex items-center text-green-700">
                     <CreditCard className="h-4 w-4 mr-1" />
                     Paiement sécurisé
                   </div>
-                  <div className="flex items-center text-blue-700">
+                  <div className="flex items-center text-green-700">
                     <Clock className="h-4 w-4 mr-1" />
                     Activation immédiate
                   </div>
-                  <div className="flex items-center text-blue-700">
-                    <Users className="h-4 w-4 mr-1" />
-                    Tarif adhérent ETF
+                  <div className="flex items-center text-green-700">
+                    <Link2 className="h-4 w-4 mr-1" />
+                    Connexion liée
                   </div>
                 </div>
               </div>
@@ -277,14 +406,17 @@ const AIAssistant = () => {
           <Button 
             size="lg" 
             className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6"
-            onClick={() => window.open('https://maboitedigital.com', '_blank')}
+            onClick={handleConnectToMaBoiteDigitale}
           >
             <Bot className="mr-2 h-5 w-5" />
-            Découvrir Ma Boîte Digitale
+            {iaSubscriptionActive ? 'Accéder à mes outils IA' : 'Découvrir Ma Boîte Digitale'}
             <ExternalLink className="ml-2 h-5 w-5" />
           </Button>
           <p className="text-sm text-gray-500 mt-4">
             En cas de question, contactez-nous à contact@en-toutefranchise.com
+          </p>
+          <p className="text-xs text-gray-400 mt-2">
+            Les outils IA sont fournis par <a href="https://maboitedigitale.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">maboitedigitale.com</a>
           </p>
         </div>
       </div>
