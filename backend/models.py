@@ -1016,6 +1016,7 @@ class CohesionCampaign(BaseModel):
     bodyText: Optional[str] = None
     status: str = "draft"  # draft, scheduled, sending, sent, paused
     recipientTags: List[str] = []  # Tags des contacts ciblés
+    recipientCategoryId: Optional[str] = None  # ID de l'audience ciblée
     recipientCount: int = 0
     sentCount: int = 0
     failedCount: int = 0
@@ -1033,7 +1034,8 @@ class CohesionCampaign(BaseModel):
                 "name": "Newsletter Janvier",
                 "subject": "Les actualités de la franchise",
                 "bodyHtml": "<h1>Bonjour {firstName}!</h1>",
-                "recipientTags": ["newsletter"]
+                "recipientTags": ["newsletter"],
+                "recipientCategoryId": "category-uuid"
             }
         }
 
@@ -1045,6 +1047,7 @@ class CohesionCampaignCreate(BaseModel):
     bodyHtml: str
     bodyText: Optional[str] = None
     recipientTags: Optional[List[str]] = []
+    recipientCategoryId: Optional[str] = None
     scheduledAt: Optional[datetime] = None
 
 
@@ -1055,6 +1058,7 @@ class CohesionCampaignUpdate(BaseModel):
     bodyHtml: Optional[str] = None
     bodyText: Optional[str] = None
     recipientTags: Optional[List[str]] = None
+    recipientCategoryId: Optional[str] = None
     status: Optional[str] = None
     scheduledAt: Optional[datetime] = None
 

@@ -38,6 +38,7 @@ def create_cohesion_router(db, get_current_admin_user):
         status: Optional[str] = None,
         tags: Optional[str] = None,
         categoryId: Optional[str] = None,
+        hasCategory: Optional[str] = None,
         current_user: dict = Depends(get_current_admin_user)
     ):
         """Récupère la liste des contacts avec pagination et filtres"""
@@ -60,6 +61,15 @@ def create_cohesion_router(db, get_current_admin_user):
         
         if categoryId:
             query["categoryId"] = categoryId
+        
+        # Filtrer par présence/absence de catégorie
+        if hasCategory is not None:
+            if hasCategory.lower() == 'false':
+                query["$or"] = query.get("$or", [])
+                # Contacts sans catégorie
+                query["categoryId"] = {"$in": [None, ""]}
+            elif hasCategory.lower() == 'true':
+                query["categoryId"] = {"$nin": [None, ""]}
         
         total = await db.cohesion_contacts.count_documents(query)
         skip = (page - 1) * limit
@@ -680,6 +690,12 @@ def create_cohesion_router(db, get_current_admin_user):
             raise HTTPException(status_code=404, detail="Campagne non trouvée")
         
         query = {"status": "active"}
+        
+        # Filtrer par audience (catégorie)
+        if campaign.get("recipientCategoryId"):
+            query["categoryId"] = campaign["recipientCategoryId"]
+        
+        # Filtrer par tags
         if campaign.get("recipientTags"):
             query["tags"] = {"$in": campaign["recipientTags"]}
         
@@ -694,6 +710,12 @@ def create_cohesion_router(db, get_current_admin_user):
             return
         
         query = {"status": "active"}
+        
+        # Filtrer par audience (catégorie)
+        if campaign.get("recipientCategoryId"):
+            query["categoryId"] = campaign["recipientCategoryId"]
+        
+        # Filtrer par tags
         if campaign.get("recipientTags"):
             query["tags"] = {"$in": campaign["recipientTags"]}
         

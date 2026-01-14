@@ -151,8 +151,12 @@ const ContactRow = memo(({ contact, selected, onSelect, onEdit, onDelete, catego
 // Composant principal
 const AdminCohesion = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('contacts');
+  const [activeTab, setActiveTab] = useState('audiences'); // Vue par défaut = audiences
   const [loading, setLoading] = useState(true);
+  
+  // Navigation par audience
+  const [selectedAudience, setSelectedAudience] = useState(null); // null = vue d'ensemble, object = audience sélectionnée
+  const [viewMode, setViewMode] = useState('overview'); // 'overview' | 'audience-detail'
   
   // État contacts
   const [contacts, setContacts] = useState([]);
@@ -200,6 +204,9 @@ const AdminCohesion = () => {
   const [allContactsCount, setAllContactsCount] = useState(0);
   const [noCategoryCount, setNoCategoryCount] = useState(0);
   
+  // Pour la création rapide de campagne depuis une audience
+  const [quickCampaignAudience, setQuickCampaignAudience] = useState(null);
+  
   const token = localStorage.getItem('token');
   const headers = useMemo(() => ({
     'Authorization': `Bearer ${token}`,
@@ -216,7 +223,17 @@ const AdminCohesion = () => {
       if (contactsSearch) params.append('search', contactsSearch);
       if (selectedStatus) params.append('status', selectedStatus);
       if (selectedTag) params.append('tags', selectedTag);
-      if (selectedCategoryFilter) params.append('categoryId', selectedCategoryFilter);
+      
+      // Gestion de l'audience sélectionnée
+      if (selectedAudience) {
+        if (selectedAudience.id === '__uncategorized__') {
+          params.append('hasCategory', 'false');
+        } else {
+          params.append('categoryId', selectedAudience.id);
+        }
+      } else if (selectedCategoryFilter) {
+        params.append('categoryId', selectedCategoryFilter);
+      }
       
       const res = await fetch(`${API_URL}/cohesion/contacts?${params}`, { headers });
       if (res.ok) {
@@ -227,7 +244,7 @@ const AdminCohesion = () => {
     } catch (error) {
       console.error('Erreur chargement contacts:', error);
     }
-  }, [contactsPage, contactsSearch, selectedStatus, selectedTag, selectedCategoryFilter, headers]);
+  }, [contactsPage, contactsSearch, selectedStatus, selectedTag, selectedCategoryFilter, selectedAudience, headers]);
 
   // Récupérer les campagnes
   const fetchCampaigns = useCallback(async () => {
@@ -304,6 +321,13 @@ const AdminCohesion = () => {
     };
     loadData();
   }, [fetchContacts, fetchCampaigns, fetchTags, fetchCategories, fetchStats]);
+
+  // Recharger les contacts quand l'audience sélectionnée change
+  useEffect(() => {
+    if (selectedAudience) {
+      fetchContacts();
+    }
+  }, [selectedAudience]);
 
   // Import CSV
   const handleImport = async () => {
@@ -872,6 +896,40 @@ const AdminCohesion = () => {
     }
   };
 
+  // Navigation vers une audience spécifique
+  const openAudience = (audience) => {
+    setSelectedAudience(audience);
+    setViewMode('audience-detail');
+    setContactsPage(1);
+    setContactsSearch('');
+    setSelectedContacts(new Set());
+    setSelectAllMode(false);
+  };
+
+  // Retour à la vue d'ensemble des audiences
+  const backToOverview = () => {
+    setSelectedAudience(null);
+    setViewMode('overview');
+    setContactsPage(1);
+    setContactsSearch('');
+    setSelectedCategoryFilter('');
+    setSelectedContacts(new Set());
+    setSelectAllMode(false);
+  };
+
+  // Créer une campagne rapide depuis une audience
+  const createQuickCampaign = (audience) => {
+    setCurrentCampaign({
+      name: `Campagne - ${audience.name}`,
+      subject: '',
+      bodyHtml: '',
+      recipientCategoryId: audience.id,
+      recipientTags: []
+    });
+    setQuickCampaignAudience(audience);
+    setShowCampaignModal(true);
+  };
+
   // Toggle sélection contact
   const toggleContactSelection = (contactId) => {
     setSelectedContacts(prev => {
@@ -1002,15 +1060,11 @@ const AdminCohesion = () => {
       )}
 
       {/* Onglets */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); if (val === 'audiences') backToOverview(); }}>
         <TabsList className="mb-6">
-          <TabsTrigger value="contacts">
-            <Users className="h-4 w-4 mr-2" />
-            Contacts
-          </TabsTrigger>
-          <TabsTrigger value="categories">
+          <TabsTrigger value="audiences">
             <FolderOpen className="h-4 w-4 mr-2" />
-            Catégories
+            Audiences
           </TabsTrigger>
           <TabsTrigger value="campaigns">
             <Mail className="h-4 w-4 mr-2" />
@@ -1022,430 +1076,431 @@ const AdminCohesion = () => {
           </TabsTrigger>
         </TabsList>
 
-        {/* Onglet Contacts */}
-        <TabsContent value="contacts">
-          <Card>
-            <CardHeader>
+        {/* Onglet Audiences - Vue principale style Mailchimp */}
+        <TabsContent value="audiences">
+          {viewMode === 'overview' ? (
+            // Vue d'ensemble des audiences
+            <div className="space-y-6">
+              {/* En-tête avec actions */}
               <div className="flex items-center justify-between">
-                <CardTitle>Base de contacts</CardTitle>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Vos Audiences</h2>
+                  <p className="text-gray-600">Gérez vos listes de contacts par audience</p>
+                </div>
                 <div className="flex gap-2">
-                  <Button onClick={() => setShowImportModal(true)}>
+                  <Button variant="outline" onClick={() => setShowImportModal(true)}>
                     <Upload className="h-4 w-4 mr-2" />
                     Importer CSV
                   </Button>
                   <Button onClick={() => {
-                    setCurrentContact({ email: '', firstName: '', lastName: '', company: '', tags: [] });
-                    setShowContactModal(true);
+                    setCurrentCategory({ name: '', description: '', color: '#3B82F6' });
+                    setShowCategoryModal(true);
                   }}>
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Ajouter
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouvelle audience
                   </Button>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              {/* Barre de recherche et filtres */}
-              <div className="flex flex-wrap gap-4 mb-4">
-                <div className="flex-1 min-w-[200px]">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Rechercher..."
-                      value={contactsSearch}
-                      onChange={(e) => setContactsSearch(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <Select value={selectedStatus || '__all__'} onValueChange={(v) => setSelectedStatus(v === '__all__' ? '' : v)}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Statut" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__all__">Tous</SelectItem>
-                    <SelectItem value="active">Actif</SelectItem>
-                    <SelectItem value="unsubscribed">Désabonné</SelectItem>
-                    <SelectItem value="bounced">Bounced</SelectItem>
-                    <SelectItem value="invalid">Invalide</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={selectedTag || '__all__'} onValueChange={(v) => setSelectedTag(v === '__all__' ? '' : v)}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Tag" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__all__">Tous les tags</SelectItem>
-                    {tags.map(tag => (
-                      <SelectItem key={tag.name} value={tag.name}>
-                        {tag.name} ({tag.count})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={selectedCategoryFilter || '__all__'} onValueChange={(v) => setSelectedCategoryFilter(v === '__all__' ? '' : v)}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Catégorie" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__all__">Toutes les catégories</SelectItem>
-                    {categories.map(cat => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: cat.color }}
-                          />
-                          {cat.name} ({cat.contactsCount})
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
 
-              {/* Panneau d'outils de sélection en masse */}
-              <div className="mb-4 p-4 bg-gray-50 border rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium text-gray-700 flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Outils de sélection en masse
-                  </h4>
-                  <span className="text-sm text-gray-500">
-                    {contactsTotal} contact(s) au total
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={handleSelectAll}
-                    disabled={selectedContacts.size === contactsTotal}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    Sélectionner tout ({contactsTotal})
-                  </Button>
-                  {categories.map(cat => (
-                    <Button 
-                      key={cat.id}
-                      size="sm" 
-                      variant="outline"
-                      className="gap-1"
-                      onClick={async () => {
-                        try {
-                          const res = await fetch(`${API_URL}/cohesion/contacts/all-ids?categoryId=${cat.id}`, { headers });
-                          if (res.ok) {
-                            const data = await res.json();
-                            setSelectedContacts(new Set(data.ids));
-                            setAllContactsCount(data.count);
-                            setSelectAllMode(true);
-                            toast({ title: `${data.count} contacts sélectionnés (${cat.name})` });
-                          }
-                        } catch (error) {
-                          toast({ title: "Erreur", variant: "destructive" });
-                        }
-                      }}
-                    >
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: cat.color }}
-                      />
-                      {cat.name} ({cat.contactsCount})
-                    </Button>
-                  ))}
-                  {noCategoryCount > 0 && (
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      className="border-yellow-300 bg-yellow-50 text-yellow-800"
-                      onClick={async () => {
-                        try {
-                          const res = await fetch(`${API_URL}/cohesion/contacts/all-ids?hasCategory=false`, { headers });
-                          if (res.ok) {
-                            const data = await res.json();
-                            setSelectedContacts(new Set(data.ids));
-                            setAllContactsCount(data.count);
-                            setSelectAllMode(true);
-                            toast({ title: `${data.count} contacts sans catégorie sélectionnés` });
-                          }
-                        } catch (error) {
-                          toast({ title: "Erreur", variant: "destructive" });
-                        }
-                      }}
-                    >
-                      <AlertCircle className="h-4 w-4 mr-1" />
-                      Sans catégorie ({noCategoryCount})
-                    </Button>
-                  )}
-                  {selectedContacts.size > 0 && (
-                    <Button size="sm" variant="ghost" onClick={clearSelection}>
-                      <XCircle className="h-4 w-4 mr-1" />
-                      Désélectionner tout
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {/* Alerte contacts sans catégorie */}
+              {/* Alerte contacts sans audience */}
               {noCategoryCount > 0 && (
-                <div className="flex items-center justify-between mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5 text-yellow-600" />
-                    <span className="text-sm text-yellow-800">
-                      <strong>{noCategoryCount}</strong> contact(s) sans catégorie
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Select onValueChange={handleAssignCategoryToNoCategory}>
-                      <SelectTrigger className="w-auto h-8 text-sm">
-                        <FolderOpen className="h-4 w-4 mr-1" />
-                        Affecter catégorie
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map(cat => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            <div className="flex items-center gap-2">
-                              <div 
-                                className="w-3 h-3 rounded-full" 
-                                style={{ backgroundColor: cat.color }}
-                              />
-                              {cat.name}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button size="sm" variant="outline" className="text-red-600" onClick={handleDeleteNoCategory}>
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Supprimer tous
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Actions groupées - Panneau fixe en haut quand sélection active */}
-              {selectedContacts.size > 0 && (
-                <div className="mb-4 p-4 bg-blue-100 border-2 border-blue-300 rounded-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full font-bold">
-                        {selectAllMode ? allContactsCount : selectedContacts.size}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-blue-900">
-                          {selectAllMode ? `${allContactsCount} contacts sélectionnés` : `${selectedContacts.size} contact(s) sélectionné(s)`}
-                        </p>
-                        <p className="text-sm text-blue-700">
-                          {selectAllMode ? 'Tous les contacts correspondant aux filtres' : 'Sélection manuelle'}
-                        </p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={clearSelection}>
-                      <XCircle className="h-5 w-5" />
-                    </Button>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-3">
-                    <div className="flex items-center gap-2 p-2 bg-white rounded border">
-                      <span className="text-sm font-medium text-gray-600">Affecter catégorie:</span>
-                      {categories.map(cat => (
-                        <Button 
-                          key={cat.id}
-                          size="sm" 
-                          variant="outline"
-                          className="gap-1"
-                          onClick={() => handleAssignCategoryToSelected(cat.id)}
-                        >
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: cat.color }}
-                          />
-                          {cat.name}
-                        </Button>
-                      ))}
-                    </div>
-                    
-                    <Button size="sm" variant="outline" onClick={() => setShowTagModal(true)}>
-                      <Tag className="h-4 w-4 mr-1" />
-                      Ajouter tag
-                    </Button>
-                    
-                    <Button size="sm" variant="destructive" onClick={handleDeleteSelected}>
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Supprimer la sélection
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Tableau des contacts */}
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">
-                        <input
-                          type="checkbox"
-                          checked={selectedContacts.size === contacts.length && contacts.length > 0}
-                          onChange={selectAllContacts}
-                          className="rounded border-gray-300"
-                        />
-                      </TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Nom</TableHead>
-                      <TableHead>Entreprise</TableHead>
-                      <TableHead>Catégorie</TableHead>
-                      <TableHead>Tags</TableHead>
-                      <TableHead>Statut</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {contacts.map(contact => (
-                      <ContactRow
-                        key={contact.id}
-                        contact={contact}
-                        categories={categories}
-                        selected={selectedContacts.has(contact.id)}
-                        onSelect={toggleContactSelection}
-                        onEdit={(c) => {
-                          setCurrentContact(c);
-                          setShowContactModal(true);
-                        }}
-                        onDelete={handleDeleteContact}
-                      />
-                    ))}
-                    {contacts.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={8} className="text-center text-gray-500 py-8">
-                          Aucun contact trouvé
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Pagination */}
-              <div className="flex items-center justify-between mt-4">
-                <p className="text-sm text-gray-500">
-                  {contactsTotal} contact(s) au total
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={contactsPage === 1}
-                    onClick={() => setContactsPage(p => p - 1)}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="px-3 py-1 text-sm">
-                    Page {contactsPage}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={contacts.length < 50}
-                    onClick={() => setContactsPage(p => p + 1)}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Onglet Catégories */}
-        <TabsContent value="categories">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Catégories de contacts</CardTitle>
-                  <CardDescription>
-                    Organisez vos contacts par catégories (ex: Journalistes, Particuliers, etc.)
-                  </CardDescription>
-                </div>
-                <Button onClick={() => {
-                  setCurrentCategory({ name: '', description: '', color: '#3B82F6' });
-                  setShowCategoryModal(true);
-                }}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouvelle catégorie
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {categories.map(category => (
-                  <Card key={category.id} className="border-l-4" style={{ borderLeftColor: category.color }}>
-                    <CardContent className="pt-4">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-4 h-4 rounded-full" 
-                              style={{ backgroundColor: category.color }}
-                            />
-                            <h3 className="font-semibold text-lg">{category.name}</h3>
-                          </div>
-                          {category.description && (
-                            <p className="text-gray-600 text-sm mt-1">{category.description}</p>
-                          )}
-                          <p className="text-sm text-gray-500 mt-2">
-                            <Users className="h-4 w-4 inline mr-1" />
-                            {category.contactsCount} contact(s)
-                          </p>
+                <Card className="border-2 border-yellow-300 bg-yellow-50">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-yellow-200 flex items-center justify-center">
+                          <AlertCircle className="h-6 w-6 text-yellow-700" />
                         </div>
-                        <div className="flex gap-1">
+                        <div>
+                          <h3 className="font-semibold text-lg text-yellow-900">Contacts sans audience</h3>
+                          <p className="text-yellow-700">{noCategoryCount} contact(s) n'appartiennent à aucune audience</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => openAudience({ id: '__uncategorized__', name: 'Sans audience', color: '#EAB308', contactsCount: noCategoryCount })}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          Voir les contacts
+                        </Button>
+                        <Select onValueChange={handleAssignCategoryToNoCategory}>
+                          <SelectTrigger className="w-[200px]">
+                            <FolderOpen className="h-4 w-4 mr-2" />
+                            Affecter à une audience
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map(cat => (
+                              <SelectItem key={cat.id} value={cat.id}>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
+                                  {cat.name}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Grille des audiences */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {categories.map(audience => (
+                  <Card 
+                    key={audience.id} 
+                    className="cursor-pointer hover:shadow-lg transition-shadow border-t-4"
+                    style={{ borderTopColor: audience.color }}
+                    onClick={() => openAudience(audience)}
+                  >
+                    <CardContent className="pt-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
+                            style={{ backgroundColor: audience.color }}
+                          >
+                            {audience.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-lg">{audience.name}</h3>
+                            {audience.description && (
+                              <p className="text-gray-500 text-sm">{audience.description}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                           <Button 
                             variant="ghost" 
                             size="sm"
                             onClick={() => {
-                              setCurrentCategory(category);
+                              setCurrentCategory(audience);
                               setShowCategoryModal(true);
                             }}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleDeleteCategory(category.id, false)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
                         </div>
                       </div>
-                      <div className="mt-3 flex gap-2">
+                      
+                      <div className="flex items-center justify-between py-4 border-t border-gray-100">
+                        <div className="text-center flex-1">
+                          <p className="text-3xl font-bold" style={{ color: audience.color }}>{audience.contactsCount}</p>
+                          <p className="text-sm text-gray-500">contacts</p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 pt-4 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => createQuickCampaign(audience)}
+                          disabled={!emailStatus?.configured || audience.contactsCount === 0}
+                        >
+                          <Mail className="h-4 w-4 mr-1" />
+                          Envoyer un email
+                        </Button>
                         <Button 
                           variant="outline" 
                           size="sm"
                           className="flex-1"
-                          onClick={() => {
-                            setSelectedCategoryFilter(category.id);
-                            setActiveTab('contacts');
-                          }}
+                          onClick={() => openAudience(audience)}
                         >
-                          <Eye className="h-4 w-4 mr-1" />
-                          Voir contacts
+                          <Users className="h-4 w-4 mr-1" />
+                          Gérer
                         </Button>
                       </div>
                     </CardContent>
                   </Card>
                 ))}
-                {categories.length === 0 && (
-                  <div className="col-span-full text-center py-8 text-gray-500">
-                    <FolderOpen className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                    <p>Aucune catégorie créée</p>
-                    <p className="text-sm">Créez des catégories pour organiser vos contacts</p>
-                  </div>
-                )}
+
+                {/* Carte "Ajouter une audience" */}
+                <Card 
+                  className="cursor-pointer hover:shadow-lg transition-shadow border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center min-h-[200px]"
+                  onClick={() => {
+                    setCurrentCategory({ name: '', description: '', color: '#3B82F6' });
+                    setShowCategoryModal(true);
+                  }}
+                >
+                  <CardContent className="text-center">
+                    <Plus className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                    <p className="font-medium text-gray-600">Créer une audience</p>
+                    <p className="text-sm text-gray-400">Organisez vos contacts</p>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
+
+              {categories.length === 0 && noCategoryCount === 0 && (
+                <Card className="py-16">
+                  <CardContent className="text-center">
+                    <FolderOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-600 mb-2">Aucune audience créée</h3>
+                    <p className="text-gray-500 mb-4">Commencez par créer une audience ou importer des contacts</p>
+                    <div className="flex gap-3 justify-center">
+                      <Button onClick={() => {
+                        setCurrentCategory({ name: '', description: '', color: '#3B82F6' });
+                        setShowCategoryModal(true);
+                      }}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Créer une audience
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowImportModal(true)}>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Importer des contacts
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          ) : (
+            // Vue détaillée d'une audience
+            <div className="space-y-6">
+              {/* Breadcrumb et en-tête */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Button variant="ghost" size="sm" onClick={backToOverview}>
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Retour aux audiences
+                  </Button>
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+                      style={{ backgroundColor: selectedAudience?.color || '#6B7280' }}
+                    >
+                      {selectedAudience?.name?.charAt(0).toUpperCase() || '?'}
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900">{selectedAudience?.name || 'Audience'}</h2>
+                      <p className="text-gray-600">{contactsTotal} contact(s)</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => createQuickCampaign(selectedAudience)}
+                    disabled={!emailStatus?.configured || contactsTotal === 0}
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Envoyer un email à cette audience
+                  </Button>
+                  <Button onClick={() => setShowImportModal(true)}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Importer
+                  </Button>
+                  <Button onClick={() => {
+                    setCurrentContact({ 
+                      email: '', 
+                      firstName: '', 
+                      lastName: '', 
+                      company: '', 
+                      tags: [],
+                      categoryId: selectedAudience?.id !== '__uncategorized__' ? selectedAudience?.id : null
+                    });
+                    setShowContactModal(true);
+                  }}>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Ajouter un contact
+                  </Button>
+                </div>
+              </div>
+
+              <Card>
+                <CardContent className="pt-6">
+                  {/* Barre de recherche */}
+                  <div className="flex flex-wrap gap-4 mb-4">
+                    <div className="flex-1 min-w-[200px]">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Rechercher dans cette audience..."
+                          value={contactsSearch}
+                          onChange={(e) => setContactsSearch(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+                    <Select value={selectedStatus || '__all__'} onValueChange={(v) => setSelectedStatus(v === '__all__' ? '' : v)}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Statut" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__all__">Tous</SelectItem>
+                        <SelectItem value="active">Actif</SelectItem>
+                        <SelectItem value="unsubscribed">Désabonné</SelectItem>
+                        <SelectItem value="bounced">Bounced</SelectItem>
+                        <SelectItem value="invalid">Invalide</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={selectedTag || '__all__'} onValueChange={(v) => setSelectedTag(v === '__all__' ? '' : v)}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Tag" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__all__">Tous les tags</SelectItem>
+                        {tags.map(tag => (
+                          <SelectItem key={tag.name} value={tag.name}>{tag.name} ({tag.count})</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Actions groupées */}
+                  {selectedContacts.size > 0 && (
+                    <div className="mb-4 p-4 bg-blue-100 border-2 border-blue-300 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full font-bold">
+                            {selectAllMode ? allContactsCount : selectedContacts.size}
+                          </div>
+                          <span className="font-semibold text-blue-900">
+                            {selectAllMode ? `${allContactsCount} contacts sélectionnés` : `${selectedContacts.size} contact(s) sélectionné(s)`}
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          {selectedAudience?.id === '__uncategorized__' && (
+                            <Select onValueChange={handleAssignCategoryToSelected}>
+                              <SelectTrigger className="w-[200px]">
+                                <FolderOpen className="h-4 w-4 mr-2" />
+                                Affecter à une audience
+                              </SelectTrigger>
+                              <SelectContent>
+                                {categories.map(cat => (
+                                  <SelectItem key={cat.id} value={cat.id}>
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
+                                      {cat.name}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                          <Button size="sm" variant="outline" onClick={() => setShowTagModal(true)}>
+                            <Tag className="h-4 w-4 mr-1" />
+                            Ajouter tag
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={handleDeleteSelected}>
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Supprimer
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={clearSelection}>
+                            <XCircle className="h-5 w-5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tableau des contacts */}
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-12">
+                            <input
+                              type="checkbox"
+                              checked={selectedContacts.size === contacts.length && contacts.length > 0}
+                              onChange={selectAllContacts}
+                              className="rounded border-gray-300"
+                            />
+                          </TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Nom</TableHead>
+                          <TableHead>Entreprise</TableHead>
+                          <TableHead>Tags</TableHead>
+                          <TableHead>Statut</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {contacts.map(contact => (
+                          <TableRow key={contact.id} className="hover:bg-gray-50">
+                            <TableCell className="w-12">
+                              <input
+                                type="checkbox"
+                                checked={selectedContacts.has(contact.id)}
+                                onChange={() => toggleContactSelection(contact.id)}
+                                className="rounded border-gray-300"
+                              />
+                            </TableCell>
+                            <TableCell className="font-medium">{contact.email}</TableCell>
+                            <TableCell>
+                              {contact.firstName || contact.lastName 
+                                ? `${contact.firstName || ''} ${contact.lastName || ''}`.trim()
+                                : '-'}
+                            </TableCell>
+                            <TableCell>{contact.company || '-'}</TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-1">
+                                {contact.tags?.slice(0, 3).map((tag, i) => (
+                                  <Badge key={i} variant="outline" className="text-xs">{tag}</Badge>
+                                ))}
+                                {contact.tags?.length > 3 && (
+                                  <Badge variant="outline" className="text-xs">+{contact.tags.length - 3}</Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>{STATUS_BADGES[contact.status] || STATUS_BADGES.active}</TableCell>
+                            <TableCell className="text-right">
+                              <Button variant="ghost" size="sm" onClick={() => {
+                                setCurrentContact(contact);
+                                setShowContactModal(true);
+                              }}>
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => handleDeleteContact(contact.id)}>
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {contacts.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={7} className="text-center text-gray-500 py-8">
+                              Aucun contact dans cette audience
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Pagination */}
+                  <div className="flex items-center justify-between mt-4">
+                    <p className="text-sm text-gray-500">
+                      {contactsTotal} contact(s) au total
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={contactsPage === 1}
+                        onClick={() => setContactsPage(p => p - 1)}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <span className="px-3 py-1 text-sm">
+                        Page {contactsPage}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={contacts.length < 50}
+                        onClick={() => setContactsPage(p => p + 1)}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </TabsContent>
+
+        {/* Onglet Contacts - SUPPRIMÉ, remplacé par la vue Audiences */}
 
         {/* Onglet Campagnes */}
         <TabsContent value="campaigns">
@@ -1701,16 +1756,16 @@ const AdminCohesion = () => {
             </div>
             
             <div>
-              <Label>Catégorie à affecter</Label>
+              <Label>Audience de destination</Label>
               <Select 
                 value={importCategoryId || '__none__'} 
                 onValueChange={(v) => setImportCategoryId(v === '__none__' ? '' : v)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une catégorie (optionnel)" />
+                  <SelectValue placeholder="Sélectionner une audience (optionnel)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">Aucune catégorie</SelectItem>
+                  <SelectItem value="__none__">Aucune audience</SelectItem>
                   {categories.map(cat => (
                     <SelectItem key={cat.id} value={cat.id}>
                       <div className="flex items-center gap-2">
@@ -1725,7 +1780,7 @@ const AdminCohesion = () => {
                 </SelectContent>
               </Select>
               <p className="text-xs text-gray-500 mt-1">
-                Tous les contacts importés seront affectés à cette catégorie
+                Tous les contacts importés seront ajoutés à cette audience
               </p>
             </div>
             
@@ -1820,7 +1875,7 @@ const AdminCohesion = () => {
                 />
               </div>
               <div>
-                <Label>Catégorie</Label>
+                <Label>Audience</Label>
                 <Select 
                   value={currentContact.categoryId || '__none__'} 
                   onValueChange={(value) => setCurrentContact({
@@ -1829,10 +1884,10 @@ const AdminCohesion = () => {
                   })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une catégorie" />
+                    <SelectValue placeholder="Sélectionner une audience" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none__">Aucune catégorie</SelectItem>
+                    <SelectItem value="__none__">Aucune audience</SelectItem>
                     {categories.map(cat => (
                       <SelectItem key={cat.id} value={cat.id}>
                         <div className="flex items-center gap-2">
@@ -1861,12 +1916,26 @@ const AdminCohesion = () => {
       </Dialog>
 
       {/* Modal Campagne */}
-      <Dialog open={showCampaignModal} onOpenChange={setShowCampaignModal}>
+      <Dialog open={showCampaignModal} onOpenChange={(open) => {
+        setShowCampaignModal(open);
+        if (!open) setQuickCampaignAudience(null);
+      }}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>
               {currentCampaign?.id ? 'Modifier la campagne' : 'Nouvelle campagne'}
             </DialogTitle>
+            {quickCampaignAudience && (
+              <DialogDescription>
+                <div className="flex items-center gap-2 mt-2">
+                  <div 
+                    className="w-4 h-4 rounded-full" 
+                    style={{ backgroundColor: quickCampaignAudience.color }}
+                  />
+                  <span>Destinataires : <strong>{quickCampaignAudience.name}</strong> ({quickCampaignAudience.contactsCount} contacts)</span>
+                </div>
+              </DialogDescription>
+            )}
           </DialogHeader>
           {currentCampaign && (
             <div className="space-y-4">
@@ -1886,17 +1955,58 @@ const AdminCohesion = () => {
                   placeholder="Ex: Les actualités du mois"
                 />
               </div>
-              <div>
-                <Label>Tags des destinataires (laisser vide pour tous)</Label>
-                <Input
-                  value={currentCampaign.recipientTags?.join(', ') || ''}
-                  onChange={(e) => setCurrentCampaign({
-                    ...currentCampaign, 
-                    recipientTags: e.target.value.split(',').map(t => t.trim()).filter(t => t)
-                  })}
-                  placeholder="Ex: newsletter, actif"
-                />
+              
+              {/* Sélection de l'audience */}
+              <div className="p-4 bg-gray-50 rounded-lg border">
+                <Label className="text-base font-medium">Destinataires</Label>
+                <p className="text-sm text-gray-500 mb-3">Choisissez l'audience cible de cette campagne</p>
+                
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-sm">Audience</Label>
+                    <Select 
+                      value={currentCampaign.recipientCategoryId || '__all__'} 
+                      onValueChange={(v) => setCurrentCampaign({
+                        ...currentCampaign, 
+                        recipientCategoryId: v === '__all__' ? null : v
+                      })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner une audience" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__all__">
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4" />
+                            Tous les contacts actifs
+                          </div>
+                        </SelectItem>
+                        {categories.map(cat => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
+                              {cat.name} ({cat.contactsCount} contacts)
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-sm">Filtrer par tags (optionnel)</Label>
+                    <Input
+                      value={currentCampaign.recipientTags?.join(', ') || ''}
+                      onChange={(e) => setCurrentCampaign({
+                        ...currentCampaign, 
+                        recipientTags: e.target.value.split(',').map(t => t.trim()).filter(t => t)
+                      })}
+                      placeholder="Ex: newsletter, actif (laisser vide pour tous)"
+                    />
+                  </div>
+                </div>
               </div>
+              
               <div>
                 <Label>Contenu HTML *</Label>
                 <Textarea
@@ -1913,7 +2023,10 @@ const AdminCohesion = () => {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCampaignModal(false)}>
+            <Button variant="outline" onClick={() => {
+              setShowCampaignModal(false);
+              setQuickCampaignAudience(null);
+            }}>
               Annuler
             </Button>
             <Button onClick={handleSaveCampaign}>
@@ -1998,21 +2111,21 @@ const AdminCohesion = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Modal Catégorie */}
+      {/* Modal Audience (catégorie) */}
       <Dialog open={showCategoryModal} onOpenChange={setShowCategoryModal}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {currentCategory?.id ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
+              {currentCategory?.id ? 'Modifier l\'audience' : 'Nouvelle audience'}
             </DialogTitle>
             <DialogDescription>
-              Les catégories permettent d'organiser vos contacts par groupes
+              Les audiences permettent de regrouper vos contacts par thématique (ex: Journalistes, Partenaires, VIP...)
             </DialogDescription>
           </DialogHeader>
           {currentCategory && (
             <div className="space-y-4">
               <div>
-                <Label>Nom *</Label>
+                <Label>Nom de l'audience *</Label>
                 <Input
                   value={currentCategory.name}
                   onChange={(e) => setCurrentCategory({...currentCategory, name: e.target.value})}
@@ -2024,7 +2137,7 @@ const AdminCohesion = () => {
                 <Textarea
                   value={currentCategory.description || ''}
                   onChange={(e) => setCurrentCategory({...currentCategory, description: e.target.value})}
-                  placeholder="Description optionnelle de cette catégorie"
+                  placeholder="Description optionnelle de cette audience"
                   rows={2}
                 />
               </div>
