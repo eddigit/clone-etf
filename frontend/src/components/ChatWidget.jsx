@@ -8,7 +8,8 @@ import {
   Send,
   Minimize2,
   User,
-  Clock
+  Clock,
+  Bell
 } from 'lucide-react';
 import { API_URL } from '../config/api';
 
@@ -24,9 +25,37 @@ const ChatWidget = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [invitation, setInvitation] = useState(null);
   
   const messagesEndRef = useRef(null);
   const wsRef = useRef(null);
+
+  // Jouer un son de notification
+  const playNotificationSound = useCallback(() => {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 600;
+      oscillator.type = 'sine';
+      gainNode.gain.value = 0.2;
+      
+      oscillator.start();
+      setTimeout(() => {
+        oscillator.frequency.value = 800;
+      }, 100);
+      setTimeout(() => {
+        oscillator.stop();
+        audioContext.close();
+      }, 200);
+    } catch (e) {
+      console.log('Audio not supported');
+    }
+  }, []);
 
   // Générer ou récupérer l'ID visiteur
   useEffect(() => {
@@ -44,6 +73,28 @@ const ChatWidget = () => {
       setShowNameInput(false);
     }
   }, []);
+
+  // Accepter l'invitation d'un admin
+  const acceptInvitation = useCallback(() => {
+    if (invitation) {
+      setConversation({ id: invitation.conversation_id });
+      setShowNameInput(false);
+      setIsOpen(true);
+      setIsMinimized(false);
+      setInvitation(null);
+      
+      // Ajouter le message de l'admin
+      if (invitation.message) {
+        setMessages(prev => [...prev, {
+          id: Date.now(),
+          content: invitation.message,
+          sender_type: 'admin',
+          sender_name: invitation.admin_name,
+          timestamp: new Date()
+        }]);
+      }
+    }
+  }, [invitation]);
 
   // Connexion WebSocket
   const connectWebSocket = useCallback(() => {
@@ -72,6 +123,7 @@ const ChatWidget = () => {
           
           if (!isOpen) {
             setUnreadCount(prev => prev + 1);
+            playNotificationSound();
           }
         } else if (data.type === 'admin_joined') {
           setMessages(prev => [...prev, {
@@ -88,6 +140,15 @@ const ChatWidget = () => {
             timestamp: new Date()
           }]);
           setConversation(null);
+        } else if (data.type === 'chat_invitation') {
+          // Un admin veut discuter avec nous !
+          playNotificationSound();
+          setInvitation({
+            conversation_id: data.conversation_id,
+            admin_name: data.admin_name,
+            message: data.message,
+            timestamp: new Date()
+          });
         }
       };
 
@@ -104,10 +165,11 @@ const ChatWidget = () => {
     } catch (error) {
       console.error('Error connecting WebSocket:', error);
     }
-  }, [visitorId, isOpen]);
+  }, [visitorId, isOpen, playNotificationSound]);
 
+  // Se connecter au WebSocket dès le chargement de la page (pour recevoir les invitations)
   useEffect(() => {
-    if (isOpen && visitorId) {
+    if (visitorId) {
       connectWebSocket();
     }
 
@@ -116,7 +178,7 @@ const ChatWidget = () => {
         wsRef.current.close();
       }
     };
-  }, [isOpen, visitorId, connectWebSocket]);
+  }, [visitorId, connectWebSocket]);
 
   // Scroll vers le bas quand nouveaux messages
   useEffect(() => {
@@ -238,6 +300,43 @@ const ChatWidget = () => {
 
   return (
     <>
+      {/* Bulle d'invitation d'un admin */}
+      {invitation && !isOpen && (
+        <div className="fixed bottom-24 right-6 z-50 animate-bounce">
+          <div className="bg-white rounded-2xl shadow-2xl p-4 max-w-sm border-2 border-green-500">
+            <div className="flex items-start gap-3 mb-3">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <Bell className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900">
+                  {invitation.admin_name} veut discuter avec vous !
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  {invitation.message}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setInvitation(null)}
+                variant="outline"
+                className="flex-1"
+              >
+                Plus tard
+              </Button>
+              <Button
+                onClick={acceptInvitation}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Répondre
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Bouton flottant */}
       {!isOpen && (
         <button

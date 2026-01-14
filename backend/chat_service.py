@@ -363,6 +363,71 @@ class LiveChatService:
         except Exception as e:
             logger.error(f"Error getting all conversations: {e}")
             return []
+    
+    async def invite_visitor_to_chat(
+        self,
+        visitor_id: str,
+        admin_id: str,
+        admin_name: str,
+        welcome_message: Optional[str] = None
+    ) -> Dict:
+        """Inviter un visiteur en ligne à chatter (initié par l'admin)"""
+        try:
+            # Vérifier s'il y a déjà une conversation active avec ce visiteur
+            existing = await self.conversations.find_one({
+                "visitor_id": visitor_id,
+                "status": {"$in": ["waiting", "active"]}
+            })
+            
+            if existing:
+                return {"success": True, "conversation": existing, "existing": True}
+            
+            # Créer une nouvelle conversation initiée par l'admin
+            conversation = {
+                "id": f"chat_{visitor_id}_{int(datetime.utcnow().timestamp())}",
+                "visitor_id": visitor_id,
+                "visitor_name": f"Visiteur {visitor_id[:8]}",
+                "visitor_email": None,
+                "admin_id": admin_id,
+                "admin_name": admin_name,
+                "status": "active",  # Directement actif car initié par admin
+                "started_at": datetime.utcnow(),
+                "last_message_at": datetime.utcnow(),
+                "closed_at": None,
+                "messages_count": 0,
+                "visitor_page": None,
+                "visitor_info": {},
+                "initiated_by": "admin"  # Indicateur que c'est l'admin qui a initié
+            }
+            
+            await self.conversations.insert_one(conversation)
+            
+            # Envoyer l'invitation au visiteur via WebSocket
+            invitation_message = welcome_message or "Bonjour ! Un conseiller ETF souhaite discuter avec vous. Comment puis-je vous aider ?"
+            
+            await self.manager.send_to_visitor(visitor_id, {
+                "type": "chat_invitation",
+                "conversation_id": conversation["id"],
+                "admin_name": admin_name,
+                "message": invitation_message,
+                "timestamp": datetime.utcnow().isoformat()
+            })
+            
+            # Ajouter le message de bienvenue si fourni
+            if welcome_message:
+                await self.send_message(
+                    conversation_id=conversation["id"],
+                    sender_type="admin",
+                    sender_id=admin_id,
+                    sender_name=admin_name,
+                    content=welcome_message
+                )
+            
+            return {"success": True, "conversation": conversation, "existing": False}
+            
+        except Exception as e:
+            logger.error(f"Error inviting visitor to chat: {e}")
+            return {"success": False, "error": str(e)}
 
 
 # Instances globales

@@ -3400,6 +3400,27 @@ async def close_chat_conversation(
     result = await live_chat_service.close_conversation(conversation_id)
     return result
 
+@api_router.post("/admin/chat/invite/{visitor_id}")
+async def invite_visitor_to_chat(
+    visitor_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Inviter un visiteur en ligne à chatter"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    body = await request.json()
+    welcome_message = body.get("message", "Bonjour ! Un conseiller ETF souhaite discuter avec vous. Comment puis-je vous aider ?")
+    
+    result = await live_chat_service.invite_visitor_to_chat(
+        visitor_id=visitor_id,
+        admin_id=current_user.get("id"),
+        admin_name=f"{current_user.get('firstName', '')} {current_user.get('lastName', '')}",
+        welcome_message=welcome_message
+    )
+    return serialize_doc(result)
+
 # --- WebSocket Endpoints ---
 
 @app.websocket("/ws/visitor/{visitor_id}")

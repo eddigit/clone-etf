@@ -56,6 +56,7 @@ const PublicLayout = ({ children }) => {
       <Navbar />
       {children}
       <Footer />
+      <ChatWidget />
     </>
   );
 };
