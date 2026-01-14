@@ -465,7 +465,7 @@ const Home = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-green-600/20 rounded-2xl blur-xl"></div>
               <div className="relative bg-slate-800/50 backdrop-blur border border-purple-500/30 rounded-2xl p-4 shadow-2xl">
                 <img
-                  src="/images/maboitedigitale-dashboard.png"
+                  src="https://res.cloudinary.com/dtoink4qi/image/upload/v1768391962/Capture_d_%C3%A9cran_2026-01-14_094205_kellpl.png"
                   alt="Dashboard Ma Boîte Digitale - Outils numériques"
                   className="w-full rounded-xl shadow-lg"
                   onError={(e) => {

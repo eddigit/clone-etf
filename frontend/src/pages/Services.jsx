@@ -100,12 +100,9 @@ const Services = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl blur-2xl opacity-30 transform -rotate-3"></div>
               <div className="relative bg-slate-800 rounded-2xl p-2 shadow-2xl border border-purple-500/30">
                 <img 
-                  src="/images/maboitedigitale-dashboard.png" 
+                  src="https://res.cloudinary.com/dtoink4qi/image/upload/v1768391962/Capture_d_%C3%A9cran_2026-01-14_094205_kellpl.png" 
                   alt="Dashboard MaBoiteDigitale - Tous vos outils digitaux" 
                   className="w-full rounded-xl"
-                  onError={(e) => {
-                    e.target.src = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=500&fit=crop';
-                  }}
                 />
                 <div className="absolute -bottom-4 -right-4 bg-green-600 text-white px-4 py-2 rounded-full font-bold shadow-lg">
                   -56% pour les adhérents !
