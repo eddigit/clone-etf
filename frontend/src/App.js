@@ -26,6 +26,7 @@ import Cases from "./pages/dashboard/Cases";
 import OnboardingPage from "./pages/dashboard/Onboarding";
 import DashboardArticles from "./pages/dashboard/Articles";
 import DashboardArticleDetail from "./pages/dashboard/ArticleDetail";
+import SSOCallback from "./pages/SSOCallback";
 // Admin imports
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -73,6 +74,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/sso/callback" element={<SSOCallback />} />
 
           {/* Protected Dashboard Routes */}
           <Route

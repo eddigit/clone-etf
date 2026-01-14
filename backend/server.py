@@ -45,6 +45,7 @@ from community_routes import create_community_router
 from email_service import email_service
 from test_agent import run_user_test_agent, get_all_test_reports, get_test_report, test_reports_cache
 from cloudinary_service import upload_image_to_cloudinary, is_cloudinary_enabled
+from partner_routes import partner_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -329,6 +330,57 @@ async def verify_reset_token(token: str = Query(...)):
         "valid": True,
         "email": user["email"],
         "firstName": user["firstName"]
+    }
+
+
+@api_router.post("/auth/sso/validate")
+async def validate_sso_token(
+    token: str = Body(...),
+    partner: str = Body(...)
+):
+    """
+    Valide un token SSO et connecte l'utilisateur
+    (Appelé par le frontend après redirection depuis MaBoiteDigitale)
+    """
+    sso_token = await db.sso_tokens.find_one({
+        "token": token,
+        "partner_id": partner,
+        "used": False,
+        "expires_at": {"$gt": datetime.utcnow()}
+    })
+
+    if not sso_token:
+        raise HTTPException(status_code=401, detail="Token SSO invalide ou expiré")
+
+    user = await db.users.find_one({"id": sso_token["user_id"]})
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+
+    await db.sso_tokens.update_one(
+        {"token": token},
+        {"$set": {"used": True, "used_at": datetime.utcnow()}}
+    )
+
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"lastLogin": datetime.utcnow()}}
+    )
+
+    auth_token = create_access_token({"user_id": user["id"]})
+
+    logger.info(f"SSO validation successful for {user['email']} via partner {partner}")
+
+    return {
+        "success": True,
+        "token": auth_token,
+        "user": {
+            "id": user["id"],
+            "email": user["email"],
+            "firstName": user["firstName"],
+            "lastName": user["lastName"],
+            "role": user["role"]
+        }
     }
 
 
@@ -3169,6 +3221,9 @@ async def health_check():
 # Créer et inclure le router communautaire avec les dépendances
 community_router = create_community_router(db, get_current_user)
 api_router.include_router(community_router)
+
+# Inclure le router partenaire (MaBoiteDigitale)
+app.include_router(partner_router)
 
 # Include the router in the main app
 app.include_router(api_router)
