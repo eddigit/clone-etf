@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, UploadFile, File, Query, Request, BackgroundTasks, Body
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, UploadFile, File, Query, Request, BackgroundTasks, Body, WebSocket, WebSocketDisconnect
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
@@ -46,6 +46,8 @@ from email_service import email_service
 from test_agent import run_user_test_agent, get_all_test_reports, get_test_report, test_reports_cache
 from cloudinary_service import upload_image_to_cloudinary, is_cloudinary_enabled
 from partner_routes import partner_router
+from analytics_service import init_analytics_service, analytics_service
+from chat_service import init_live_chat_service, live_chat_service, connection_manager
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -3232,6 +3234,226 @@ app.include_router(api_router)
 uploads_dir = Path("uploads")
 uploads_dir.mkdir(exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+# ===================== ANALYTICS & LIVE CHAT ROUTES =====================
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialiser les services au démarrage"""
+    # Initialiser le service d'analytics
+    analytics = init_analytics_service(db)
+    await analytics.init_indexes()
+    
+    # Initialiser le service de chat
+    chat = init_live_chat_service(db)
+    await chat.init_indexes()
+    
+    logger.info("Analytics and Live Chat services initialized")
+
+# --- Analytics Routes ---
+
+@api_router.post("/analytics/track")
+async def track_page_view(request: Request):
+    """Enregistrer une vue de page (appelé par le frontend)"""
+    try:
+        data = await request.json()
+        
+        # Récupérer l'IP du client
+        client_ip = request.client.host if request.client else None
+        forwarded = request.headers.get("X-Forwarded-For")
+        if forwarded:
+            client_ip = forwarded.split(",")[0].strip()
+        
+        user_agent = request.headers.get("User-Agent", "")
+        
+        result = await analytics_service.track_page_view(
+            page_url=data.get("page_url", ""),
+            page_title=data.get("page_title"),
+            referrer=data.get("referrer"),
+            user_agent=user_agent,
+            ip_address=client_ip,
+            visitor_id=data.get("visitor_id"),
+            session_id=data.get("session_id"),
+            user_id=data.get("user_id")
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error tracking page view: {e}")
+        return {"success": False, "error": str(e)}
+
+@api_router.get("/admin/analytics/stats")
+async def get_analytics_stats(
+    days: int = Query(30, description="Nombre de jours"),
+    current_user: dict = Depends(get_current_user)
+):
+    """Récupérer les statistiques d'analytics (admin only)"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    stats = await analytics_service.get_stats(days)
+    return stats
+
+@api_router.get("/admin/analytics/realtime")
+async def get_realtime_analytics(current_user: dict = Depends(get_current_user)):
+    """Récupérer les statistiques en temps réel (admin only)"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    stats = await analytics_service.get_realtime_stats()
+    return stats
+
+@api_router.get("/admin/analytics/visitors/online")
+async def get_online_visitors(current_user: dict = Depends(get_current_user)):
+    """Récupérer la liste des visiteurs en ligne (admin only)"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    visitors = await analytics_service.get_online_visitors()
+    return {"visitors": serialize_doc(visitors), "count": len(visitors)}
+
+# --- Live Chat Routes ---
+
+@api_router.post("/chat/start")
+async def start_chat_conversation(request: Request):
+    """Démarrer une conversation de chat (visiteur)"""
+    try:
+        data = await request.json()
+        result = await live_chat_service.start_conversation(
+            visitor_id=data.get("visitor_id"),
+            visitor_name=data.get("visitor_name"),
+            visitor_email=data.get("visitor_email"),
+            current_page=data.get("current_page")
+        )
+        return serialize_doc(result)
+    except Exception as e:
+        logger.error(f"Error starting chat: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/chat/message")
+async def send_chat_message(request: Request):
+    """Envoyer un message dans le chat"""
+    try:
+        data = await request.json()
+        result = await live_chat_service.send_message(
+            conversation_id=data.get("conversation_id"),
+            sender_type=data.get("sender_type"),
+            sender_id=data.get("sender_id"),
+            sender_name=data.get("sender_name", "Visiteur"),
+            content=data.get("content")
+        )
+        return serialize_doc(result)
+    except Exception as e:
+        logger.error(f"Error sending message: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/chat/conversations/{conversation_id}/messages")
+async def get_chat_messages(conversation_id: str):
+    """Récupérer les messages d'une conversation"""
+    messages = await live_chat_service.get_conversation_messages(conversation_id)
+    return {"messages": serialize_doc(messages)}
+
+@api_router.get("/admin/chat/conversations")
+async def get_admin_chat_conversations(
+    status: Optional[str] = Query(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """Récupérer les conversations de chat (admin only)"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    if status == "waiting":
+        conversations = await live_chat_service.get_waiting_conversations()
+    elif status == "active":
+        conversations = await live_chat_service.get_active_conversations()
+    else:
+        conversations = await live_chat_service.get_all_conversations()
+    
+    return {"conversations": serialize_doc(conversations)}
+
+@api_router.post("/admin/chat/conversations/{conversation_id}/assign")
+async def assign_chat_to_admin(
+    conversation_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Assigner une conversation à l'admin actuel"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    result = await live_chat_service.assign_admin(
+        conversation_id=conversation_id,
+        admin_id=current_user.get("id"),
+        admin_name=f"{current_user.get('firstName', '')} {current_user.get('lastName', '')}"
+    )
+    return serialize_doc(result)
+
+@api_router.post("/admin/chat/conversations/{conversation_id}/close")
+async def close_chat_conversation(
+    conversation_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Fermer une conversation"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    result = await live_chat_service.close_conversation(conversation_id)
+    return result
+
+# --- WebSocket Endpoints ---
+
+@app.websocket("/ws/visitor/{visitor_id}")
+async def websocket_visitor(websocket: WebSocket, visitor_id: str):
+    """WebSocket pour les visiteurs"""
+    await connection_manager.connect_visitor(websocket, visitor_id)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            
+            if data.get("type") == "message":
+                await live_chat_service.send_message(
+                    conversation_id=data.get("conversation_id"),
+                    sender_type="visitor",
+                    sender_id=visitor_id,
+                    sender_name=data.get("sender_name", "Visiteur"),
+                    content=data.get("content")
+                )
+            elif data.get("type") == "page_change":
+                # Mettre à jour la page actuelle du visiteur
+                await analytics_service.track_page_view(
+                    page_url=data.get("page_url", ""),
+                    visitor_id=visitor_id
+                )
+                
+    except WebSocketDisconnect:
+        connection_manager.disconnect_visitor(visitor_id)
+        await analytics_service.set_visitor_offline(visitor_id)
+
+@app.websocket("/ws/admin/{admin_id}")
+async def websocket_admin(websocket: WebSocket, admin_id: str):
+    """WebSocket pour les admins"""
+    await connection_manager.connect_admin(websocket, admin_id)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            
+            if data.get("type") == "message":
+                await live_chat_service.send_message(
+                    conversation_id=data.get("conversation_id"),
+                    sender_type="admin",
+                    sender_id=admin_id,
+                    sender_name=data.get("sender_name", "Admin"),
+                    content=data.get("content")
+                )
+            elif data.get("type") == "assign":
+                await live_chat_service.assign_admin(
+                    conversation_id=data.get("conversation_id"),
+                    admin_id=admin_id,
+                    admin_name=data.get("admin_name", "Admin")
+                )
+                
+    except WebSocketDisconnect:
+        connection_manager.disconnect_admin(admin_id)
 
 # CORS middleware - Configuration dynamique selon l'environnement
 allowed_origins = ["*"] if ENVIRONMENT == "development" else [FRONTEND_URL]

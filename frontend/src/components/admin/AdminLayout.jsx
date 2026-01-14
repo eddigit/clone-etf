@@ -13,7 +13,9 @@ import {
   ChevronLeft,
   FileText,
   Newspaper,
-  Zap
+  Zap,
+  BarChart3,
+  MessageCircle
 } from 'lucide-react';
 
 const AdminLayout = ({ children }) => {
@@ -30,6 +32,8 @@ const AdminLayout = ({ children }) => {
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
+    { icon: BarChart3, label: 'Statistiques', path: '/admin/analytics' },
+    { icon: MessageCircle, label: 'Chat en direct', path: '/admin/chat' },
     { icon: Users, label: 'Adherents', path: '/admin/members' },
     { icon: FileText, label: 'Adhesions', path: '/admin/adhesions' },
     { icon: Newspaper, label: 'Blog', path: '/admin/blog' },

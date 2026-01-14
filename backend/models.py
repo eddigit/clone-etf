@@ -774,3 +774,135 @@ class MaBoiteDigitaleMemberSync(BaseModel):
     membership_type: str
     membership_end_date: datetime
     discount_percentage: float = 20.0
+
+
+# ========================================
+# ANALYTICS MODELS - Statistiques visiteurs
+# ========================================
+
+class PageView(BaseModel):
+    """Vue de page individuelle"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    visitor_id: str
+    page_url: str
+    page_title: Optional[str] = None
+    referrer: Optional[str] = None
+    referrer_domain: Optional[str] = None
+    search_query: Optional[str] = None  # Mots-clés Google si disponible
+    user_agent: Optional[str] = None
+    ip_address: Optional[str] = None
+    country: Optional[str] = None
+    city: Optional[str] = None
+    device_type: Optional[str] = None  # desktop, mobile, tablet
+    browser: Optional[str] = None
+    os: Optional[str] = None
+    session_id: Optional[str] = None
+    user_id: Optional[str] = None  # Si utilisateur connecté
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+
+class Visitor(BaseModel):
+    """Visiteur unique (basé sur fingerprint ou cookie)"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    fingerprint: Optional[str] = None
+    first_visit: datetime = Field(default_factory=datetime.utcnow)
+    last_visit: datetime = Field(default_factory=datetime.utcnow)
+    total_visits: int = 1
+    total_page_views: int = 0
+    user_id: Optional[str] = None  # Lié si connecté
+    country: Optional[str] = None
+    city: Optional[str] = None
+    device_type: Optional[str] = None
+    browser: Optional[str] = None
+    os: Optional[str] = None
+    is_online: bool = False
+    current_page: Optional[str] = None
+    socket_id: Optional[str] = None  # Pour le chat en temps réel
+
+
+class VisitorSession(BaseModel):
+    """Session de visite"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    visitor_id: str
+    started_at: datetime = Field(default_factory=datetime.utcnow)
+    ended_at: Optional[datetime] = None
+    page_views: int = 0
+    duration_seconds: int = 0
+    entry_page: Optional[str] = None
+    exit_page: Optional[str] = None
+    referrer: Optional[str] = None
+    referrer_domain: Optional[str] = None
+    search_query: Optional[str] = None
+
+
+class AnalyticsStats(BaseModel):
+    """Statistiques agrégées pour l'admin"""
+    total_visitors: int = 0
+    total_page_views: int = 0
+    unique_visitors_today: int = 0
+    page_views_today: int = 0
+    visitors_online: int = 0
+    avg_session_duration: float = 0.0
+    bounce_rate: float = 0.0
+    top_pages: List[dict] = []
+    top_referrers: List[dict] = []
+    top_search_queries: List[dict] = []
+    visitors_by_country: List[dict] = []
+    visitors_by_device: List[dict] = []
+    visitors_by_day: List[dict] = []
+
+
+class TrackingEvent(BaseModel):
+    """Événement de tracking envoyé par le frontend"""
+    event_type: str  # pageview, click, scroll, etc.
+    page_url: str
+    page_title: Optional[str] = None
+    referrer: Optional[str] = None
+    visitor_id: Optional[str] = None
+    session_id: Optional[str] = None
+    user_id: Optional[str] = None
+    metadata: Optional[dict] = None
+    timestamp: Optional[datetime] = None
+
+
+# ========================================
+# LIVE CHAT MODELS - Chat en temps réel
+# ========================================
+
+class ChatMessage(BaseModel):
+    """Message de chat"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    conversation_id: str
+    sender_type: str  # visitor, admin
+    sender_id: str
+    sender_name: Optional[str] = None
+    content: str
+    is_read: bool = False
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+
+class LiveChatConversation(BaseModel):
+    """Conversation de chat en direct"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    visitor_id: str
+    visitor_name: Optional[str] = None
+    visitor_email: Optional[str] = None
+    admin_id: Optional[str] = None  # Admin qui a pris en charge
+    admin_name: Optional[str] = None
+    status: str = "waiting"  # waiting, active, closed
+    started_at: datetime = Field(default_factory=datetime.utcnow)
+    last_message_at: Optional[datetime] = None
+    closed_at: Optional[datetime] = None
+    messages_count: int = 0
+    visitor_page: Optional[str] = None  # Page actuelle du visiteur
+    visitor_info: Optional[dict] = None  # Infos supplémentaires
+
+
+class ChatNotification(BaseModel):
+    """Notification de chat pour les admins"""
+    type: str  # new_conversation, new_message, visitor_online
+    conversation_id: Optional[str] = None
+    visitor_id: Optional[str] = None
+    message: Optional[str] = None
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+

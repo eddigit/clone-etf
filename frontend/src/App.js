@@ -35,7 +35,11 @@ import AdminHelloAsso from "./pages/admin/AdminHelloAsso";
 import AdminMemberships from "./pages/admin/AdminMemberships";
 import AdminBlog from "./pages/admin/AdminBlog";
 import AdminTestAgent from "./pages/admin/AdminTestAgent";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminChat from "./pages/admin/AdminChat";
 import BlogArticle from "./pages/BlogArticle";
+import ChatWidget from "./components/ChatWidget";
+import AnalyticsTracker from "./components/AnalyticsTracker";
 import NotFound from "./pages/NotFound";
 import { Toaster } from "./components/ui/toaster";
 
@@ -60,6 +64,7 @@ function App() {
   return (
     <div className="App">
       <BrowserRouter>
+        <AnalyticsTracker />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
@@ -263,10 +268,27 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin/analytics"
+            element={
+              <ProtectedRoute>
+                <AdminLayout><AdminAnalytics /></AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/chat"
+            element={
+              <ProtectedRoute>
+                <AdminLayout><AdminChat /></AdminLayout>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Catch all - 404 page */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <ChatWidget />
       </BrowserRouter>
       <Toaster />
     </div>

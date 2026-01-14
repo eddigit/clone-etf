@@ -72,5 +72,7 @@ tzdata==2025.2
 urllib3==2.6.1
 uvicorn==0.25.0
 watchfiles==1.1.1
+websockets==12.0
 python-socketio==5.11.4
 aiohttp==3.10.11
+user-agents==2.2.0
