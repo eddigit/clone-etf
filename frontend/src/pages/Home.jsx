@@ -55,6 +55,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'https://clone-etf.onrender.com
 const Home = () => {
   const navigate = useNavigate();
   const [featuredArticles, setFeaturedArticles] = useState([]);
+  const [selectedVideo, setSelectedVideo] = useState(null);
 
   // Fonction pour obtenir l'URL complète d'une image
   const getFullImageUrl = (url) => {
@@ -393,7 +394,7 @@ const Home = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-800 border-slate-700 border-2 border-green-600">
+            <Card className="bg-slate-800 border-2 border-green-600">
               <CardHeader>
                 <div className="w-12 h-12 bg-green-900/50 rounded-lg flex items-center justify-center mb-4">
                   <Rocket className="h-6 w-6 text-green-400" />
@@ -676,7 +677,11 @@ const Home = () => {
 
           <div className="grid md:grid-cols-3 gap-6 mb-8">
             {videos.map((video) => (
-              <Card key={video.id} className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer">
+              <Card 
+                key={video.id} 
+                className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer"
+                onClick={() => setSelectedVideo(video)}
+              >
                 <div className="relative">
                   <img
                     src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
@@ -698,9 +703,15 @@ const Home = () => {
           </div>
 
           <div className="text-center">
-            <Button variant="outline" size="lg">
-              Voir nos 120 vidéos et reportages TV
-            </Button>
+            <a 
+              href="https://www.youtube.com/@entoutefranchise5765" 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
+              <Button variant="outline" size="lg">
+                Voir nos 120 vidéos et reportages TV
+              </Button>
+            </a>
           </div>
 
           <div className="grid grid-cols-3 gap-6 mt-12 text-center">
@@ -845,6 +856,32 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {selectedVideo && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedVideo(null)}
+        >
+          <div 
+            className="relative w-full max-w-4xl aspect-video"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSelectedVideo(null)}
+              className="absolute -top-10 right-0 text-white hover:text-gray-300 text-3xl font-bold"
+            >
+              &times;
+            </button>
+            <iframe
+              src={`https://www.youtube.com/embed/${selectedVideo.videoId}?autoplay=1`}
+              title={selectedVideo.title}
+              className="w-full h-full rounded-lg"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

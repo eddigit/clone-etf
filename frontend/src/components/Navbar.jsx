@@ -86,18 +86,18 @@ const Navbar = () => {
                   onClick={() => navigate(userRole === 'admin' ? '/admin' : '/dashboard')}
                   variant="outline"
                   size="sm"
-                  className="flex items-center space-x-2"
+                  className="flex items-center space-x-2 text-white border-white hover:text-white"
                 >
                   <UserCircle className="h-4 w-4" />
                   <span>{userRole === 'admin' ? 'Admin' : 'Espace Membre'}</span>
                 </Button>
-                <Button onClick={handleLogout} variant="ghost" size="sm">
+                <Button onClick={handleLogout} variant="ghost" size="sm" className="text-white hover:text-white">
                   Déconnexion
                 </Button>
               </>
             ) : (
               <>
-                <Button onClick={() => navigate('/login')} variant="ghost" size="sm">
+                <Button onClick={() => navigate('/login')} variant="ghost" size="sm" className="text-white hover:text-white">
                   Connexion
                 </Button>
                 <Button onClick={() => navigate('/register')} size="sm" className="bg-green-600 hover:bg-green-700">
