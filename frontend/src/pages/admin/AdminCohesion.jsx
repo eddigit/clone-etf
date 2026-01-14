@@ -327,6 +327,7 @@ const AdminCohesion = () => {
     if (selectedAudience) {
       fetchContacts();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAudience]);
 
   // Import CSV
