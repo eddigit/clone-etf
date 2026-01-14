@@ -1103,6 +1103,88 @@ const AdminCohesion = () => {
                 </Select>
               </div>
 
+              {/* Panneau d'outils de sélection en masse */}
+              <div className="mb-4 p-4 bg-gray-50 border rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-gray-700 flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Outils de sélection en masse
+                  </h4>
+                  <span className="text-sm text-gray-500">
+                    {contactsTotal} contact(s) au total
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={handleSelectAll}
+                    disabled={selectedContacts.size === contactsTotal}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Sélectionner tout ({contactsTotal})
+                  </Button>
+                  {categories.map(cat => (
+                    <Button 
+                      key={cat.id}
+                      size="sm" 
+                      variant="outline"
+                      className="gap-1"
+                      onClick={async () => {
+                        try {
+                          const res = await fetch(`${API_URL}/cohesion/contacts/all-ids?categoryId=${cat.id}`, { headers });
+                          if (res.ok) {
+                            const data = await res.json();
+                            setSelectedContacts(new Set(data.ids));
+                            setAllContactsCount(data.count);
+                            setSelectAllMode(true);
+                            toast({ title: `${data.count} contacts sélectionnés (${cat.name})` });
+                          }
+                        } catch (error) {
+                          toast({ title: "Erreur", variant: "destructive" });
+                        }
+                      }}
+                    >
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: cat.color }}
+                      />
+                      {cat.name} ({cat.contactsCount})
+                    </Button>
+                  ))}
+                  {noCategoryCount > 0 && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="border-yellow-300 bg-yellow-50 text-yellow-800"
+                      onClick={async () => {
+                        try {
+                          const res = await fetch(`${API_URL}/cohesion/contacts/all-ids?hasCategory=false`, { headers });
+                          if (res.ok) {
+                            const data = await res.json();
+                            setSelectedContacts(new Set(data.ids));
+                            setAllContactsCount(data.count);
+                            setSelectAllMode(true);
+                            toast({ title: `${data.count} contacts sans catégorie sélectionnés` });
+                          }
+                        } catch (error) {
+                          toast({ title: "Erreur", variant: "destructive" });
+                        }
+                      }}
+                    >
+                      <AlertCircle className="h-4 w-4 mr-1" />
+                      Sans catégorie ({noCategoryCount})
+                    </Button>
+                  )}
+                  {selectedContacts.size > 0 && (
+                    <Button size="sm" variant="ghost" onClick={clearSelection}>
+                      <XCircle className="h-4 w-4 mr-1" />
+                      Désélectionner tout
+                    </Button>
+                  )}
+                </div>
+              </div>
+
               {/* Alerte contacts sans catégorie */}
               {noCategoryCount > 0 && (
                 <div className="flex items-center justify-between mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -1140,48 +1222,58 @@ const AdminCohesion = () => {
                 </div>
               )}
 
-              {/* Actions groupées */}
+              {/* Actions groupées - Panneau fixe en haut quand sélection active */}
               {selectedContacts.size > 0 && (
-                <div className="flex items-center gap-2 mb-4 p-3 bg-blue-50 rounded-lg flex-wrap">
-                  <span className="text-sm text-blue-800 font-medium">
-                    {selectAllMode ? `${allContactsCount} contacts (tous)` : `${selectedContacts.size} contact(s)`} sélectionné(s)
-                  </span>
-                  {!selectAllMode && contactsTotal > contacts.length && (
-                    <Button size="sm" variant="link" className="text-blue-600 p-0 h-auto" onClick={handleSelectAll}>
-                      Sélectionner les {contactsTotal} contacts
+                <div className="mb-4 p-4 bg-blue-100 border-2 border-blue-300 rounded-lg">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full font-bold">
+                        {selectAllMode ? allContactsCount : selectedContacts.size}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-blue-900">
+                          {selectAllMode ? `${allContactsCount} contacts sélectionnés` : `${selectedContacts.size} contact(s) sélectionné(s)`}
+                        </p>
+                        <p className="text-sm text-blue-700">
+                          {selectAllMode ? 'Tous les contacts correspondant aux filtres' : 'Sélection manuelle'}
+                        </p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={clearSelection}>
+                      <XCircle className="h-5 w-5" />
                     </Button>
-                  )}
-                  <Button size="sm" variant="ghost" onClick={clearSelection}>
-                    <XCircle className="h-4 w-4" />
-                  </Button>
-                  <div className="w-px h-6 bg-blue-200" />
-                  <Button size="sm" variant="outline" onClick={() => setShowTagModal(true)}>
-                    <Tag className="h-4 w-4 mr-1" />
-                    Ajouter tag
-                  </Button>
-                  <Select onValueChange={handleAssignCategoryToSelected}>
-                    <SelectTrigger className="w-auto h-8 text-sm">
-                      <FolderOpen className="h-4 w-4 mr-1" />
-                      Catégorie
-                    </SelectTrigger>
-                    <SelectContent>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-3">
+                    <div className="flex items-center gap-2 p-2 bg-white rounded border">
+                      <span className="text-sm font-medium text-gray-600">Affecter catégorie:</span>
                       {categories.map(cat => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: cat.color }}
-                            />
-                            {cat.name}
-                          </div>
-                        </SelectItem>
+                        <Button 
+                          key={cat.id}
+                          size="sm" 
+                          variant="outline"
+                          className="gap-1"
+                          onClick={() => handleAssignCategoryToSelected(cat.id)}
+                        >
+                          <div 
+                            className="w-3 h-3 rounded-full" 
+                            style={{ backgroundColor: cat.color }}
+                          />
+                          {cat.name}
+                        </Button>
                       ))}
-                    </SelectContent>
-                  </Select>
-                  <Button size="sm" variant="outline" className="text-red-600" onClick={handleDeleteSelected}>
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Supprimer
-                  </Button>
+                    </div>
+                    
+                    <Button size="sm" variant="outline" onClick={() => setShowTagModal(true)}>
+                      <Tag className="h-4 w-4 mr-1" />
+                      Ajouter tag
+                    </Button>
+                    
+                    <Button size="sm" variant="destructive" onClick={handleDeleteSelected}>
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Supprimer la sélection
+                    </Button>
+                  </div>
                 </div>
               )}
 
