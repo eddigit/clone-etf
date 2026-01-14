@@ -230,7 +230,7 @@ const AdminMembers = () => {
     fetchMembers();
   };
 
-  const fetchMemberDetails = async (memberId) => {
+  const fetchMemberDetails = useCallback(async (memberId) => {
     console.log('fetchMemberDetails called with:', memberId);
     try {
       const token = localStorage.getItem('token');
