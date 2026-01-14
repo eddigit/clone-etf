@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
-import { Check, Shield, FileText, TrendingUp, Bot, Globe, Rocket } from 'lucide-react';
+import { Check, Shield, FileText, TrendingUp, Bot, Globe, Rocket, ExternalLink, Sparkles, Mail, BarChart3, Users, Palette, Calendar, Headphones } from 'lucide-react';
 import { services, digitalServices, membershipPlans, aiPlans } from '../mockData';
 
 const iconMap = {
@@ -74,6 +74,122 @@ const Services = () => {
                 </Card>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* Section MaBoiteDigitale - Partenaire Premium */}
+      <section className="py-20 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <Badge className="mb-4 bg-purple-600 text-white text-sm px-4 py-1">
+              <Sparkles className="h-4 w-4 mr-2 inline" />
+              PARTENARIAT EXCLUSIF ADHÉRENTS
+            </Badge>
+            <h2 className="text-4xl font-bold text-white mb-4">
+              MaBoiteDigitale.com
+            </h2>
+            <p className="text-xl text-purple-200 max-w-3xl mx-auto">
+              La plateforme tout-en-un pour digitaliser votre activité et booster votre communication
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Image de la plateforme */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl blur-2xl opacity-30 transform -rotate-3"></div>
+              <div className="relative bg-slate-800 rounded-2xl p-2 shadow-2xl border border-purple-500/30">
+                <img 
+                  src="/images/maboitedigitale-dashboard.png" 
+                  alt="Dashboard MaBoiteDigitale - Tous vos outils digitaux" 
+                  className="w-full rounded-xl"
+                  onError={(e) => {
+                    e.target.src = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=500&fit=crop';
+                  }}
+                />
+                <div className="absolute -bottom-4 -right-4 bg-green-600 text-white px-4 py-2 rounded-full font-bold shadow-lg">
+                  -56% pour les adhérents !
+                </div>
+              </div>
+            </div>
+
+            {/* Contenu descriptif */}
+            <div className="space-y-6">
+              <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-purple-500/20">
+                <h3 className="text-2xl font-bold text-white mb-4 flex items-center">
+                  <Rocket className="h-6 w-6 mr-3 text-purple-400" />
+                  Tous vos outils digitaux réunis
+                </h3>
+                <p className="text-gray-300 mb-4">
+                  En tant qu'adhérent ETF, vous bénéficiez d'un accès privilégié à la plateforme MaBoiteDigitale.com 
+                  avec une <strong className="text-green-400">réduction exclusive de 20%</strong> sur tous les abonnements.
+                </p>
+                
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="flex items-center text-gray-300">
+                    <Mail className="h-5 w-5 mr-2 text-cyan-400" />
+                    <span>Signatures Email Pro</span>
+                  </div>
+                  <div className="flex items-center text-gray-300">
+                    <Globe className="h-5 w-5 mr-2 text-green-400" />
+                    <span>Site Web One-Page</span>
+                  </div>
+                  <div className="flex items-center text-gray-300">
+                    <Calendar className="h-5 w-5 mr-2 text-orange-400" />
+                    <span>Prise de RDV en ligne</span>
+                  </div>
+                  <div className="flex items-center text-gray-300">
+                    <Palette className="h-5 w-5 mr-2 text-pink-400" />
+                    <span>Brand Kit & Identité</span>
+                  </div>
+                  <div className="flex items-center text-gray-300">
+                    <BarChart3 className="h-5 w-5 mr-2 text-blue-400" />
+                    <span>Statistiques détaillées</span>
+                  </div>
+                  <div className="flex items-center text-gray-300">
+                    <Users className="h-5 w-5 mr-2 text-yellow-400" />
+                    <span>Programme Affiliation</span>
+                  </div>
+                  <div className="flex items-center text-gray-300">
+                    <Bot className="h-5 w-5 mr-2 text-purple-400" />
+                    <span>Coach Digital IA</span>
+                  </div>
+                  <div className="flex items-center text-gray-300">
+                    <Headphones className="h-5 w-5 mr-2 text-red-400" />
+                    <span>Support & Services</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button 
+                    size="lg" 
+                    className="bg-purple-600 hover:bg-purple-700 flex-1"
+                    onClick={() => window.open('https://maboitedigitale.com?partner=etf', '_blank')}
+                  >
+                    <ExternalLink className="mr-2 h-5 w-5" />
+                    Découvrir la plateforme
+                  </Button>
+                  <div className="text-center sm:text-left">
+                    <div className="text-3xl font-bold text-white">17€<span className="text-lg text-gray-400">/mois</span></div>
+                    <div className="text-sm text-gray-400 line-through">Au lieu de 39€/mois</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Témoignage */}
+              <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-xl p-6 border border-purple-500/20">
+                <div className="flex items-start gap-4">
+                  <div className="text-4xl text-purple-400">"</div>
+                  <div>
+                    <p className="text-gray-300 italic mb-3">
+                      Grâce à MaBoiteDigitale, j'ai pu créer ma signature email professionnelle et mon mini-site en quelques minutes. 
+                      Un vrai gain de temps pour ma communication !
+                    </p>
+                    <p className="text-purple-400 font-semibold">— Un adhérent ETF satisfait</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

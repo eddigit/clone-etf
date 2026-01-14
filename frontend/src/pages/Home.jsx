@@ -22,7 +22,13 @@ import {
   Rocket,
   Play,
   ArrowRight,
-  Newspaper
+  Newspaper,
+  ExternalLink,
+  Sparkles,
+  BarChart3,
+  Palette,
+  Calendar,
+  Headphones
 } from 'lucide-react';
 import {
   stats,
@@ -428,6 +434,111 @@ const Home = () => {
               <Users className="mr-2 h-5 w-5" />
               Adhérer maintenant
             </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Section MaBoiteDigitale - Partenariat Exclusif */}
+      <section className="py-20 bg-gradient-to-br from-purple-900 via-slate-900 to-slate-900 relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-green-600/10 rounded-full blur-3xl"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="text-center mb-12">
+            <Badge className="bg-purple-600/20 text-purple-300 border border-purple-500 mb-4">
+              <Sparkles className="h-4 w-4 mr-2" />
+              PARTENARIAT EXCLUSIF ADHÉRENTS
+            </Badge>
+            <h2 className="text-4xl font-bold text-white mb-4">
+              Ma Boîte Digitale
+            </h2>
+            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+              Tous les outils digitaux dont vous avez besoin pour développer votre activité,
+              à un tarif préférentiel réservé aux adhérents ETF
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Image du dashboard */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-green-600/20 rounded-2xl blur-xl"></div>
+              <div className="relative bg-slate-800/50 backdrop-blur border border-purple-500/30 rounded-2xl p-4 shadow-2xl">
+                <img
+                  src="/images/maboitedigitale-dashboard.png"
+                  alt="Dashboard Ma Boîte Digitale - Outils numériques"
+                  className="w-full rounded-xl shadow-lg"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" fill="%231e293b"><rect width="100%" height="100%"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23a855f7" font-size="18">Capture Ma Boîte Digitale</text></svg>';
+                  }}
+                />
+                <div className="absolute -bottom-4 -right-4 bg-green-600 text-white px-4 py-2 rounded-full font-bold shadow-lg">
+                  -56% pour les adhérents !
+                </div>
+              </div>
+            </div>
+
+            {/* Contenu et outils */}
+            <div className="space-y-8">
+              {/* Prix */}
+              <div className="bg-slate-800/50 backdrop-blur border border-green-500/30 rounded-xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-gray-400 text-sm">Tarif adhérent ETF</p>
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-4xl font-bold text-green-400">17€</span>
+                      <span className="text-gray-400">/mois</span>
+                      <span className="text-red-400 line-through text-lg">39€/mois</span>
+                    </div>
+                  </div>
+                  <Badge className="bg-green-600">ÉCONOMISEZ 22€/mois</Badge>
+                </div>
+              </div>
+
+              {/* Grille d'outils */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {[
+                  { icon: Mail, label: 'Signatures Email', color: 'text-blue-400' },
+                  { icon: Globe, label: 'Site Web', color: 'text-green-400' },
+                  { icon: Calendar, label: 'Rendez-vous', color: 'text-orange-400' },
+                  { icon: Palette, label: 'Brand Kit', color: 'text-pink-400' },
+                  { icon: BarChart3, label: 'Statistiques', color: 'text-cyan-400' },
+                  { icon: Users, label: 'Affiliation', color: 'text-yellow-400' },
+                  { icon: Bot, label: 'Coach Digital IA', color: 'text-purple-400' },
+                  { icon: Headphones, label: 'Support', color: 'text-gray-400' },
+                ].map((tool, index) => (
+                  <div 
+                    key={index}
+                    className="bg-slate-700/50 rounded-lg p-3 text-center hover:bg-slate-700 transition-colors"
+                  >
+                    <tool.icon className={`h-6 w-6 mx-auto mb-2 ${tool.color}`} />
+                    <span className="text-xs text-gray-300">{tool.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* CTA */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button 
+                  size="lg" 
+                  className="bg-purple-600 hover:bg-purple-700 flex-1"
+                  onClick={() => window.open('https://maboitedigitale.com', '_blank')}
+                >
+                  <ExternalLink className="mr-2 h-5 w-5" />
+                  Découvrir la plateforme
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-green-500 text-green-400 hover:bg-green-500/10 flex-1"
+                  onClick={() => navigate('/register')}
+                >
+                  <Rocket className="mr-2 h-5 w-5" />
+                  Adhérer pour en profiter
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
