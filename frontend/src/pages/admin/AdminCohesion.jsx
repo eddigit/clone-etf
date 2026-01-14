@@ -193,8 +193,12 @@ const AdminCohesion = () => {
   const [currentCampaign, setCurrentCampaign] = useState(null);
   const [previewData, setPreviewData] = useState(null);
   const [importFile, setImportFile] = useState(null);
+  const [importCategoryId, setImportCategoryId] = useState('');
   const [importResult, setImportResult] = useState(null);
   const [newTag, setNewTag] = useState('');
+  const [selectAllMode, setSelectAllMode] = useState(false);
+  const [allContactsCount, setAllContactsCount] = useState(0);
+  const [noCategoryCount, setNoCategoryCount] = useState(0);
   
   const token = localStorage.getItem('token');
   const headers = useMemo(() => ({
@@ -268,13 +272,18 @@ const AdminCohesion = () => {
   // Récupérer les statistiques
   const fetchStats = useCallback(async () => {
     try {
-      const [statsRes, emailRes] = await Promise.all([
+      const [statsRes, emailRes, noCatRes] = await Promise.all([
         fetch(`${API_URL}/cohesion/stats`, { headers }),
-        fetch(`${API_URL}/cohesion/email-status`, { headers })
+        fetch(`${API_URL}/cohesion/email-status`, { headers }),
+        fetch(`${API_URL}/cohesion/contacts/count?hasCategory=false`, { headers })
       ]);
       
       if (statsRes.ok) setStats(await statsRes.json());
       if (emailRes.ok) setEmailStatus(await emailRes.json());
+      if (noCatRes.ok) {
+        const data = await noCatRes.json();
+        setNoCategoryCount(data.count);
+      }
     } catch (error) {
       console.error('Erreur chargement stats:', error);
     }
@@ -303,8 +312,14 @@ const AdminCohesion = () => {
     const formData = new FormData();
     formData.append('file', importFile);
     
+    // Construire l'URL avec la catégorie si sélectionnée
+    let url = `${API_URL}/cohesion/import`;
+    if (importCategoryId && importCategoryId !== '__none__') {
+      url += `?category_id=${importCategoryId}`;
+    }
+    
     try {
-      const res = await fetch(`${API_URL}/cohesion/import`, {
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -313,7 +328,10 @@ const AdminCohesion = () => {
       if (res.ok) {
         const data = await res.json();
         setImportResult(data.result);
+        setImportFile(null);
+        setImportCategoryId('');
         fetchContacts();
+        fetchCategories();
         fetchStats();
         toast({
           title: "Import réussi",
@@ -565,13 +583,101 @@ const AdminCohesion = () => {
       if (res.ok) {
         toast({ title: "Catégorie assignée" });
         setSelectedContacts(new Set());
+        setSelectAllMode(false);
         fetchContacts();
         fetchCategories();
+        fetchStats();
       }
     } catch (error) {
       toast({
         title: "Erreur",
         description: "Erreur lors de l'assignation",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Affecter une catégorie à tous les contacts sans catégorie
+  const handleAssignCategoryToNoCategory = async (categoryId) => {
+    if (!window.confirm(`Affecter cette catégorie à ${noCategoryCount} contacts sans catégorie ?`)) return;
+    
+    try {
+      const res = await fetch(
+        `${API_URL}/cohesion/contacts/bulk-assign-category?category_id=${categoryId}&filter_no_category=true`,
+        {
+          method: 'POST',
+          headers
+        }
+      );
+      
+      if (res.ok) {
+        const data = await res.json();
+        toast({ title: data.message });
+        fetchContacts();
+        fetchCategories();
+        fetchStats();
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'assignation",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Supprimer tous les contacts sans catégorie
+  const handleDeleteNoCategory = async () => {
+    if (!window.confirm(`Supprimer définitivement ${noCategoryCount} contacts sans catégorie ?`)) return;
+    
+    try {
+      const res = await fetch(
+        `${API_URL}/cohesion/contacts/bulk-delete?filter_no_category=true`,
+        {
+          method: 'DELETE',
+          headers
+        }
+      );
+      
+      if (res.ok) {
+        const data = await res.json();
+        toast({ title: data.message });
+        fetchContacts();
+        fetchCategories();
+        fetchStats();
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Sélectionner tous les contacts (pas juste la page)
+  const handleSelectAll = async () => {
+    try {
+      // Construire les paramètres de filtre
+      const params = new URLSearchParams();
+      if (contactsSearch) params.append('search', contactsSearch);
+      if (selectedStatus) params.append('status', selectedStatus);
+      if (selectedTag) params.append('tags', selectedTag);
+      if (selectedCategoryFilter) params.append('categoryId', selectedCategoryFilter);
+      
+      const res = await fetch(`${API_URL}/cohesion/contacts/all-ids?${params}`, { headers });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedContacts(new Set(data.ids));
+        setAllContactsCount(data.count);
+        setSelectAllMode(true);
+        toast({ title: `${data.count} contacts sélectionnés` });
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la sélection",
         variant: "destructive"
       });
     }
@@ -779,13 +885,20 @@ const AdminCohesion = () => {
     });
   };
 
-  // Sélectionner tous
+  // Sélectionner tous (page courante uniquement)
   const selectAllContacts = () => {
-    if (selectedContacts.size === contacts.length) {
+    if (selectedContacts.size === contacts.length && !selectAllMode) {
       setSelectedContacts(new Set());
     } else {
       setSelectedContacts(new Set(contacts.map(c => c.id)));
+      setSelectAllMode(false);
     }
+  };
+
+  // Désélectionner tout
+  const clearSelection = () => {
+    setSelectedContacts(new Set());
+    setSelectAllMode(false);
   };
 
   if (loading) {
@@ -990,12 +1103,58 @@ const AdminCohesion = () => {
                 </Select>
               </div>
 
+              {/* Alerte contacts sans catégorie */}
+              {noCategoryCount > 0 && (
+                <div className="flex items-center justify-between mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5 text-yellow-600" />
+                    <span className="text-sm text-yellow-800">
+                      <strong>{noCategoryCount}</strong> contact(s) sans catégorie
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Select onValueChange={handleAssignCategoryToNoCategory}>
+                      <SelectTrigger className="w-auto h-8 text-sm">
+                        <FolderOpen className="h-4 w-4 mr-1" />
+                        Affecter catégorie
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map(cat => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            <div className="flex items-center gap-2">
+                              <div 
+                                className="w-3 h-3 rounded-full" 
+                                style={{ backgroundColor: cat.color }}
+                              />
+                              {cat.name}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button size="sm" variant="outline" className="text-red-600" onClick={handleDeleteNoCategory}>
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Supprimer tous
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Actions groupées */}
               {selectedContacts.size > 0 && (
                 <div className="flex items-center gap-2 mb-4 p-3 bg-blue-50 rounded-lg flex-wrap">
-                  <span className="text-sm text-blue-800">
-                    {selectedContacts.size} contact(s) sélectionné(s)
+                  <span className="text-sm text-blue-800 font-medium">
+                    {selectAllMode ? `${allContactsCount} contacts (tous)` : `${selectedContacts.size} contact(s)`} sélectionné(s)
                   </span>
+                  {!selectAllMode && contactsTotal > contacts.length && (
+                    <Button size="sm" variant="link" className="text-blue-600 p-0 h-auto" onClick={handleSelectAll}>
+                      Sélectionner les {contactsTotal} contacts
+                    </Button>
+                  )}
+                  <Button size="sm" variant="ghost" onClick={clearSelection}>
+                    <XCircle className="h-4 w-4" />
+                  </Button>
+                  <div className="w-px h-6 bg-blue-200" />
                   <Button size="sm" variant="outline" onClick={() => setShowTagModal(true)}>
                     <Tag className="h-4 w-4 mr-1" />
                     Ajouter tag
@@ -1449,6 +1608,35 @@ const AdminCohesion = () => {
               </p>
             </div>
             
+            <div>
+              <Label>Catégorie à affecter</Label>
+              <Select 
+                value={importCategoryId || '__none__'} 
+                onValueChange={(v) => setImportCategoryId(v === '__none__' ? '' : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une catégorie (optionnel)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Aucune catégorie</SelectItem>
+                  {categories.map(cat => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: cat.color }}
+                        />
+                        {cat.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">
+                Tous les contacts importés seront affectés à cette catégorie
+              </p>
+            </div>
+            
             {importResult && (
               <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                 <div className="flex items-center gap-2">
@@ -1471,7 +1659,12 @@ const AdminCohesion = () => {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowImportModal(false)}>
+            <Button variant="outline" onClick={() => {
+              setShowImportModal(false);
+              setImportFile(null);
+              setImportCategoryId('');
+              setImportResult(null);
+            }}>
               Fermer
             </Button>
             <Button onClick={handleImport} disabled={!importFile}>

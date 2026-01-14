@@ -198,12 +198,124 @@ def create_cohesion_router(db, get_current_admin_user):
         result = await db.cohesion_contacts.delete_many({"id": {"$in": contact_ids}})
         return {"message": f"{result.deleted_count} contacts supprimés"}
     
+    # ==================== ACTIONS EN MASSE ====================
+    
+    @router.get("/contacts/count", response_model=dict)
+    async def count_contacts(
+        status: Optional[str] = None,
+        categoryId: Optional[str] = None,
+        hasCategory: Optional[bool] = None,
+        current_user: dict = Depends(get_current_admin_user)
+    ):
+        """Compte les contacts selon les filtres"""
+        query = {}
+        if status:
+            query["status"] = status
+        if categoryId:
+            query["categoryId"] = categoryId
+        if hasCategory is not None:
+            if hasCategory:
+                query["categoryId"] = {"$ne": None, "$exists": True}
+            else:
+                query["$or"] = [{"categoryId": None}, {"categoryId": {"$exists": False}}]
+        
+        count = await db.cohesion_contacts.count_documents(query)
+        return {"count": count}
+    
+    @router.post("/contacts/bulk-assign-category", response_model=dict)
+    async def bulk_assign_category(
+        category_id: str = Query(..., description="ID de la catégorie à affecter"),
+        filter_no_category: bool = Query(False, description="Affecter uniquement aux contacts sans catégorie"),
+        current_user: dict = Depends(get_current_admin_user)
+    ):
+        """Affecte une catégorie à tous les contacts (ou seulement ceux sans catégorie)"""
+        # Récupérer la catégorie
+        category = await db.cohesion_categories.find_one({"id": category_id})
+        if not category:
+            raise HTTPException(status_code=404, detail="Catégorie non trouvée")
+        
+        # Construire le filtre
+        query = {}
+        if filter_no_category:
+            query["$or"] = [{"categoryId": None}, {"categoryId": {"$exists": False}}]
+        
+        # Mettre à jour les contacts
+        result = await db.cohesion_contacts.update_many(
+            query,
+            {"$set": {"categoryId": category_id, "categoryName": category.get("name")}}
+        )
+        
+        return {"message": f"Catégorie affectée à {result.modified_count} contacts"}
+    
+    @router.delete("/contacts/bulk-delete", response_model=dict)
+    async def bulk_delete_contacts(
+        filter_no_category: bool = Query(False, description="Supprimer uniquement les contacts sans catégorie"),
+        category_id: Optional[str] = Query(None, description="Supprimer les contacts de cette catégorie"),
+        current_user: dict = Depends(get_current_admin_user)
+    ):
+        """Supprime des contacts en masse selon les filtres"""
+        query = {}
+        
+        if filter_no_category:
+            query["$or"] = [{"categoryId": None}, {"categoryId": {"$exists": False}}]
+        elif category_id:
+            query["categoryId"] = category_id
+        else:
+            raise HTTPException(status_code=400, detail="Vous devez spécifier un filtre (filter_no_category ou category_id)")
+        
+        # Compter d'abord
+        count = await db.cohesion_contacts.count_documents(query)
+        
+        # Supprimer
+        result = await db.cohesion_contacts.delete_many(query)
+        
+        return {"message": f"{result.deleted_count} contacts supprimés", "deleted": result.deleted_count}
+    
+    @router.get("/contacts/all-ids", response_model=dict)
+    async def get_all_contact_ids(
+        status: Optional[str] = None,
+        categoryId: Optional[str] = None,
+        hasCategory: Optional[bool] = None,
+        tags: Optional[str] = None,
+        search: Optional[str] = None,
+        current_user: dict = Depends(get_current_admin_user)
+    ):
+        """Récupère tous les IDs des contacts selon les filtres (pour sélection en masse)"""
+        query = {}
+        
+        if search:
+            query["$or"] = [
+                {"email": {"$regex": search, "$options": "i"}},
+                {"firstName": {"$regex": search, "$options": "i"}},
+                {"lastName": {"$regex": search, "$options": "i"}},
+                {"company": {"$regex": search, "$options": "i"}}
+            ]
+        
+        if status:
+            query["status"] = status
+        
+        if tags:
+            tag_list = [t.strip() for t in tags.split(",")]
+            query["tags"] = {"$in": tag_list}
+        
+        if categoryId:
+            query["categoryId"] = categoryId
+        elif hasCategory is False:
+            query["$or"] = [{"categoryId": None}, {"categoryId": {"$exists": False}}]
+        
+        cursor = db.cohesion_contacts.find(query, {"id": 1})
+        docs = await cursor.to_list(length=100000)
+        ids = [doc["id"] for doc in docs]
+        
+        return {"ids": ids, "count": len(ids)}
+    
     # ==================== IMPORT CSV ====================
     
     @router.post("/import", response_model=dict)
     async def import_csv(
         file: UploadFile = File(...),
         validate_domains: bool = Query(False),
+        category_id: Optional[str] = Query(None, description="ID de la catégorie à affecter aux contacts importés"),
         current_user: dict = Depends(get_current_admin_user)
     ):
         """
@@ -214,6 +326,13 @@ def create_cohesion_router(db, get_current_admin_user):
         """
         if not file.filename.endswith('.csv'):
             raise HTTPException(status_code=400, detail="Le fichier doit être au format CSV")
+        
+        # Récupérer la catégorie si fournie
+        category_name = None
+        if category_id:
+            category = await db.cohesion_categories.find_one({"id": category_id})
+            if category:
+                category_name = category.get("name")
         
         # Lire le contenu du fichier
         content = await file.read()
@@ -252,6 +371,8 @@ def create_cohesion_router(db, get_current_admin_user):
                     lastName=contact_data.get('lastName'),
                     phone=contact_data.get('phone'),
                     company=contact_data.get('company'),
+                    categoryId=category_id,
+                    categoryName=category_name,
                     source="import",
                     emailValidated=True
                 )
@@ -259,6 +380,13 @@ def create_cohesion_router(db, get_current_admin_user):
             
             if contacts_to_insert:
                 await db.cohesion_contacts.insert_many(contacts_to_insert)
+                
+                # Mettre à jour le compteur de la catégorie
+                if category_id:
+                    await db.cohesion_categories.update_one(
+                        {"id": category_id},
+                        {"$inc": {"contactsCount": len(contacts_to_insert)}}
+                    )
         
         return {
             "message": "Import terminé",
