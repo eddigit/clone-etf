@@ -179,6 +179,9 @@ class ArticleCreate(BaseModel):
     # SEO
     metaTitle: Optional[str] = None
     metaDescription: Optional[str] = None
+    # Réseaux sociaux
+    shareToSocial: bool = False  # Partager sur les réseaux sociaux
+    socialPlatforms: Optional[List[str]] = None  # Plateformes: facebook, instagram, linkedin, twitter
 
 class ArticleUpdate(BaseModel):
     """Mise à jour d'un article"""
@@ -195,6 +198,9 @@ class ArticleUpdate(BaseModel):
     readTime: Optional[str] = None
     metaTitle: Optional[str] = None
     metaDescription: Optional[str] = None
+    # Réseaux sociaux (pour republication)
+    shareToSocial: bool = False
+    socialPlatforms: Optional[List[str]] = None
 
 class Article(BaseModel):
     """Article de blog complet"""
@@ -906,3 +912,184 @@ class ChatNotification(BaseModel):
     message: Optional[str] = None
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
+
+# ========================================
+# COHÉSION MODELS - Gestion de la communauté et emails
+# ========================================
+
+class CohesionCategory(BaseModel):
+    """Catégorie pour organiser les contacts (ex: Journalistes, Mousquetaires, etc.)"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: Optional[str] = None
+    color: str = "#3B82F6"  # Couleur par défaut (bleu)
+    contactsCount: int = 0
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: Optional[datetime] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "name": "Journalistes",
+                "description": "Contacts presse et médias",
+                "color": "#10B981"
+            }
+        }
+
+
+class CohesionCategoryCreate(BaseModel):
+    """Création d'une catégorie"""
+    name: str
+    description: Optional[str] = None
+    color: Optional[str] = "#3B82F6"
+
+
+class CohesionCategoryUpdate(BaseModel):
+    """Mise à jour d'une catégorie"""
+    name: Optional[str] = None
+    description: Optional[str] = None
+    color: Optional[str] = None
+
+
+class CohesionContact(BaseModel):
+    """Contact de la base cohésion"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    email: str
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    phone: Optional[str] = None
+    company: Optional[str] = None
+    source: str = "import"  # import, manual, website
+    tags: List[str] = []
+    categoryId: Optional[str] = None  # ID de la catégorie
+    categoryName: Optional[str] = None  # Nom de la catégorie (pour affichage)
+    status: str = "active"  # active, unsubscribed, bounced, invalid
+    emailValidated: bool = False
+    importedAt: datetime = Field(default_factory=datetime.utcnow)
+    lastContactedAt: Optional[datetime] = None
+    metadata: Optional[dict] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "contact@example.com",
+                "firstName": "Jean",
+                "lastName": "Dupont",
+                "company": "Entreprise SA",
+                "source": "import",
+                "tags": ["franchise", "restauration"],
+                "categoryId": "abc-123",
+                "categoryName": "Journalistes"
+            }
+        }
+
+
+class CohesionContactCreate(BaseModel):
+    """Création d'un contact"""
+    email: str
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    phone: Optional[str] = None
+    company: Optional[str] = None
+    tags: Optional[List[str]] = []
+    categoryId: Optional[str] = None
+    source: str = "manual"
+
+
+class CohesionContactUpdate(BaseModel):
+    """Mise à jour d'un contact"""
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    phone: Optional[str] = None
+    company: Optional[str] = None
+    tags: Optional[List[str]] = None
+    categoryId: Optional[str] = None
+    status: Optional[str] = None
+
+
+class CohesionCampaign(BaseModel):
+    """Campagne d'email"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    subject: str
+    bodyHtml: str
+    bodyText: Optional[str] = None
+    status: str = "draft"  # draft, scheduled, sending, sent, paused
+    recipientTags: List[str] = []  # Tags des contacts ciblés
+    recipientCount: int = 0
+    sentCount: int = 0
+    failedCount: int = 0
+    openCount: int = 0
+    clickCount: int = 0
+    scheduledAt: Optional[datetime] = None
+    sentAt: Optional[datetime] = None
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+    createdBy: Optional[str] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "name": "Newsletter Janvier",
+                "subject": "Les actualités de la franchise",
+                "bodyHtml": "<h1>Bonjour {firstName}!</h1>",
+                "recipientTags": ["newsletter"]
+            }
+        }
+
+
+class CohesionCampaignCreate(BaseModel):
+    """Création d'une campagne"""
+    name: str
+    subject: str
+    bodyHtml: str
+    bodyText: Optional[str] = None
+    recipientTags: Optional[List[str]] = []
+    scheduledAt: Optional[datetime] = None
+
+
+class CohesionCampaignUpdate(BaseModel):
+    """Mise à jour d'une campagne"""
+    name: Optional[str] = None
+    subject: Optional[str] = None
+    bodyHtml: Optional[str] = None
+    bodyText: Optional[str] = None
+    recipientTags: Optional[List[str]] = None
+    status: Optional[str] = None
+    scheduledAt: Optional[datetime] = None
+
+
+class CohesionEmailLog(BaseModel):
+    """Log d'envoi d'email"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    campaignId: Optional[str] = None
+    contactId: str
+    email: str
+    status: str  # sent, failed, bounced, opened, clicked
+    sentAt: datetime = Field(default_factory=datetime.utcnow)
+    openedAt: Optional[datetime] = None
+    clickedAt: Optional[datetime] = None
+    errorMessage: Optional[str] = None
+
+
+class CohesionImportResult(BaseModel):
+    """Résultat d'import CSV"""
+    totalRows: int = 0
+    imported: int = 0
+    duplicates: int = 0
+    invalidEmails: int = 0
+    errors: List[dict] = []
+
+
+class CohesionStats(BaseModel):
+    """Statistiques de la base cohésion"""
+    totalContacts: int = 0
+    activeContacts: int = 0
+    unsubscribed: int = 0
+    bounced: int = 0
+    invalid: int = 0
+    totalCampaigns: int = 0
+    sentCampaigns: int = 0
+    totalEmailsSent: int = 0
+    averageOpenRate: float = 0.0
+    topTags: List[dict] = []

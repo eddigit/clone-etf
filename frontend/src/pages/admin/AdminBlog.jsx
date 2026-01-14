@@ -29,7 +29,12 @@ import {
   Clock,
   User,
   Tag,
-  RefreshCw
+  RefreshCw,
+  Share2,
+  Facebook,
+  Linkedin,
+  Twitter,
+  Instagram
 } from 'lucide-react';
 import API from '../../config/api';
 import RichTextEditor from '../../components/admin/RichTextEditor';
@@ -63,8 +68,27 @@ const AdminBlog = () => {
     status: 'draft',
     publishTo: ['public'],  // Canaux de diffusion
     metaTitle: '',
-    metaDescription: ''
+    metaDescription: '',
+    shareToSocial: false,
+    socialPlatforms: ['facebook', 'linkedin', 'twitter']
   });
+
+  // Social media platforms state
+  const [socialPlatforms, setSocialPlatforms] = useState([]);
+  const [loadingSocialPlatforms, setLoadingSocialPlatforms] = useState(false);
+
+  // Fetch social media platforms configuration
+  const fetchSocialPlatforms = useCallback(async () => {
+    try {
+      setLoadingSocialPlatforms(true);
+      const response = await API.get('/api/admin/social-media/platforms');
+      setSocialPlatforms(response.data.platforms || []);
+    } catch (error) {
+      console.error('Error fetching social platforms:', error);
+    } finally {
+      setLoadingSocialPlatforms(false);
+    }
+  }, []);
 
   // Fetch articles
   const fetchArticles = useCallback(async () => {
@@ -102,7 +126,8 @@ const AdminBlog = () => {
   useEffect(() => {
     fetchArticles();
     fetchCategories();
-  }, [fetchArticles]);
+    fetchSocialPlatforms();
+  }, [fetchArticles, fetchSocialPlatforms]);
 
   // Reset form
   const resetForm = () => {
@@ -118,7 +143,9 @@ const AdminBlog = () => {
       status: 'draft',
       publishTo: ['public'],
       metaTitle: '',
-      metaDescription: ''
+      metaDescription: '',
+      shareToSocial: false,
+      socialPlatforms: ['facebook', 'linkedin', 'twitter']
     });
     setEditingArticle(null);
   };
@@ -269,6 +296,57 @@ const AdminBlog = () => {
         variant: 'destructive'
       });
     }
+  };
+
+  // Share to social media
+  const [sharingArticle, setSharingArticle] = useState(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [selectedSharePlatforms, setSelectedSharePlatforms] = useState(['facebook', 'linkedin', 'twitter']);
+  const [sharing, setSharing] = useState(false);
+
+  const handleShareToSocial = async () => {
+    if (!sharingArticle) return;
+    
+    try {
+      setSharing(true);
+      const response = await API.post(`/api/admin/articles/${sharingArticle.id}/share-social`, {
+        platforms: selectedSharePlatforms
+      });
+      
+      const results = response.data.results;
+      const successCount = Object.values(results).filter(r => r.success).length;
+      const failCount = Object.values(results).filter(r => !r.success).length;
+      
+      if (successCount > 0) {
+        toast({
+          title: 'Article partagé !',
+          description: `Publié sur ${successCount} réseau(x)${failCount > 0 ? `, ${failCount} échec(s)` : ''}`
+        });
+      } else {
+        toast({
+          title: 'Échec du partage',
+          description: 'Vérifiez la configuration des réseaux sociaux',
+          variant: 'destructive'
+        });
+      }
+      
+      setShowShareModal(false);
+      setSharingArticle(null);
+    } catch (error) {
+      console.error('Error sharing to social media:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de partager sur les réseaux sociaux',
+        variant: 'destructive'
+      });
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const openShareModal = (article) => {
+    setSharingArticle(article);
+    setShowShareModal(true);
   };
 
   // Upload image
@@ -495,6 +573,17 @@ const AdminBlog = () => {
                         <ExternalLink className="h-4 w-4" />
                       </Button>
                     )}
+                    {article.status === 'published' && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => openShareModal(article)}
+                        title="Partager sur les réseaux sociaux"
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="ghost"
@@ -645,6 +734,72 @@ const AdminBlog = () => {
               )}
             </div>
 
+            {/* Partage Réseaux Sociaux */}
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2 mb-3">
+                <Share2 className="h-5 w-5 text-blue-600" />
+                <label className="block text-sm font-medium text-gray-900">
+                  Partager sur les réseaux sociaux
+                </label>
+              </div>
+              
+              <label className="flex items-center gap-3 cursor-pointer mb-3">
+                <input
+                  type="checkbox"
+                  checked={formData.shareToSocial}
+                  onChange={(e) => setFormData(prev => ({ ...prev, shareToSocial: e.target.checked }))}
+                  className="h-4 w-4 text-blue-600 rounded"
+                />
+                <span className="text-sm text-gray-700">
+                  Publier automatiquement sur les réseaux sociaux à la publication
+                </span>
+              </label>
+
+              {formData.shareToSocial && (
+                <div className="space-y-2 pl-7">
+                  <p className="text-xs text-gray-500 mb-2">Sélectionnez les plateformes :</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {socialPlatforms.map((platform) => (
+                      <label 
+                        key={platform.id} 
+                        className={`flex items-center gap-2 p-2 rounded border cursor-pointer transition-colors ${
+                          formData.socialPlatforms.includes(platform.id)
+                            ? 'bg-blue-100 border-blue-300'
+                            : 'bg-white border-gray-200 hover:bg-gray-50'
+                        } ${!platform.configured ? 'opacity-50' : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={formData.socialPlatforms.includes(platform.id)}
+                          onChange={(e) => {
+                            const newPlatforms = e.target.checked
+                              ? [...formData.socialPlatforms, platform.id]
+                              : formData.socialPlatforms.filter(p => p !== platform.id);
+                            setFormData(prev => ({ ...prev, socialPlatforms: newPlatforms }));
+                          }}
+                          disabled={!platform.configured}
+                          className="h-3 w-3 text-blue-600 rounded"
+                        />
+                        {platform.id === 'facebook' && <Facebook className="h-4 w-4 text-blue-600" />}
+                        {platform.id === 'instagram' && <Instagram className="h-4 w-4 text-pink-600" />}
+                        {platform.id === 'linkedin' && <Linkedin className="h-4 w-4 text-blue-700" />}
+                        {platform.id === 'twitter' && <Twitter className="h-4 w-4 text-sky-500" />}
+                        <span className="text-sm">{platform.name}</span>
+                        {!platform.configured && (
+                          <span className="text-xs text-orange-500">(non configuré)</span>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                  {formData.status !== 'published' && (
+                    <p className="text-xs text-orange-600 mt-2">
+                      ⚠️ Le partage se fera uniquement si le statut est "Publié"
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Featured Image */}
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-900">Image principale</label>
@@ -773,6 +928,80 @@ const AdminBlog = () => {
             </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? 'Enregistrement...' : (editingArticle ? 'Mettre a jour' : 'Creer l\'article')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de partage réseaux sociaux */}
+      <Dialog open={showShareModal} onOpenChange={setShowShareModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="h-5 w-5 text-blue-600" />
+              Partager sur les réseaux sociaux
+            </DialogTitle>
+            <DialogDescription>
+              {sharingArticle && `Partager "${sharingArticle.title}" sur les réseaux sociaux`}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-gray-600">Sélectionnez les plateformes :</p>
+            
+            <div className="grid grid-cols-2 gap-3">
+              {socialPlatforms.map((platform) => (
+                <label 
+                  key={platform.id} 
+                  className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    selectedSharePlatforms.includes(platform.id)
+                      ? 'bg-blue-50 border-blue-400'
+                      : 'bg-white border-gray-200 hover:border-gray-300'
+                  } ${!platform.configured ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedSharePlatforms.includes(platform.id)}
+                    onChange={(e) => {
+                      const newPlatforms = e.target.checked
+                        ? [...selectedSharePlatforms, platform.id]
+                        : selectedSharePlatforms.filter(p => p !== platform.id);
+                      setSelectedSharePlatforms(newPlatforms);
+                    }}
+                    disabled={!platform.configured}
+                    className="h-4 w-4 text-blue-600 rounded"
+                  />
+                  <div className="flex items-center gap-2">
+                    {platform.id === 'facebook' && <Facebook className="h-5 w-5 text-blue-600" />}
+                    {platform.id === 'instagram' && <Instagram className="h-5 w-5 text-pink-600" />}
+                    {platform.id === 'linkedin' && <Linkedin className="h-5 w-5 text-blue-700" />}
+                    {platform.id === 'twitter' && <Twitter className="h-5 w-5 text-sky-500" />}
+                    <span className="font-medium">{platform.name}</span>
+                  </div>
+                  {!platform.configured && (
+                    <span className="text-xs text-orange-500 ml-auto">Non configuré</span>
+                  )}
+                </label>
+              ))}
+            </div>
+
+            {selectedSharePlatforms.length === 0 && (
+              <p className="text-sm text-orange-600">
+                Veuillez sélectionner au moins une plateforme
+              </p>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowShareModal(false)}>
+              Annuler
+            </Button>
+            <Button 
+              onClick={handleShareToSocial} 
+              disabled={sharing || selectedSharePlatforms.length === 0}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {sharing ? 'Publication...' : 'Publier maintenant'}
             </Button>
           </DialogFooter>
         </DialogContent>

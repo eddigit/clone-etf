@@ -42,12 +42,14 @@ from helloasso_service import helloasso_service
 from maboitedigitale_service import maboitedigitale_service
 from pdf_service import generate_membership_pdf
 from community_routes import create_community_router
+from cohesion_routes import create_cohesion_router
 from email_service import email_service
 from test_agent import run_user_test_agent, get_all_test_reports, get_test_report, test_reports_cache
 from cloudinary_service import upload_image_to_cloudinary, is_cloudinary_enabled
 from partner_routes import partner_router
 from analytics_service import init_analytics_service, analytics_service
 from chat_service import init_live_chat_service, live_chat_service, connection_manager
+from social_media_service import social_media_service, publish_article_to_social_media
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -60,6 +62,7 @@ db = client[os.environ.get('DB_NAME', 'test_database')]
 # Environment configuration
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
 ENVIRONMENT = os.environ.get('ENVIRONMENT', 'development')
+SITE_URL = os.environ.get('SITE_URL', 'https://www.entoutefranchise.org')  # URL publique du site
 
 # Create the main app without a prefix
 app = FastAPI(title="En Toute Franchise API", version="1.0.0")
@@ -950,11 +953,13 @@ async def admin_list_articles(
 @api_router.post("/admin/articles")
 async def admin_create_article(
     article_data: ArticleCreate,
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_admin_user)
 ):
     """
     Crée un nouvel article.
     Génère automatiquement le slug si non fourni.
+    Publie sur les réseaux sociaux si demandé.
     """
     try:
         now = datetime.utcnow()
@@ -999,14 +1004,95 @@ async def admin_create_article(
 
         logger.info(f"Article créé par {current_user['email']}: {article.title}")
 
+        # Publication sur les réseaux sociaux si demandé et article publié
+        social_results = None
+        if article_data.shareToSocial and article_data.status == "published":
+            try:
+                platforms = article_data.socialPlatforms or ["facebook", "linkedin", "twitter"]
+                social_results = await publish_article_to_social_media(
+                    title=article_data.title,
+                    excerpt=article_data.excerpt,
+                    article_slug=slug,
+                    image_url=article_data.featuredImage,
+                    platforms=platforms,
+                    base_url=SITE_URL
+                )
+                logger.info(f"Publication réseaux sociaux: {social_results}")
+            except Exception as social_error:
+                logger.error(f"Erreur publication réseaux sociaux: {str(social_error)}")
+                social_results = {"error": str(social_error)}
+
         return {
             "status": "success",
             "article": article.model_dump(),
-            "message": "Article créé avec succès"
+            "message": "Article créé avec succès",
+            "socialMedia": social_results
         }
 
     except Exception as e:
         logger.error(f"Erreur création article: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- Routes Réseaux Sociaux ---
+
+@api_router.get("/admin/social-media/platforms")
+async def get_social_media_platforms(
+    current_user: dict = Depends(get_admin_user)
+):
+    """Retourne les plateformes de réseaux sociaux configurées"""
+    configured = social_media_service.get_configured_platforms()
+    return {
+        "platforms": [
+            {"id": "facebook", "name": "Facebook", "configured": "facebook" in configured, "icon": "facebook"},
+            {"id": "instagram", "name": "Instagram", "configured": "instagram" in configured, "icon": "instagram"},
+            {"id": "linkedin", "name": "LinkedIn", "configured": "linkedin" in configured, "icon": "linkedin"},
+            {"id": "twitter", "name": "X (Twitter)", "configured": "twitter" in configured, "icon": "twitter"}
+        ],
+        "configuredCount": len(configured)
+    }
+
+
+@api_router.post("/admin/articles/{article_id}/share-social")
+async def share_article_to_social_media(
+    article_id: str,
+    platforms: List[str] = Body(..., embed=True),
+    current_user: dict = Depends(get_admin_user)
+):
+    """Publie un article existant sur les réseaux sociaux sélectionnés"""
+    article = await db.articles.find_one({"id": article_id})
+    if not article:
+        raise HTTPException(status_code=404, detail="Article non trouvé")
+    
+    if article.get("status") != "published":
+        raise HTTPException(status_code=400, detail="L'article doit être publié pour être partagé")
+    
+    try:
+        results = await publish_article_to_social_media(
+            title=article["title"],
+            excerpt=article["excerpt"],
+            article_slug=article["slug"],
+            image_url=article.get("featuredImage"),
+            platforms=platforms,
+            base_url=SITE_URL
+        )
+        
+        # Enregistrer les résultats de publication
+        await db.articles.update_one(
+            {"id": article_id},
+            {"$set": {
+                "socialMediaPublished": results,
+                "socialMediaPublishedAt": datetime.utcnow()
+            }}
+        )
+        
+        return {
+            "status": "success",
+            "results": results,
+            "message": "Article partagé sur les réseaux sociaux"
+        }
+    except Exception as e:
+        logger.error(f"Erreur partage réseaux sociaux: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -3223,6 +3309,10 @@ async def health_check():
 # Créer et inclure le router communautaire avec les dépendances
 community_router = create_community_router(db, get_current_user)
 api_router.include_router(community_router)
+
+# Créer et inclure le router Cohésion (gestion des contacts et campagnes)
+cohesion_router = create_cohesion_router(db, get_admin_user)
+api_router.include_router(cohesion_router)
 
 # Inclure le router partenaire (MaBoiteDigitale)
 app.include_router(partner_router)

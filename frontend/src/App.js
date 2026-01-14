@@ -34,6 +34,7 @@ import AdminMembers from "./pages/admin/AdminMembers";
 import AdminHelloAsso from "./pages/admin/AdminHelloAsso";
 import AdminMemberships from "./pages/admin/AdminMemberships";
 import AdminBlog from "./pages/admin/AdminBlog";
+import AdminCohesion from "./pages/admin/AdminCohesion";
 import AdminTestAgent from "./pages/admin/AdminTestAgent";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminChat from "./pages/admin/AdminChat";
@@ -282,6 +283,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminLayout><AdminChat /></AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/cohesion"
+            element={
+              <ProtectedRoute>
+                <AdminLayout><AdminCohesion /></AdminLayout>
               </ProtectedRoute>
             }
           />
