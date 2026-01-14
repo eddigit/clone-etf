@@ -944,24 +944,24 @@ const AdminCohesion = () => {
                     />
                   </div>
                 </div>
-                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <Select value={selectedStatus || '__all__'} onValueChange={(v) => setSelectedStatus(v === '__all__' ? '' : v)}>
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Statut" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tous</SelectItem>
+                    <SelectItem value="__all__">Tous</SelectItem>
                     <SelectItem value="active">Actif</SelectItem>
                     <SelectItem value="unsubscribed">Désabonné</SelectItem>
                     <SelectItem value="bounced">Bounced</SelectItem>
                     <SelectItem value="invalid">Invalide</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={selectedTag} onValueChange={setSelectedTag}>
+                <Select value={selectedTag || '__all__'} onValueChange={(v) => setSelectedTag(v === '__all__' ? '' : v)}>
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Tag" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tous les tags</SelectItem>
+                    <SelectItem value="__all__">Tous les tags</SelectItem>
                     {tags.map(tag => (
                       <SelectItem key={tag.name} value={tag.name}>
                         {tag.name} ({tag.count})
@@ -969,12 +969,12 @@ const AdminCohesion = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={selectedCategoryFilter} onValueChange={setSelectedCategoryFilter}>
+                <Select value={selectedCategoryFilter || '__all__'} onValueChange={(v) => setSelectedCategoryFilter(v === '__all__' ? '' : v)}>
                   <SelectTrigger className="w-48">
                     <SelectValue placeholder="Catégorie" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Toutes les catégories</SelectItem>
+                    <SelectItem value="__all__">Toutes les catégories</SelectItem>
                     {categories.map(cat => (
                       <SelectItem key={cat.id} value={cat.id}>
                         <div className="flex items-center gap-2">
@@ -1537,17 +1537,17 @@ const AdminCohesion = () => {
               <div>
                 <Label>Catégorie</Label>
                 <Select 
-                  value={currentContact.categoryId || ''} 
+                  value={currentContact.categoryId || '__none__'} 
                   onValueChange={(value) => setCurrentContact({
                     ...currentContact, 
-                    categoryId: value || null
+                    categoryId: value === '__none__' ? null : value
                   })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner une catégorie" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Aucune catégorie</SelectItem>
+                    <SelectItem value="__none__">Aucune catégorie</SelectItem>
                     {categories.map(cat => (
                       <SelectItem key={cat.id} value={cat.id}>
                         <div className="flex items-center gap-2">
