@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo, startTransition } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -45,6 +45,121 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { API_URL } from '../../config/api';
+
+// Fonctions de badge memoizees (hors du composant pour eviter les re-creations)
+const STATUS_BADGES = {
+  active: <Badge className="bg-green-100 text-green-800">Actif</Badge>,
+  expired: <Badge variant="secondary">Expiré</Badge>
+};
+
+const MEMBERSHIP_TYPES = {
+  individual: { label: 'Particulier', color: 'bg-blue-100 text-blue-800' },
+  professional: { label: 'Commerçant', color: 'bg-purple-100 text-purple-800' },
+  professional_plus: { label: 'Entreprise', color: 'bg-orange-100 text-orange-800' },
+  association: { label: 'Association', color: 'bg-teal-100 text-teal-800' }
+};
+
+const getStatusBadge = (status) => STATUS_BADGES[status] || STATUS_BADGES.expired;
+
+const getMembershipTypeBadge = (type) => {
+  const t = MEMBERSHIP_TYPES[type] || { label: type, color: 'bg-gray-100 text-gray-800' };
+  return <Badge className={t.color}>{t.label}</Badge>;
+};
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-';
+  return new Date(dateStr).toLocaleDateString('fr-FR');
+};
+
+// Composant de ligne de table memoize
+const MemberRow = memo(({ 
+  member, 
+  onSendEmail, 
+  onViewDetails, 
+  onEdit, 
+  onStatusChange, 
+  onGenerateCoupon 
+}) => (
+  <TableRow className="hover:bg-gray-50 cursor-pointer">
+    <TableCell className="font-medium">
+      <div>
+        <p>{member.firstName} {member.lastName}</p>
+        {member.businessName && (
+          <p className="text-sm text-gray-500">{member.businessName}</p>
+        )}
+      </div>
+    </TableCell>
+    <TableCell>{member.email}</TableCell>
+    <TableCell>{getMembershipTypeBadge(member.membershipType)}</TableCell>
+    <TableCell>{getStatusBadge(member.membershipStatus)}</TableCell>
+    <TableCell>{formatDate(member.membershipEndDate)}</TableCell>
+    <TableCell>
+      {member.couponCode ? (
+        <code className="text-sm bg-gray-100 px-2 py-1 rounded">{member.couponCode}</code>
+      ) : (
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={(e) => { e.stopPropagation(); onGenerateCoupon(member.id); }}
+        >
+          Créer
+        </Button>
+      )}
+    </TableCell>
+    <TableCell className="text-right">
+      <div className="flex justify-end gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => { e.stopPropagation(); onSendEmail(member.id, member.email); }}
+          title="Envoyer email de bienvenue"
+          className="text-blue-600"
+        >
+          <Mail className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => { e.stopPropagation(); onViewDetails(member.id); }}
+          title="Voir details"
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => { e.stopPropagation(); onEdit(member); }}
+          title="Modifier"
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
+        {member.membershipStatus === 'active' ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => { e.stopPropagation(); onStatusChange(member.id, 'expired'); }}
+            className="text-orange-600"
+            title="Desactiver"
+          >
+            Desactiver
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => { e.stopPropagation(); onStatusChange(member.id, 'active'); }}
+            className="text-green-600"
+            title="Activer"
+          >
+            Activer
+          </Button>
+        )}
+      </div>
+    </TableCell>
+  </TableRow>
+));
+
+MemberRow.displayName = 'MemberRow';
 
 const AdminMembers = () => {
   const [members, setMembers] = useState([]);
@@ -139,9 +254,9 @@ const AdminMembers = () => {
       console.error('Error fetching member details:', error);
       alert('Erreur: ' + error.message);
     }
-  };
+  }, []);
 
-  const handleStatusChange = async (memberId, newStatus) => {
+  const handleStatusChange = useCallback(async (memberId, newStatus) => {
     console.log('handleStatusChange called:', memberId, newStatus);
     try {
       const token = localStorage.getItem('token');
@@ -155,7 +270,10 @@ const AdminMembers = () => {
 
       if (response.ok) {
         alert('Statut mis à jour avec succès');
-        fetchMembers();
+        // Utiliser startTransition pour la mise à jour non-urgente
+        startTransition(() => {
+          fetchMembers();
+        });
       } else {
         console.error('Failed to update status:', response.status);
         alert('Erreur lors de la mise à jour du statut');
@@ -164,9 +282,9 @@ const AdminMembers = () => {
       console.error('Error updating status:', error);
       alert('Erreur: ' + error.message);
     }
-  };
+  }, [fetchMembers]);
 
-  const handleGenerateCoupon = async (memberId) => {
+  const handleGenerateCoupon = useCallback(async (memberId) => {
     console.log('handleGenerateCoupon called:', memberId);
     try {
       const token = localStorage.getItem('token');
@@ -187,7 +305,9 @@ const AdminMembers = () => {
       if (response.ok) {
         const data = await response.json();
         alert(`Coupon créé: ${data.coupon.code}`);
-        fetchMembers();
+        startTransition(() => {
+          fetchMembers();
+        });
       } else {
         console.error('Failed to generate coupon:', response.status);
         alert('Erreur lors de la création du coupon');
@@ -196,7 +316,7 @@ const AdminMembers = () => {
       console.error('Error generating coupon:', error);
       alert('Erreur: ' + error.message);
     }
-  };
+  }, [fetchMembers]);
 
   // Créer un nouvel adhérent
   const handleCreateMember = async (e) => {
@@ -327,7 +447,7 @@ const AdminMembers = () => {
     }
   };
 
-  const handleSendWelcomeEmail = async (memberId, memberEmail) => {
+  const handleSendWelcomeEmail = useCallback(async (memberId, memberEmail) => {
     if (!window.confirm(`Envoyer un email de bienvenue a ${memberEmail} ?\n\nL'adherent recevra un lien pour creer son mot de passe.`)) {
       return;
     }
@@ -352,31 +472,13 @@ const AdminMembers = () => {
       console.error('Error sending welcome email:', error);
       alert('Erreur lors de l\'envoi de l\'email');
     }
-  };
+  }, []);
 
-  const getStatusBadge = (status) => {
-    return status === 'active' ? (
-      <Badge className="bg-green-100 text-green-800">Actif</Badge>
-    ) : (
-      <Badge variant="secondary">Expiré</Badge>
-    );
-  };
-
-  const getMembershipTypeBadge = (type) => {
-    const types = {
-      individual: { label: 'Particulier', color: 'bg-blue-100 text-blue-800' },
-      professional: { label: 'Commerçant', color: 'bg-purple-100 text-purple-800' },
-      professional_plus: { label: 'Entreprise', color: 'bg-orange-100 text-orange-800' },
-      association: { label: 'Association', color: 'bg-teal-100 text-teal-800' }
-    };
-    const t = types[type] || { label: type, color: 'bg-gray-100 text-gray-800' };
-    return <Badge className={t.color}>{t.label}</Badge>;
-  };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('fr-FR');
-  };
+  // Handlers memoizes pour le composant MemberRow
+  const handleEditMember = useCallback((member) => {
+    setEditForm(member);
+    setShowEditModal(true);
+  }, []);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -472,104 +574,15 @@ const AdminMembers = () => {
                 </TableHeader>
                 <TableBody>
                   {members.map((member) => (
-                    <TableRow key={member.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{member.firstName} {member.lastName}</p>
-                          {member.businessName && (
-                            <p className="text-sm text-gray-500">{member.businessName}</p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{member.email}</TableCell>
-                      <TableCell>{getMembershipTypeBadge(member.membershipType)}</TableCell>
-                      <TableCell>{getStatusBadge(member.membershipStatus)}</TableCell>
-                      <TableCell>{formatDate(member.membershipEndDate)}</TableCell>
-                      <TableCell>
-                        {member.couponCode ? (
-                          <code className="text-sm bg-gray-100 px-2 py-1 rounded">{member.couponCode}</code>
-                        ) : (
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleGenerateCoupon(member.id)}
-                          >
-                            Créer
-                          </Button>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              console.log('Mail button clicked');
-                              handleSendWelcomeEmail(member.id, member.email);
-                            }}
-                            title="Envoyer email de bienvenue"
-                            className="text-blue-600"
-                          >
-                            <Mail className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              console.log('Eye button clicked for member:', member.id);
-                              fetchMemberDetails(member.id);
-                            }}
-                            title="Voir details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              console.log('Edit button clicked');
-                              setEditForm(member);
-                              setShowEditModal(true);
-                            }}
-                            title="Modifier"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          {member.membershipStatus === 'active' ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                console.log('Deactivate button clicked');
-                                handleStatusChange(member.id, 'expired');
-                              }}
-                              className="text-orange-600"
-                              title="Desactiver"
-                            >
-                              Desactiver
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                console.log('Activate button clicked');
-                                handleStatusChange(member.id, 'active');
-                              }}
-                              className="text-green-600"
-                              title="Activer"
-                            >
-                              Activer
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                    <MemberRow
+                      key={member.id}
+                      member={member}
+                      onSendEmail={handleSendWelcomeEmail}
+                      onViewDetails={fetchMemberDetails}
+                      onEdit={handleEditMember}
+                      onStatusChange={handleStatusChange}
+                      onGenerateCoupon={handleGenerateCoupon}
+                    />
                   ))}
                 </TableBody>
               </Table>
