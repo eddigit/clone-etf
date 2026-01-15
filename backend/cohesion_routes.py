@@ -723,11 +723,21 @@ def create_cohesion_router(db, get_current_admin_user):
         if not campaign:
             raise HTTPException(status_code=404, detail="Campagne non trouvée")
         
+        recipient_category = campaign.get("recipientCategoryId")
+        
+        # Cas spécial : Tous les adhérents (membres avec adhésion active)
+        if recipient_category == "__members__":
+            # Compter les membres avec adhésion active
+            count = await db.users.count_documents({
+                "email": {"$exists": True, "$ne": None, "$ne": ""}
+            })
+            return {"recipientCount": count}
+        
         query = {"status": "active"}
         
         # Filtrer par audience (catégorie)
-        if campaign.get("recipientCategoryId"):
-            query["categoryId"] = campaign["recipientCategoryId"]
+        if recipient_category:
+            query["categoryId"] = recipient_category
         
         # Filtrer par tags
         if campaign.get("recipientTags"):
@@ -743,28 +753,51 @@ def create_cohesion_router(db, get_current_admin_user):
         if not campaign:
             return
         
-        query = {"status": "active"}
-        
-        # Filtrer par audience (catégorie)
-        if campaign.get("recipientCategoryId"):
-            query["categoryId"] = campaign["recipientCategoryId"]
-        
-        # Filtrer par tags
-        if campaign.get("recipientTags"):
-            query["tags"] = {"$in": campaign["recipientTags"]}
-        
-        cursor = db_instance.cohesion_contacts.find(query)
-        contacts = await cursor.to_list(length=10000)
-        
-        # Préparer les destinataires
+        recipient_category = campaign.get("recipientCategoryId")
         recipients = []
-        for contact in contacts:
-            recipients.append({
-                "email": contact["email"],
-                "firstName": contact.get("firstName", ""),
-                "lastName": contact.get("lastName", ""),
-                "company": contact.get("company", "")
+        
+        # Cas spécial : Tous les adhérents (membres avec adhésion active)
+        if recipient_category == "__members__":
+            cursor = db_instance.users.find({
+                "email": {"$exists": True, "$ne": None, "$ne": ""}
             })
+            members = await cursor.to_list(length=10000)
+            
+            for member in members:
+                # Extraire prénom/nom du champ name
+                full_name = member.get("name", "")
+                name_parts = full_name.split(" ", 1) if full_name else ["", ""]
+                first_name = name_parts[0] if name_parts else ""
+                last_name = name_parts[1] if len(name_parts) > 1 else ""
+                
+                recipients.append({
+                    "email": member["email"],
+                    "firstName": first_name,
+                    "lastName": last_name,
+                    "company": member.get("company", "")
+                })
+        else:
+            # Logique existante pour les contacts
+            query = {"status": "active"}
+            
+            # Filtrer par audience (catégorie)
+            if recipient_category:
+                query["categoryId"] = recipient_category
+            
+            # Filtrer par tags
+            if campaign.get("recipientTags"):
+                query["tags"] = {"$in": campaign["recipientTags"]}
+            
+            cursor = db_instance.cohesion_contacts.find(query)
+            contacts = await cursor.to_list(length=10000)
+            
+            for contact in contacts:
+                recipients.append({
+                    "email": contact["email"],
+                    "firstName": contact.get("firstName", ""),
+                    "lastName": contact.get("lastName", ""),
+                    "company": contact.get("company", "")
+                })
         
         # Envoyer les emails
         stats = await cohesion_service.send_bulk_emails(
@@ -836,12 +869,22 @@ def create_cohesion_router(db, get_current_admin_user):
         if campaign.get("status") == "sent":
             raise HTTPException(status_code=400, detail="Cette campagne a déjà été envoyée")
         
-        # Compter les destinataires
-        query = {"status": "active"}
-        if campaign.get("recipientTags"):
-            query["tags"] = {"$in": campaign["recipientTags"]}
+        # Compter les destinataires selon l'audience
+        recipient_category = campaign.get("recipientCategoryId")
         
-        recipient_count = await db.cohesion_contacts.count_documents(query)
+        if recipient_category == "__members__":
+            # Tous les adhérents
+            recipient_count = await db.users.count_documents({
+                "email": {"$exists": True, "$ne": None, "$ne": ""}
+            })
+        else:
+            query = {"status": "active"}
+            if recipient_category:
+                query["categoryId"] = recipient_category
+            if campaign.get("recipientTags"):
+                query["tags"] = {"$in": campaign["recipientTags"]}
+            
+            recipient_count = await db.cohesion_contacts.count_documents(query)
         
         if recipient_count == 0:
             raise HTTPException(status_code=400, detail="Aucun destinataire pour cette campagne")

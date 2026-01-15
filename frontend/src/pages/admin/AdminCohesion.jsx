@@ -1572,8 +1572,22 @@ const AdminCohesion = () => {
                         <div>
                           <h3 className="font-semibold text-lg">{campaign.name}</h3>
                           <p className="text-gray-600">{campaign.subject}</p>
-                          <div className="flex items-center gap-2 mt-2">
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
                             {CAMPAIGN_STATUS_BADGES[campaign.status]}
+                            {campaign.recipientCategoryId === '__members__' ? (
+                              <Badge className="bg-green-100 text-green-800 border-green-300">
+                                <Users className="h-3 w-3 mr-1" />
+                                Adhérents ETF
+                              </Badge>
+                            ) : campaign.recipientCategoryId ? (
+                              <Badge variant="outline">
+                                {categories.find(c => c.id === campaign.recipientCategoryId)?.name || 'Audience'}
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-gray-500">
+                                Tous les contacts
+                              </Badge>
+                            )}
                             {campaign.recipientTags?.length > 0 && (
                               <span className="text-sm text-gray-500">
                                 Tags: {campaign.recipientTags.join(', ')}
@@ -2020,6 +2034,12 @@ const AdminCohesion = () => {
                           <div className="flex items-center gap-2">
                             <Users className="h-4 w-4" />
                             Tous les contacts actifs
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="__members__">
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-green-600" />
+                            <span className="text-green-700 font-medium">Tous les adhérents ETF</span>
                           </div>
                         </SelectItem>
                         {categories.map(cat => (
