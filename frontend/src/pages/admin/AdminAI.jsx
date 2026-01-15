@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
@@ -49,10 +49,10 @@ const AdminAI = () => {
   const [sentimentLoading, setSentimentLoading] = useState(false);
 
   const token = localStorage.getItem('token');
-  const headers = {
+  const headers = useMemo(() => ({
     'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json'
-  };
+  }), [token]);
 
   // Charger les statistiques
   const fetchStats = useCallback(async () => {
@@ -65,7 +65,7 @@ const AdminAI = () => {
     } catch (error) {
       console.error('Error fetching AI stats:', error);
     }
-  }, []);
+  }, [headers]);
 
   // Vérifier la santé du service
   const checkHealth = useCallback(async () => {
