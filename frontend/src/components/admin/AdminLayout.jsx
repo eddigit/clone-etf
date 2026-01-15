@@ -16,7 +16,8 @@ import {
   Zap,
   BarChart3,
   MessageCircle,
-  UsersRound
+  UsersRound,
+  Bot
 } from 'lucide-react';
 
 const AdminLayout = ({ children }) => {
@@ -34,6 +35,7 @@ const AdminLayout = ({ children }) => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
     { icon: BarChart3, label: 'Statistiques', path: '/admin/analytics' },
+    { icon: Bot, label: 'Intelligence Artificielle', path: '/admin/ai' },
     { icon: MessageCircle, label: 'Chat en direct', path: '/admin/chat' },
     { icon: UsersRound, label: 'Cohésion', path: '/admin/cohesion' },
     { icon: Users, label: 'Adherents', path: '/admin/members' },

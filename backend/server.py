@@ -43,6 +43,7 @@ from maboitedigitale_service import maboitedigitale_service
 from pdf_service import generate_membership_pdf
 from community_routes import create_community_router
 from cohesion_routes import create_cohesion_router
+from ai_routes import create_ai_router
 from email_service import email_service
 from test_agent import run_user_test_agent, get_all_test_reports, get_test_report, test_reports_cache
 from cloudinary_service import upload_image_to_cloudinary, is_cloudinary_enabled
@@ -3313,6 +3314,10 @@ api_router.include_router(community_router)
 # Créer et inclure le router Cohésion (gestion des contacts et campagnes)
 cohesion_router = create_cohesion_router(db, get_admin_user)
 api_router.include_router(cohesion_router)
+
+# Créer et inclure le router IA (Groq AI pour le chat et l'orchestration)
+ai_router = create_ai_router(db, get_admin_user)
+api_router.include_router(ai_router)
 
 # Inclure le router partenaire (MaBoiteDigitale)
 app.include_router(partner_router)
