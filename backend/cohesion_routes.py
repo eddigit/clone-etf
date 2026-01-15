@@ -43,14 +43,17 @@ def create_cohesion_router(db, get_current_admin_user):
     ):
         """Récupère la liste des contacts avec pagination et filtres"""
         query = {}
+        and_conditions = []
         
         if search:
-            query["$or"] = [
-                {"email": {"$regex": search, "$options": "i"}},
-                {"firstName": {"$regex": search, "$options": "i"}},
-                {"lastName": {"$regex": search, "$options": "i"}},
-                {"company": {"$regex": search, "$options": "i"}}
-            ]
+            and_conditions.append({
+                "$or": [
+                    {"email": {"$regex": search, "$options": "i"}},
+                    {"firstName": {"$regex": search, "$options": "i"}},
+                    {"lastName": {"$regex": search, "$options": "i"}},
+                    {"company": {"$regex": search, "$options": "i"}}
+                ]
+            })
         
         if status:
             query["status"] = status
@@ -61,15 +64,26 @@ def create_cohesion_router(db, get_current_admin_user):
         
         if categoryId:
             query["categoryId"] = categoryId
-        
         # Filtrer par présence/absence de catégorie
-        if hasCategory is not None:
+        elif hasCategory is not None:
             if hasCategory.lower() == 'false':
-                query["$or"] = query.get("$or", [])
                 # Contacts sans catégorie
-                query["categoryId"] = {"$in": [None, ""]}
+                and_conditions.append({
+                    "$or": [
+                        {"categoryId": None}, 
+                        {"categoryId": {"$exists": False}},
+                        {"categoryId": ""}
+                    ]
+                })
             elif hasCategory.lower() == 'true':
                 query["categoryId"] = {"$nin": [None, ""]}
+        
+        # Combiner les conditions AND si nécessaire
+        if and_conditions:
+            if len(and_conditions) == 1:
+                query.update(and_conditions[0])
+            else:
+                query["$and"] = and_conditions
         
         total = await db.cohesion_contacts.count_documents(query)
         skip = (page - 1) * limit
@@ -285,21 +299,24 @@ def create_cohesion_router(db, get_current_admin_user):
     async def get_all_contact_ids(
         status: Optional[str] = None,
         categoryId: Optional[str] = None,
-        hasCategory: Optional[bool] = None,
+        hasCategory: Optional[str] = None,
         tags: Optional[str] = None,
         search: Optional[str] = None,
         current_user: dict = Depends(get_current_admin_user)
     ):
         """Récupère tous les IDs des contacts selon les filtres (pour sélection en masse)"""
         query = {}
+        and_conditions = []
         
         if search:
-            query["$or"] = [
-                {"email": {"$regex": search, "$options": "i"}},
-                {"firstName": {"$regex": search, "$options": "i"}},
-                {"lastName": {"$regex": search, "$options": "i"}},
-                {"company": {"$regex": search, "$options": "i"}}
-            ]
+            and_conditions.append({
+                "$or": [
+                    {"email": {"$regex": search, "$options": "i"}},
+                    {"firstName": {"$regex": search, "$options": "i"}},
+                    {"lastName": {"$regex": search, "$options": "i"}},
+                    {"company": {"$regex": search, "$options": "i"}}
+                ]
+            })
         
         if status:
             query["status"] = status
@@ -310,8 +327,25 @@ def create_cohesion_router(db, get_current_admin_user):
         
         if categoryId:
             query["categoryId"] = categoryId
-        elif hasCategory is False:
-            query["$or"] = [{"categoryId": None}, {"categoryId": {"$exists": False}}]
+        elif hasCategory is not None:
+            if hasCategory.lower() == 'false':
+                # Contacts sans catégorie
+                and_conditions.append({
+                    "$or": [
+                        {"categoryId": None}, 
+                        {"categoryId": {"$exists": False}},
+                        {"categoryId": ""}
+                    ]
+                })
+            elif hasCategory.lower() == 'true':
+                query["categoryId"] = {"$nin": [None, ""]}
+        
+        # Combiner les conditions AND si nécessaire
+        if and_conditions:
+            if len(and_conditions) == 1:
+                query.update(and_conditions[0])
+            else:
+                query["$and"] = and_conditions
         
         cursor = db.cohesion_contacts.find(query, {"id": 1})
         docs = await cursor.to_list(length=100000)

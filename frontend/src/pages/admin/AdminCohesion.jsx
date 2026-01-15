@@ -688,7 +688,17 @@ const AdminCohesion = () => {
       if (contactsSearch) params.append('search', contactsSearch);
       if (selectedStatus) params.append('status', selectedStatus);
       if (selectedTag) params.append('tags', selectedTag);
-      if (selectedCategoryFilter) params.append('categoryId', selectedCategoryFilter);
+      
+      // Gestion de l'audience sélectionnée (y compris "sans catégorie")
+      if (selectedAudience) {
+        if (selectedAudience.id === '__uncategorized__') {
+          params.append('hasCategory', 'false');
+        } else {
+          params.append('categoryId', selectedAudience.id);
+        }
+      } else if (selectedCategoryFilter) {
+        params.append('categoryId', selectedCategoryFilter);
+      }
       
       const res = await fetch(`${API_URL}/cohesion/contacts/all-ids?${params}`, { headers });
       
@@ -1347,6 +1357,28 @@ const AdminCohesion = () => {
                     </Select>
                   </div>
 
+                  {/* Bouton de sélection massive - visible quand on n'a pas encore tout sélectionné */}
+                  {contactsTotal > 50 && selectedContacts.size < contactsTotal && !selectAllMode && (
+                    <div className="mb-4 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Users className="h-6 w-6 text-yellow-700" />
+                          <span className="text-yellow-900">
+                            <strong>{contactsTotal}</strong> contacts dans cette vue. 
+                            {selectedContacts.size > 0 && ` (${selectedContacts.size} sélectionné(s) sur cette page)`}
+                          </span>
+                        </div>
+                        <Button 
+                          onClick={handleSelectAll}
+                          className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Sélectionner les {contactsTotal} contacts
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Actions groupées */}
                   {selectedContacts.size > 0 && (
                     <div className="mb-4 p-4 bg-blue-100 border-2 border-blue-300 rounded-lg">
@@ -1356,28 +1388,36 @@ const AdminCohesion = () => {
                             {selectAllMode ? allContactsCount : selectedContacts.size}
                           </div>
                           <span className="font-semibold text-blue-900">
-                            {selectAllMode ? `${allContactsCount} contacts sélectionnés` : `${selectedContacts.size} contact(s) sélectionné(s)`}
+                            {selectAllMode ? `${allContactsCount} contacts sélectionnés (TOUS)` : `${selectedContacts.size} contact(s) sélectionné(s)`}
                           </span>
-                        </div>
-                        <div className="flex gap-2">
-                          {selectedAudience?.id === '__uncategorized__' && (
-                            <Select onValueChange={handleAssignCategoryToSelected}>
-                              <SelectTrigger className="w-[200px]">
-                                <FolderOpen className="h-4 w-4 mr-2" />
-                                Affecter à une audience
-                              </SelectTrigger>
-                              <SelectContent>
-                                {categories.map(cat => (
-                                  <SelectItem key={cat.id} value={cat.id}>
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
-                                      {cat.name}
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                          {!selectAllMode && contactsTotal > contacts.length && (
+                            <Button 
+                              variant="link" 
+                              className="text-blue-700 underline p-0 h-auto"
+                              onClick={handleSelectAll}
+                            >
+                              Sélectionner tous les {contactsTotal} contacts
+                            </Button>
                           )}
+                        </div>
+                        <div className="flex gap-2 flex-wrap">
+                          {/* Bouton d'affectation - visible pour TOUTES les audiences, pas seulement sans catégorie */}
+                          <Select onValueChange={handleAssignCategoryToSelected}>
+                            <SelectTrigger className="w-[220px] bg-white">
+                              <FolderOpen className="h-4 w-4 mr-2" />
+                              Affecter à une audience
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.map(cat => (
+                                <SelectItem key={cat.id} value={cat.id}>
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
+                                    {cat.name}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <Button size="sm" variant="outline" onClick={() => setShowTagModal(true)}>
                             <Tag className="h-4 w-4 mr-1" />
                             Ajouter tag

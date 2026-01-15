@@ -12,7 +12,12 @@ import {
   Twitter,
   Linkedin,
   Tag,
-  Eye
+  Eye,
+  BookOpen,
+  Heart,
+  ChevronUp,
+  Copy,
+  Check
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://clone-etf.onrender.com';
@@ -23,6 +28,23 @@ const BlogArticle = () => {
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [readProgress, setReadProgress] = useState(0);
+
+  // Gestion du scroll pour la barre de progression et le bouton retour en haut
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      setReadProgress(progress);
+      setShowScrollTop(scrollTop > 500);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Fonction pour obtenir l'URL complète d'une image
   const getFullImageUrl = (url) => {
@@ -36,9 +58,41 @@ const BlogArticle = () => {
     return url;
   };
 
+  // Fonction pour extraire l'ID YouTube de différents formats d'URL
+  const extractYouTubeId = (url) => {
+    if (!url) return null;
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
+      /^([a-zA-Z0-9_-]{11})$/
+    ];
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
+    }
+    return null;
+  };
+
+  // Créer l'embed YouTube avec un design moderne
+  const createYouTubeEmbed = (videoId) => {
+    return `
+      <div class="youtube-container my-8">
+        <div class="youtube-wrapper">
+          <iframe 
+            src="https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1" 
+            title="Vidéo YouTube" 
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+            allowfullscreen
+            loading="lazy"
+          ></iframe>
+        </div>
+      </div>
+    `;
+  };
+
   // Fonction pour préfixer les URLs relatives d'images dans le contenu HTML
   // et convertir les liens YouTube en iframes
-  const processImageUrls = (htmlContent) => {
+  const processContent = (htmlContent) => {
     if (!htmlContent) return '';
     
     // Remplacer les src d'images relatives par des URLs complètes
@@ -52,17 +106,25 @@ const BlogArticle = () => {
     processed = processed.replace(
       /\[youtube:([^\]]+)\]/g,
       (match, videoIdOrUrl) => {
-        let videoId = videoIdOrUrl;
-        // Extraire l'ID de différents formats d'URL YouTube
-        if (videoIdOrUrl.includes('youtube.com/watch')) {
-          const urlParams = new URLSearchParams(videoIdOrUrl.split('?')[1]);
-          videoId = urlParams.get('v') || videoIdOrUrl;
-        } else if (videoIdOrUrl.includes('youtu.be/')) {
-          videoId = videoIdOrUrl.split('youtu.be/')[1]?.split('?')[0] || videoIdOrUrl;
-        } else if (videoIdOrUrl.includes('youtube.com/embed/')) {
-          videoId = videoIdOrUrl.split('youtube.com/embed/')[1]?.split('?')[0] || videoIdOrUrl;
+        const videoId = extractYouTubeId(videoIdOrUrl) || videoIdOrUrl;
+        return createYouTubeEmbed(videoId);
+      }
+    );
+    
+    // Détecter automatiquement les URLs YouTube dans les paragraphes (URLs seules)
+    processed = processed.replace(
+      /<p>\s*(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})[^\s<]*)\s*<\/p>/gi,
+      (match, url, videoId) => createYouTubeEmbed(videoId)
+    );
+    
+    // Détecter les liens YouTube cliquables et les convertir
+    processed = processed.replace(
+      /<a[^>]*href="(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})[^"]*)"[^>]*>([^<]*)<\/a>/gi,
+      (match, url, videoId, linkText) => {
+        if (linkText.includes('youtube') || linkText.includes('youtu.be') || linkText === url) {
+          return createYouTubeEmbed(videoId);
         }
-        return `<div class="youtube-embed my-6"><div class="relative w-full" style="padding-bottom: 56.25%;"><iframe src="https://www.youtube.com/embed/${videoId}" title="Vidéo YouTube" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="absolute top-0 left-0 w-full h-full rounded-lg shadow-md"></iframe></div></div>`;
+        return match;
       }
     );
     
@@ -125,15 +187,23 @@ const BlogArticle = () => {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(window.location.href);
-    alert('Lien copie !');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-500">Chargement de l'article...</p>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
+            <BookOpen className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-blue-600" />
+          </div>
+          <p className="mt-6 text-gray-500 font-medium">Chargement de l'article...</p>
         </div>
       </div>
     );
@@ -141,12 +211,15 @@ const BlogArticle = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">{error}</h1>
-          <p className="text-gray-600 mb-8">L'article que vous recherchez n'existe pas ou a ete supprime.</p>
-          <Button onClick={() => navigate('/blog')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <BookOpen className="h-10 w-10 text-red-500" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">{error}</h1>
+          <p className="text-gray-600 mb-8 text-lg">L'article que vous recherchez n'existe pas ou a été supprimé.</p>
+          <Button onClick={() => navigate('/blog')} size="lg" className="shadow-lg">
+            <ArrowLeft className="h-5 w-5 mr-2" />
             Retour au blog
           </Button>
         </div>
@@ -158,25 +231,119 @@ const BlogArticle = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero with Featured Image */}
+      {/* Barre de progression de lecture */}
+      <div className="fixed top-0 left-0 right-0 h-1 bg-gray-200 z-50">
+        <div 
+          className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-150"
+          style={{ width: `${readProgress}%` }}
+        />
+      </div>
+
+      {/* Hero immersif */}
       <div className="relative">
-        {article.featuredImage && (
-          <div className="h-64 md:h-96 overflow-hidden">
+        {article.featuredImage ? (
+          <div className="h-[50vh] md:h-[70vh] overflow-hidden relative">
             <img
               src={article.featuredImage.startsWith('http') ? article.featuredImage : `${API_URL}${article.featuredImage}`}
               alt={article.title}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+            {/* Overlay gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+            
+            {/* Contenu sur l'image */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 lg:p-16">
+              <div className="max-w-4xl mx-auto">
+                {/* Catégorie et tags */}
+                <div className="flex items-center gap-3 mb-4 flex-wrap">
+                  <Badge className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 text-sm font-semibold">
+                    {article.category}
+                  </Badge>
+                  {article.tags && article.tags.slice(0, 2).map((tag) => (
+                    <Badge key={tag} variant="outline" className="bg-white/10 backdrop-blur-sm text-white border-white/30 text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+                
+                {/* Titre */}
+                <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
+                  {article.title}
+                </h1>
+                
+                {/* Extrait */}
+                <p className="text-lg md:text-xl text-gray-200 mb-6 max-w-3xl leading-relaxed">
+                  {article.excerpt}
+                </p>
+                
+                {/* Métadonnées */}
+                <div className="flex flex-wrap items-center gap-6 text-sm text-gray-300">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold">
+                      {article.author?.charAt(0) || 'E'}
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">{article.author}</p>
+                      <p className="text-gray-400 text-xs">Auteur</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="h-4 w-4" />
+                    <span>{formatDate(article.publishedAt || article.createdAt)}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-4 w-4" />
+                    <span>{article.readTime}</span>
+                  </div>
+                  {article.views > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <Eye className="h-4 w-4" />
+                      <span>{article.views.toLocaleString()} vues</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          // Header sans image
+          <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 py-16 md:py-24">
+            <div className="max-w-4xl mx-auto px-6">
+              <div className="flex items-center gap-3 mb-4 flex-wrap">
+                <Badge className="bg-white/20 backdrop-blur-sm text-white px-4 py-1.5 text-sm font-semibold">
+                  {article.category}
+                </Badge>
+              </div>
+              <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">
+                {article.title}
+              </h1>
+              <p className="text-lg md:text-xl text-blue-100 mb-6 max-w-3xl">
+                {article.excerpt}
+              </p>
+              <div className="flex flex-wrap items-center gap-6 text-sm text-blue-200">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  <span>{article.author}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="h-4 w-4" />
+                  <span>{formatDate(article.publishedAt || article.createdAt)}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Clock className="h-4 w-4" />
+                  <span>{article.readTime}</span>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Back button */}
-        <div className="absolute top-4 left-4">
+        {/* Bouton retour flottant */}
+        <div className="absolute top-4 left-4 z-10">
           <Button
             variant="secondary"
             onClick={() => navigate('/blog')}
-            className="shadow-lg"
+            className="shadow-xl bg-white/90 backdrop-blur-sm hover:bg-white"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour
@@ -184,152 +351,153 @@ const BlogArticle = () => {
         </div>
       </div>
 
-      {/* Article Content */}
-      <article className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
-        <header className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <Badge className="bg-blue-600">{article.category}</Badge>
-            {article.tags && article.tags.length > 0 && (
-              <div className="flex items-center gap-1">
-                {article.tags.slice(0, 3).map((tag) => (
-                  <Badge key={tag} variant="outline" className="text-xs">
-                    {tag}
+      {/* Contenu de l'article */}
+      <div className="relative">
+        {/* Barre de partage flottante (desktop) */}
+        <div className="hidden lg:flex fixed left-8 top-1/2 transform -translate-y-1/2 flex-col gap-3 z-40">
+          <div className="bg-white rounded-full shadow-xl p-2 flex flex-col gap-2">
+            <button
+              onClick={() => handleShare('facebook')}
+              className="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all hover:scale-110"
+              title="Partager sur Facebook"
+            >
+              <Facebook className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => handleShare('twitter')}
+              className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-all hover:scale-110"
+              title="Partager sur Twitter"
+            >
+              <Twitter className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => handleShare('linkedin')}
+              className="w-10 h-10 rounded-full bg-blue-700 hover:bg-blue-800 text-white flex items-center justify-center transition-all hover:scale-110"
+              title="Partager sur LinkedIn"
+            >
+              <Linkedin className="h-5 w-5" />
+            </button>
+            <div className="w-8 h-px bg-gray-200 mx-auto my-1"></div>
+            <button
+              onClick={copyToClipboard}
+              className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center transition-all hover:scale-110"
+              title="Copier le lien"
+            >
+              {copied ? <Check className="h-5 w-5 text-green-600" /> : <Copy className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Article principal */}
+        <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pb-24">
+          {/* Corps de l'article */}
+          <div
+            className="article-content prose prose-lg max-w-none mb-12"
+            dangerouslySetInnerHTML={{ __html: processContent(article.content) }}
+          />
+
+          {/* Séparateur décoratif */}
+          <div className="flex items-center gap-4 my-12">
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+            <BookOpen className="h-6 w-6 text-gray-400" />
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+          </div>
+
+          {/* Tags */}
+          {article.tags && article.tags.length > 0 && (
+            <div className="mb-12">
+              <div className="flex items-center gap-3 flex-wrap">
+                <Tag className="h-5 w-5 text-gray-400" />
+                {article.tags.map((tag) => (
+                  <Badge 
+                    key={tag} 
+                    variant="secondary"
+                    className="px-4 py-2 text-sm bg-gray-100 hover:bg-blue-100 hover:text-blue-700 transition-colors cursor-pointer"
+                  >
+                    #{tag}
                   </Badge>
                 ))}
               </div>
-            )}
-          </div>
-
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            {article.title}
-          </h1>
-
-          <p className="text-xl text-gray-600 mb-6">
-            {article.excerpt}
-          </p>
-
-          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 border-y py-4">
-            <div className="flex items-center">
-              <User className="h-4 w-4 mr-1" />
-              {article.author}
             </div>
-            <div className="flex items-center">
-              <Calendar className="h-4 w-4 mr-1" />
-              {formatDate(article.publishedAt || article.createdAt)}
-            </div>
-            <div className="flex items-center">
-              <Clock className="h-4 w-4 mr-1" />
-              {article.readTime}
-            </div>
-            {article.views > 0 && (
-              <div className="flex items-center">
-                <Eye className="h-4 w-4 mr-1" />
-                {article.views} vues
-              </div>
-            )}
-          </div>
-        </header>
+          )}
 
-        {/* Article Body */}
-        <div
-          className="prose prose-lg max-w-none mb-12 prose-img:rounded-lg prose-img:shadow-md prose-img:w-full prose-img:h-auto"
-          style={{
-            color: '#1f2937',
-            '--tw-prose-body': '#1f2937',
-            '--tw-prose-headings': '#111827',
-            '--tw-prose-links': '#2563eb',
-            '--tw-prose-bold': '#111827',
-            '--tw-prose-counters': '#4b5563',
-            '--tw-prose-bullets': '#4b5563',
-            '--tw-prose-hr': '#e5e7eb',
-            '--tw-prose-quotes': '#1f2937',
-            '--tw-prose-quote-borders': '#2563eb',
-            '--tw-prose-captions': '#4b5563',
-            '--tw-prose-code': '#111827',
-            '--tw-prose-pre-code': '#e5e7eb',
-            '--tw-prose-pre-bg': '#1f2937',
-            '--tw-prose-th-borders': '#d1d5db',
-            '--tw-prose-td-borders': '#e5e7eb'
-          }}
-          dangerouslySetInnerHTML={{ __html: processImageUrls(article.content) }}
-        />
-
-        {/* Share Section */}
-        <div className="border-t pt-8">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-2">
-              <Share2 className="h-4 w-4 text-gray-500" />
-              <span className="text-gray-600 font-medium">Partager cet article :</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
+          {/* Section de partage (mobile) */}
+          <div className="lg:hidden bg-gray-50 rounded-2xl p-6 mb-12">
+            <p className="text-sm text-gray-500 font-medium mb-4 flex items-center gap-2">
+              <Share2 className="h-4 w-4" />
+              Partager cet article
+            </p>
+            <div className="flex items-center gap-3">
+              <button
                 onClick={() => handleShare('facebook')}
-                className="text-blue-600"
+                className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2 transition-colors"
               >
-                <Facebook className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
+                <Facebook className="h-5 w-5" />
+              </button>
+              <button
                 onClick={() => handleShare('twitter')}
-                className="text-sky-500"
+                className="flex-1 py-3 rounded-xl bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center gap-2 transition-colors"
               >
-                <Twitter className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
+                <Twitter className="h-5 w-5" />
+              </button>
+              <button
                 onClick={() => handleShare('linkedin')}
-                className="text-blue-700"
+                className="flex-1 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white flex items-center justify-center gap-2 transition-colors"
               >
-                <Linkedin className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
+                <Linkedin className="h-5 w-5" />
+              </button>
+              <button
                 onClick={copyToClipboard}
+                className="py-3 px-4 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center justify-center transition-colors"
               >
-                Copier le lien
-              </Button>
+                {copied ? <Check className="h-5 w-5 text-green-600" /> : <Copy className="h-5 w-5" />}
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* Tags */}
-        {article.tags && article.tags.length > 0 && (
-          <div className="mt-8 pt-8 border-t">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Tag className="h-4 w-4 text-gray-500" />
-              {article.tags.map((tag) => (
-                <Badge key={tag} variant="secondary">
-                  {tag}
-                </Badge>
-              ))}
+          {/* Call to Action Premium */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-3xl p-8 md:p-12 text-center">
+            {/* Décoration */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
+            
+            <div className="relative z-10">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Heart className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">
+                Besoin d'aide pour votre activité ?
+              </h3>
+              <p className="text-blue-100 mb-8 text-lg max-w-xl mx-auto">
+                En Toute Franchise Association accompagne les commerçants et artisans depuis plus de 30 ans.
+              </p>
+              <div className="flex justify-center gap-4 flex-wrap">
+                <Link to="/adhesion">
+                  <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50 shadow-xl px-8">
+                    Devenir adhérent
+                  </Button>
+                </Link>
+                <Link to="/contact">
+                  <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 px-8">
+                    Nous contacter
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
-        )}
+        </article>
+      </div>
 
-        {/* Call to Action */}
-        <div className="mt-12 bg-blue-50 rounded-xl p-8 text-center">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
-            Besoin d'aide pour votre activite ?
-          </h3>
-          <p className="text-gray-600 mb-4">
-            En Toute Franchise Association accompagne les commercants et artisans depuis plus de 30 ans.
-          </p>
-          <div className="flex justify-center gap-4 flex-wrap">
-            <Link to="/adhesion">
-              <Button>Devenir adherent</Button>
-            </Link>
-            <Link to="/contact">
-              <Button variant="outline">Nous contacter</Button>
-            </Link>
-          </div>
-        </div>
-      </article>
+      {/* Bouton retour en haut */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-24 right-6 w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-110 z-40"
+          title="Retour en haut"
+        >
+          <ChevronUp className="h-6 w-6" />
+        </button>
+      )}
     </div>
   );
 };
