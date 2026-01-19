@@ -17,13 +17,13 @@ const Livre418Milliards = () => {
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
               LA FRAUDE DE LA GRANDE DISTRIBUTION
             </h2>
-            <p className="text-xl text-gray-300 mb-4">
+            <p className="text-xl text-white mb-4">
               AVEC LA COMPLICITÉ DES ÉLUS ET DE L'ADMINISTRATION
             </p>
-            <p className="text-lg text-gray-400 italic">
+            <p className="text-lg text-white italic">
               MARTINE DONNETTE & CLAUDE DIOT
             </p>
-            <p className="text-md text-gray-400 italic">
+            <p className="text-md text-white italic">
               AVEC PATRICK PASIN
             </p>
           </div>
@@ -174,7 +174,7 @@ const Livre418Milliards = () => {
           <h2 className="text-3xl font-bold text-white mb-6">
             Rejoignez le combat pour la transparence
           </h2>
-          <p className="text-xl text-gray-300 mb-8">
+          <p className="text-xl text-white mb-8">
             Soutenez notre action en adhérant à l'association En Toute Franchise
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -201,7 +201,7 @@ const Livre418Milliards = () => {
       {/* Footer Note */}
       <section className="py-8 px-4 bg-slate-900 border-t border-slate-800">
         <div className="max-w-7xl mx-auto text-center">
-          <p className="text-gray-400 text-sm">
+          <p className="text-white text-sm">
             Un livre édité par{' '}
             <a
               href="https://www.talmastudios.com"
