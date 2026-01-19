@@ -1,5 +1,5 @@
 """
-Routes API pour l'Intelligence Artificielle Groq
+Routes API pour l'Intelligence Artificielle Groq + RAG
 ETF - En Toute Franchise
 """
 
@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 import logging
+import os
 
 from groq_ai_service import (
     GroqAIService, 
@@ -16,6 +17,7 @@ from groq_ai_service import (
     groq_ai_service,
     init_groq_ai
 )
+from knowledge_base import knowledge_base, init_knowledge_base
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +30,7 @@ class ChatRequest(BaseModel):
     """Requête de chat"""
     message: str = Field(..., min_length=1, max_length=4000, description="Message de l'utilisateur")
     conversation_id: Optional[str] = Field(None, description="ID de la conversation (généré si absent)")
-    user_type: Optional[str] = Field("visitor", description="Type d'utilisateur: visitor, member, admin, prospect")
+    user_type: Optional[str] = Field("visitor", description="Type d'utilisateur: visitor, member, admin, prospect, vip")
     context: Optional[str] = Field(None, description="Contexte: general, adhesion, support, events, partners, legal, community")
     user_info: Optional[Dict[str, Any]] = Field(None, description="Informations sur l'utilisateur")
 
@@ -75,6 +77,32 @@ class ConversationHistoryResponse(BaseModel):
     conversation_id: str
     messages: List[Dict[str, Any]]
     message_count: int
+
+
+# =============================================================================
+# MODÈLES RAG
+# =============================================================================
+
+class RAGChatRequest(BaseModel):
+    """Requête de chat avec RAG"""
+    message: str = Field(..., min_length=1, max_length=2000, description="Question de l'utilisateur")
+    conversation_history: Optional[List[Dict[str, str]]] = Field(None, description="Historique de conversation")
+    use_rag: bool = Field(True, description="Utiliser la base de connaissances ETF")
+
+
+class RAGChatResponse(BaseModel):
+    """Réponse du chat RAG"""
+    success: bool
+    response: str
+    sources: Optional[List[Dict[str, Any]]] = None
+    tokens_used: Optional[int] = None
+    error: Optional[str] = None
+
+
+class RAGSearchRequest(BaseModel):
+    """Requête de recherche dans la base"""
+    query: str = Field(..., min_length=1, max_length=500, description="Recherche")
+    top_k: int = Field(default=5, ge=1, le=10, description="Nombre de résultats")
 
 
 # =============================================================================
@@ -340,5 +368,168 @@ def create_ai_router(db, get_current_admin_user=None):
                 "error": str(e),
                 "timestamp": datetime.utcnow().isoformat()
             }
+    
+    # ==================== ENDPOINTS RAG ====================
+    
+    @router.post("/rag/chat", response_model=RAGChatResponse)
+    async def rag_chat(request: RAGChatRequest):
+        """
+        Chat avec le système RAG.
+        
+        Utilise la base de connaissances ETF (30 ans d'articles)
+        pour fournir des réponses contextualisées via Groq.
+        """
+        try:
+            if not knowledge_base.is_loaded:
+                return RAGChatResponse(
+                    success=False,
+                    response="",
+                    error="Base de connaissances non chargée. Veuillez contacter l'administrateur."
+                )
+            
+            # Rechercher le contexte pertinent dans la base
+            context_data = knowledge_base.get_context_for_llm(
+                query=request.message,
+                top_k=3
+            )
+            
+            # Construire le prompt avec le contexte RAG
+            rag_prompt = f"""Tu es l'assistant IA de l'association ETF (En Toute Franchise), spécialiste du droit de la franchise depuis 1993.
+
+CONTEXTE DE LA BASE DE CONNAISSANCES ETF :
+{context_data['context']}
+
+SOURCES UTILISÉES :
+{', '.join([s['title'] for s in context_data['sources']]) if context_data['sources'] else 'Aucune source spécifique'}
+
+RÈGLES :
+1. Réponds en te basant sur le contexte fourni
+2. Si le contexte ne contient pas l'information, dis-le clairement
+3. Cite les sources quand c'est pertinent
+4. Reste professionnel et précis sur les aspects juridiques
+5. Propose de contacter ETF pour les cas complexes
+
+QUESTION DE L'UTILISATEUR :
+{request.message}"""
+
+            # Appeler Groq avec le contexte RAG
+            response = await ai_service.chat(
+                user_message=rag_prompt,
+                conversation_id=f"rag_{datetime.utcnow().timestamp()}",
+                user_type=UserType.VISITOR
+            )
+            
+            return RAGChatResponse(
+                success=True,
+                response=response,
+                sources=context_data['sources']
+            )
+            
+        except Exception as e:
+            logger.error(f"RAG chat error: {e}")
+            return RAGChatResponse(
+                success=False,
+                response="",
+                error=str(e)
+            )
+    
+    @router.post("/rag/search")
+    async def rag_search(request: RAGSearchRequest):
+        """
+        Recherche dans la base de connaissances sans appeler le LLM.
+        
+        Retourne les articles les plus pertinents via TF-IDF.
+        """
+        try:
+            if not knowledge_base.is_loaded:
+                raise HTTPException(
+                    status_code=503,
+                    detail="Base de connaissances non chargée"
+                )
+            
+            results = knowledge_base.search(
+                query=request.query,
+                top_k=request.top_k
+            )
+            
+            return {
+                "success": True,
+                "query": request.query,
+                "results": results,
+                "total_found": len(results)
+            }
+            
+        except Exception as e:
+            logger.error(f"RAG search error: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
+    
+    @router.get("/rag/stats")
+    async def rag_stats():
+        """
+        Statistiques de la base de connaissances.
+        
+        Retourne le nombre d'articles, les catégories, etc.
+        """
+        try:
+            stats = knowledge_base.get_stats()
+            return {
+                "success": True,
+                **stats
+            }
+        except Exception as e:
+            logger.error(f"RAG stats error: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    @router.get("/rag/suggestions")
+    async def rag_suggestions():
+        """
+        Retourne des questions suggérées basées sur la base de connaissances.
+        """
+        try:
+            suggestions = knowledge_base.get_suggested_questions()
+            return {
+                "success": True,
+                "suggestions": suggestions
+            }
+        except Exception as e:
+            logger.error(f"RAG suggestions error: {e}")
+            return {
+                "success": False,
+                "suggestions": [
+                    "Qu'est-ce que la Directive 2006 ?",
+                    "Comment fonctionne la CDAC ?",
+                    "Quels sont les avantages d'adhérer à ETF ?",
+                    "Qu'est-ce que le DIP en franchise ?",
+                    "Comment fonctionne la clause de non-concurrence ?"
+                ]
+            }
+    
+    @router.post("/rag/reload")
+    async def rag_reload():
+        """
+        Recharge la base de connaissances depuis le fichier JSON.
+        
+        Nécessite les droits admin.
+        """
+        try:
+            success = knowledge_base.load_articles()
+            if success:
+                stats = knowledge_base.get_stats()
+                return {
+                    "success": True,
+                    "message": "Base de connaissances rechargée avec succès",
+                    **stats
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": "Échec du rechargement de la base de connaissances"
+                }
+        except Exception as e:
+            logger.error(f"RAG reload error: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
     
     return router

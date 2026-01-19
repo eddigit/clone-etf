@@ -51,14 +51,27 @@ const ProtectedRoute = ({ children }) => {
   return token ? children : <Navigate to="/login" />;
 };
 
+// Fonction pour déterminer le type d'utilisateur pour le chat IA
+const getUserTypeForChat = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return 'visitor';
+  
+  const userRole = localStorage.getItem('userRole');
+  if (userRole === 'admin') return 'admin';
+  if (userRole === 'vip') return 'vip';
+  return 'member';
+};
+
 // Public routes with Navbar and Footer
 const PublicLayout = ({ children }) => {
+  const userType = getUserTypeForChat();
+  
   return (
     <>
       <Navbar />
       {children}
       <Footer />
-      <ChatAIWidget userType="visitor" />
+      <ChatAIWidget userType={userType} />
     </>
   );
 };

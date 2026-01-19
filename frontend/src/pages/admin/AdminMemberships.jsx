@@ -60,7 +60,8 @@ const AdminMemberships = () => {
     payment_method: '',
     payment_reference: '',
     notes: '',
-    membership_end_date: ''
+    membership_end_date: '',
+    role: ''
   });
 
   // Fonction pour récupérer les headers avec le token actuel
@@ -163,6 +164,7 @@ const AdminMemberships = () => {
       if (editForm.payment_reference) updateData.payment_reference = editForm.payment_reference;
       if (editForm.notes !== undefined) updateData.notes = editForm.notes;
       if (editForm.membership_end_date) updateData.membership_end_date = editForm.membership_end_date;
+      if (editForm.role) updateData.role = editForm.role;
 
       const response = await fetch(`${API_URL}/admin/memberships/${selectedMembership.id}`, {
         method: 'PUT',
@@ -192,9 +194,19 @@ const AdminMemberships = () => {
       payment_method: membership.payment_method || '',
       payment_reference: membership.payment_reference || '',
       notes: membership.notes || '',
-      membership_end_date: ''
+      membership_end_date: '',
+      role: membership.role || 'user'
     });
     setShowEditModal(true);
+  };
+
+  const getRoleBadge = (role) => {
+    const badges = {
+      admin: <Badge className="bg-red-100 text-red-800">Admin</Badge>,
+      vip: <Badge className="bg-amber-100 text-amber-800">VIP</Badge>,
+      user: <Badge className="bg-blue-100 text-blue-800">Membre</Badge>
+    };
+    return badges[role] || <Badge variant="outline">{role || 'Membre'}</Badge>;
   };
 
   const getStatusBadge = (status) => {
@@ -335,6 +347,7 @@ const AdminMemberships = () => {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Adherent</TableHead>
+                          <TableHead>Rôle</TableHead>
                           <TableHead>Type</TableHead>
                           <TableHead>Annee</TableHead>
                           <TableHead>Montant</TableHead>
@@ -353,6 +366,7 @@ const AdminMemberships = () => {
                                 <p className="text-sm text-gray-500">{m.user_email}</p>
                               </div>
                             </TableCell>
+                            <TableCell>{getRoleBadge(m.role)}</TableCell>
                             <TableCell>{getMembershipTypeLabel(m.membership_type)}</TableCell>
                             <TableCell>{m.year}</TableCell>
                             <TableCell className="font-medium">{m.amount} EUR</TableCell>
@@ -616,9 +630,33 @@ const AdminMemberships = () => {
             <div className="mb-4 p-3 bg-gray-50 rounded-lg">
               <p className="font-medium">{selectedMembership.user_name}</p>
               <p className="text-sm text-gray-500">{selectedMembership.user_email}</p>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-xs text-gray-500">Rôle actuel:</span>
+                {getRoleBadge(selectedMembership.role)}
+              </div>
             </div>
 
             <form onSubmit={handleEditMembership} className="space-y-4">
+              {/* Rôle utilisateur - Accès Chat IA */}
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <label className="block text-sm font-medium text-amber-800 mb-2">
+                  🌟 Rôle utilisateur (Accès Chat IA)
+                </label>
+                <select
+                  value={editForm.role}
+                  onChange={(e) => setEditForm({...editForm, role: e.target.value})}
+                  className="w-full border border-amber-300 rounded-md px-3 py-2 bg-white"
+                >
+                  <option value="">Ne pas modifier</option>
+                  <option value="user">👤 Membre standard</option>
+                  <option value="vip">⭐ VIP (Chat IA gratuit)</option>
+                  <option value="admin">🔐 Admin (Accès complet)</option>
+                </select>
+                <p className="text-xs text-amber-700 mt-1">
+                  Les VIP et Admins ont accès au chat IA sans abonnement MaBoiteDigitale
+                </p>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Statut</label>
                 <select

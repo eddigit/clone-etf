@@ -44,6 +44,7 @@ from pdf_service import generate_membership_pdf
 from community_routes import create_community_router
 from cohesion_routes import create_cohesion_router
 from ai_routes import create_ai_router
+from knowledge_base import init_knowledge_base
 from email_service import email_service
 from test_agent import run_user_test_agent, get_all_test_reports, get_test_report, test_reports_cache
 from cloudinary_service import upload_image_to_cloudinary, is_cloudinary_enabled
@@ -2397,7 +2398,8 @@ async def admin_list_memberships(
         result.append({
             **m,
             "user_email": user["email"] if user else "N/A",
-            "user_name": f"{user['firstName']} {user['lastName']}" if user else "N/A"
+            "user_name": f"{user['firstName']} {user['lastName']}" if user else "N/A",
+            "role": user.get("role", "user") if user else "user"
         })
 
     return {
@@ -2440,6 +2442,14 @@ async def admin_update_membership(
             {"id": membership_id},
             {"$set": update_data}
         )
+
+        # Si le rôle est modifié, mettre à jour l'utilisateur
+        if data.role and data.role in ["user", "vip", "admin"]:
+            await db.users.update_one(
+                {"id": membership["user_id"]},
+                {"$set": {"role": data.role, "updatedAt": now}}
+            )
+            logger.info(f"Admin {current_user['email']} changed role of user {membership['user_id']} to {data.role}")
 
         # Si le statut passe à "paid", mettre à jour l'utilisateur
         if data.status == "paid":
@@ -3343,7 +3353,17 @@ async def startup_event():
     chat = init_live_chat_service(db)
     await chat.init_indexes()
     
-    logger.info("Analytics and Live Chat services initialized")
+    # Initialiser la base de connaissances RAG
+    try:
+        kb = init_knowledge_base()
+        if kb.is_loaded:
+            logger.info(f"✅ RAG Knowledge Base loaded: {len(kb.articles)} articles")
+        else:
+            logger.warning("⚠️ RAG Knowledge Base not loaded - articles_etf_memory.json missing")
+    except Exception as e:
+        logger.error(f"❌ Failed to init RAG Knowledge Base: {e}")
+    
+    logger.info("Analytics, Live Chat and RAG services initialized")
 
 # --- Analytics Routes ---
 

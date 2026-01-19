@@ -23,7 +23,7 @@ import ReactMarkdown from 'react-markdown';
  * l'assistant IA d'En Toute Franchise.
  * 
  * Props:
- * - userType: 'visitor' | 'member' | 'admin' - Type d'utilisateur
+ * - userType: 'visitor' | 'member' | 'admin' | 'vip' | 'prospect' - Type d'utilisateur
  * - userInfo: { name, email, ... } - Infos utilisateur (optionnel)
  * - defaultOpen: boolean - Ouvrir le chat par défaut
  */

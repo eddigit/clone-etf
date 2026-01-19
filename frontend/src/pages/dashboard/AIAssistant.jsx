@@ -37,6 +37,7 @@ const AIAssistant = () => {
   const [loading, setLoading] = useState(true);
   const [ssoLoading, setSsoLoading] = useState(false);
   const [ssoError, setSsoError] = useState(null);
+  const [isVipOrAdmin, setIsVipOrAdmin] = useState(false);
 
   useEffect(() => {
     const checkStatus = async () => {
@@ -55,22 +56,35 @@ const AIAssistant = () => {
               const notExpired = !response.data.membershipEndDate || 
                                 new Date(response.data.membershipEndDate) > new Date();
               setMembershipActive(isActive && notExpired);
+              
+              // Vérifier si VIP ou Admin (accès gratuit au chat IA)
+              const userRole = response.data.role || '';
+              const hasVipAccess = userRole === 'admin' || userRole === 'vip';
+              setIsVipOrAdmin(hasVipAccess);
+              
+              // Si VIP ou Admin, activer automatiquement l'accès IA
+              if (hasVipAccess) {
+                setIaSubscriptionActive(true);
+              }
             }
           } catch (err) {
             console.error('Error fetching user profile:', err);
           }
 
-          // Vérifier le statut d'abonnement IA sur maboitedigitale.com
-          try {
-            const iaResponse = await API.get('/api/maboitedigitale/subscription');
-            if (iaResponse.data) {
-              setIaSubscription(iaResponse.data);
-              setIaSubscriptionActive(iaResponse.data.has_subscription === true);
+          // Vérifier le statut d'abonnement IA sur maboitedigitale.com (sauf VIP/Admin)
+          const userRole = localStorage.getItem('userRole');
+          if (userRole !== 'admin' && userRole !== 'vip') {
+            try {
+              const iaResponse = await API.get('/api/maboitedigitale/subscription');
+              if (iaResponse.data) {
+                setIaSubscription(iaResponse.data);
+                setIaSubscriptionActive(iaResponse.data.has_subscription === true);
+              }
+            } catch (err) {
+              console.error('Error fetching IA subscription:', err);
+              // Si erreur, on ne bloque pas l'interface
+              setIaSubscriptionActive(false);
             }
-          } catch (err) {
-            console.error('Error fetching IA subscription:', err);
-            // Si erreur, on ne bloque pas l'interface
-            setIaSubscriptionActive(false);
           }
         }
       } catch (error) {
@@ -235,7 +249,35 @@ const AIAssistant = () => {
             )}
 
             {/* Statut abonnement IA */}
-            {iaSubscriptionActive ? (
+            {isVipOrAdmin ? (
+              <Card className="bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-300">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                        <Star className="h-6 w-6 text-amber-600" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-amber-900">Accès VIP</h3>
+                          <Badge className="bg-amber-500 text-white">VIP</Badge>
+                        </div>
+                        <p className="text-amber-700 text-sm">
+                          Vous bénéficiez d'un accès gratuit et illimité aux outils IA.
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      className="bg-amber-600 hover:bg-amber-700"
+                      onClick={handleConnectToMaBoiteDigitale}
+                    >
+                      <Link2 className="h-4 w-4 mr-2" />
+                      Accéder aux outils
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : iaSubscriptionActive ? (
               <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">

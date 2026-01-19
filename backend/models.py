@@ -453,6 +453,7 @@ class AdminMembershipUpdate(BaseModel):
     amount: Optional[float] = None
     notes: Optional[str] = None
     membership_end_date: Optional[datetime] = None  # Pour prolonger l'adhésion
+    role: Optional[str] = None  # "user" | "vip" | "admin" - Détermine l'accès au chat IA
 
 # ===================== COMMUNITY MODELS =====================
 

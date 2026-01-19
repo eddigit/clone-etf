@@ -36,6 +36,7 @@ class UserType(Enum):
     MEMBER = "member"             # Adhérent connecté
     ADMIN = "admin"               # Administrateur
     PROSPECT = "prospect"         # Prospect identifié
+    VIP = "vip"                   # Membre VIP (accès gratuit au chat comme admin)
 
 class ConversationContext(Enum):
     """Contexte de la conversation"""
@@ -341,6 +342,16 @@ CONTEXT_INSTRUCTIONS = {
 - Tu peux discuter de fonctionnalités techniques
 - Tu peux donner des conseils sur la gestion de la plateforme
 - Sois plus technique et direct
+""",
+
+    UserType.VIP: """
+## Contexte : Tu parles à un MEMBRE VIP
+
+- C'est un adhérent privilégié avec un accès complet aux services
+- Il bénéficie des mêmes avantages que les administrateurs pour le chat
+- Tu peux lui parler des fonctionnalités avancées et des services premium
+- Traite-le avec une attention particulière, c'est un partenaire de confiance
+- Sois proactif et propose des conseils personnalisés
 """
 }
 
