@@ -219,11 +219,17 @@ export default function Adhesion() {
       const response = await API.post('/api/memberships', payload);
 
       // Rediriger vers HelloAsso pour le paiement
-      // TODO: intégrer le lien HelloAsso de paiement
-      alert('Adhésion créée avec succès ! Vous allez être redirigé vers le paiement.');
-      
-      // Pour l'instant, rediriger vers le dashboard
-      navigate('/dashboard/adhesions');
+      const { payment_url } = response.data;
+
+      if (payment_url) {
+        // Redirection vers HelloAsso pour le paiement
+        alert('Adhésion créée avec succès ! Vous allez être redirigé vers la page de paiement HelloAsso.');
+        window.location.href = payment_url;
+      } else {
+        // Si pas de lien de paiement (erreur temporaire), rediriger vers le dashboard
+        alert('Adhésion créée avec succès ! Vous pourrez finaliser le paiement depuis votre tableau de bord.');
+        navigate('/dashboard/adhesions');
+      }
 
     } catch (err) {
       console.error('Erreur lors de la création de l\'adhésion:', err);

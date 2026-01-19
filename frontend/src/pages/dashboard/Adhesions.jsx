@@ -50,6 +50,7 @@ export default function Adhesions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [downloadingPdf, setDownloadingPdf] = useState(null);
+  const [generatingPayment, setGeneratingPayment] = useState(null);
 
   useEffect(() => {
     fetchMemberships();
@@ -77,7 +78,7 @@ export default function Adhesions() {
     try {
       setDownloadingPdf(membershipId);
       const token = localStorage.getItem('token');
-      
+
       const response = await API.get(`/api/memberships/${membershipId}/pdf`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -94,12 +95,40 @@ export default function Adhesions() {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      
+
     } catch (err) {
       console.error('Erreur lors du téléchargement du PDF:', err);
       alert('Impossible de télécharger le PDF. Veuillez réessayer.');
     } finally {
       setDownloadingPdf(null);
+    }
+  };
+
+  const handlePayment = async (membershipId) => {
+    try {
+      setGeneratingPayment(membershipId);
+      const token = localStorage.getItem('token');
+
+      const response = await API.get(`/api/memberships/${membershipId}/payment-url`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const { payment_url } = response.data;
+
+      if (payment_url) {
+        // Rediriger vers HelloAsso pour le paiement
+        window.location.href = payment_url;
+      } else {
+        alert('Impossible de générer le lien de paiement. Veuillez réessayer.');
+      }
+
+    } catch (err) {
+      console.error('Erreur lors de la génération du lien de paiement:', err);
+      alert('Impossible de générer le lien de paiement. Veuillez réessayer.');
+    } finally {
+      setGeneratingPayment(null);
     }
   };
 
@@ -250,9 +279,23 @@ export default function Adhesions() {
 
                     <div className="flex gap-2">
                       {membership.status === 'pending' && (
-                        <Button variant="outline" size="sm">
-                          <Clock className="h-4 w-4 mr-2" />
-                          Payer maintenant
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePayment(membership.id)}
+                          disabled={generatingPayment === membership.id}
+                        >
+                          {generatingPayment === membership.id ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2" />
+                              Génération...
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="h-4 w-4 mr-2" />
+                              Payer maintenant
+                            </>
+                          )}
                         </Button>
                       )}
 
