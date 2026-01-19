@@ -15,8 +15,7 @@ export const services = [
     description: 'Orientation et soutien basés sur 20 ans d\'expérience',
     features: [
       'Orientation vers avocats partenaires',
-      'Conseil stratégique personnalisé',
-      'Assistance administrative',
+      'Assistance administrative dans les recours',
       'Retours d\'expérience sur dossiers gagnés'
     ],
     disclaimer: 'L\'association ne remplace pas un avocat et ne fournit pas de conseil juridique'
@@ -359,7 +358,8 @@ export const resources = [
 ];
 
 export const contactInfo = {
-  phone: '06 09 78 09 53',
+  phone: '06 09 78 09 63',
+  emergencyPhone: '06 09 78 09 53',
   email: 'assoentoutefranchise@sfr.fr',
   website: 'en-toutefranchise.com',
   address: '1 rue François Boucher',

@@ -204,9 +204,6 @@ const Contact = () => {
               contactez notre ligne directe :
             </p>
             <p className="text-4xl font-bold text-red-600 mb-4">{contactInfo.emergencyPhone}</p>
-            <p className="text-gray-600">
-              Disponible 24h/24 pour les membres • Intervention sous 2h en région PACA
-            </p>
           </div>
         </div>
       </section>

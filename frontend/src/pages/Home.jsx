@@ -355,20 +355,6 @@ const Home = () => {
             <Card className="bg-slate-800 border-slate-700">
               <CardHeader>
                 <div className="w-12 h-12 bg-green-900/50 rounded-lg flex items-center justify-center mb-4">
-                  <FileText className="h-6 w-6 text-green-400" />
-                </div>
-                <CardTitle className="text-xl text-white">Ressources Exclusives</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-300">
-                  Documentation, guides pratiques et retours d'expérience pour vous accompagner dans votre activité
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-slate-800 border-slate-700">
-              <CardHeader>
-                <div className="w-12 h-12 bg-green-900/50 rounded-lg flex items-center justify-center mb-4">
                   <AlertCircle className="h-6 w-6 text-green-400" />
                 </div>
                 <CardTitle className="text-xl text-white">Alertes et Actualités</CardTitle>
