@@ -12,6 +12,7 @@ import Blog from "./pages/Blog";
 import Services from "./pages/Services";
 import Contact from "./pages/Contact";
 import Adhesion from "./pages/Adhesion";
+import Livre418Milliards from "./pages/Livre418Milliards";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import AIAssistant from "./pages/dashboard/AIAssistant";
 import Documents from "./pages/dashboard/Documents";
@@ -90,6 +91,7 @@ function App() {
           <Route path="/blog/:slug" element={<PublicLayout><BlogArticle /></PublicLayout>} />
           <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
           <Route path="/adhesion" element={<PublicLayout><Adhesion /></PublicLayout>} />
+          <Route path="/livre-418-milliards" element={<PublicLayout><Livre418Milliards /></PublicLayout>} />
           
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
