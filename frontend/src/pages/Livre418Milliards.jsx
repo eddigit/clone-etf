@@ -98,30 +98,30 @@ const Livre418Milliards = () => {
             <div className="space-y-8">
               <Card className="bg-slate-800 border-slate-700">
                 <CardContent className="p-8">
-                  <div className="prose prose-invert max-w-none">
-                    <p className="text-white text-lg leading-relaxed mb-4">
+                  <div className="max-w-none">
+                    <p style={{color: '#FFFFFF'}} className="text-lg leading-relaxed mb-4">
                       Est-il possible que les grandes surfaces exploitent en France des millions de mètres carrés 
                       en toute illégalité, sans autorisation administrative, voire sans permis de construire ou 
                       irréguliers, parfois sur des zones inondables, naturelles ou à risque, donc inconstructibles ?
                     </p>
-                    <p className="text-white text-lg leading-relaxed mb-4">
+                    <p style={{color: '#FFFFFF'}} className="text-lg leading-relaxed mb-4">
                       Et en toute impunité, donc avec la complicité du gouvernement, des élus et de l'Administration ? 
                       Ainsi, pourquoi les préfets refusent-ils de faire respecter la loi pour sanctionner les fraudeurs ?
                     </p>
-                    <p className="text-white text-lg leading-relaxed mb-4">
+                    <p style={{color: '#FFFFFF'}} className="text-lg leading-relaxed mb-4">
                       Or, ces surfaces illicites devraient être fermées et les amendes à encaisser s'élèvent à des 
                       dizaines, ou plutôt des centaines, de milliards d'euros.
                     </p>
-                    <p className="text-white text-lg leading-relaxed mb-4">
+                    <p style={{color: '#FFFFFF'}} className="text-lg leading-relaxed mb-4">
                       La fraude généralisée à une telle échelle semble impensable, c'est pourtant ce dont témoigne 
                       ce livre, en révélant un système de prédation destructeur net et de richesse et d'emplois, 
                       qui fragilise des secteurs essentiels comme l'agriculture et l'industrie. Quant à son impact 
                       sur notre cadre de vie et l'environnement, il est quasiment irréversible.
                     </p>
-                    <p className="text-white text-lg leading-relaxed">
+                    <p style={{color: '#FFFFFF'}} className="text-lg leading-relaxed">
                       De plus, d'autres dangers pointent à l'horizon. Il devient donc urgent d'ouvrir un débat 
                       collectif, car c'est le type de société dans lequel nous voulons vivre qui se décide à notre 
-                      insu. C'est à cette prise de conscience que <strong className="text-white">418 Milliards</strong> apporte 
+                      insu. C'est à cette prise de conscience que <strong style={{color: '#FFFFFF'}}>418 Milliards</strong> apporte 
                       sa contribution.
                     </p>
                   </div>
