@@ -39,6 +39,7 @@ import AdminAI from "./pages/admin/AdminAI";
 import AdminTestAgent from "./pages/admin/AdminTestAgent";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminChat from "./pages/admin/AdminChat";
+import AdminAdhesionLogs from "./pages/admin/AdminAdhesionLogs";
 import BlogArticle from "./pages/BlogArticle";
 import ChatAIWidget from "./components/ChatAIWidget";
 import AnalyticsTracker from "./components/AnalyticsTracker";
@@ -233,6 +234,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminLayout><AdminHelloAsso /></AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/adhesion-logs"
+            element={
+              <ProtectedRoute>
+                <AdminLayout><AdminAdhesionLogs /></AdminLayout>
               </ProtectedRoute>
             }
           />

@@ -46,6 +46,7 @@ from cohesion_routes import create_cohesion_router
 from ai_routes import create_ai_router
 from knowledge_base import init_knowledge_base
 from email_service import email_service
+from adhesion_logger import adhesion_logger, init_adhesion_logger, AdhesionStep, AdhesionStatus
 from test_agent import run_user_test_agent, get_all_test_reports, get_test_report, test_reports_cache
 from cloudinary_service import upload_image_to_cloudinary, is_cloudinary_enabled
 from partner_routes import partner_router
@@ -55,6 +56,9 @@ from social_media_service import social_media_service, publish_article_to_social
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+# Emails admins pour les notifications
+ADMIN_NOTIFICATION_EMAILS = os.environ.get('ADMIN_NOTIFICATION_EMAILS', 'assoentoutefranchise@sfr.fr,coachdigitalparis@gmail.com').split(',')
 
 # MongoDB connection
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
@@ -1424,12 +1428,29 @@ async def helloasso_webhook(request: Request):
     Crée ou met à jour un adhérent lors d'un paiement
     Met à jour le statut des adhésions
     """
+    # Récupérer les infos de la requête
+    client_ip = request.client.host if request.client else None
+    
     try:
         payload = await request.json()
-        logger.info(f"HelloAsso webhook received: {payload.get('eventType', 'unknown')}")
-        
-        event_type = payload.get("eventType", "")
+        event_type = payload.get("eventType", "unknown")
         data = payload.get("data", {})
+        
+        # Log: Webhook reçu
+        await adhesion_logger.log(
+            step=AdhesionStep.HELLOASSO_WEBHOOK,
+            status=AdhesionStatus.INFO,
+            message=f"Webhook HelloAsso reçu - Type: {event_type}",
+            details={
+                "event_type": event_type,
+                "ip_address": client_ip,
+                "order_id": data.get("id"),
+                "form_slug": data.get("formSlug")
+            },
+            source="webhook"
+        )
+        
+        logger.info(f"HelloAsso webhook received: {event_type}")
         
         # Traiter uniquement les paiements validés
         if event_type not in ["Payment", "Order"]:
@@ -1440,8 +1461,17 @@ async def helloasso_webhook(request: Request):
         email = payer.get("email", "").lower()
         first_name = payer.get("firstName", "")
         last_name = payer.get("lastName", "")
+        member_name = f"{first_name} {last_name}".strip()
         
         if not email:
+            await adhesion_logger.log(
+                step=AdhesionStep.HELLOASSO_WEBHOOK,
+                status=AdhesionStatus.ERROR,
+                message="Webhook HelloAsso sans email",
+                error="No email in payload",
+                details={"payload": str(payload)[:500]},
+                source="webhook"
+            )
             logger.warning("HelloAsso webhook: No email in payload")
             return {"status": "error", "reason": "No email provided"}
         
@@ -1486,6 +1516,20 @@ async def helloasso_webhook(request: Request):
                 }
             )
             user_id = existing_user["id"]
+            
+            await adhesion_logger.log(
+                step=AdhesionStep.USER_UPDATED,
+                status=AdhesionStatus.SUCCESS,
+                email=email,
+                user_id=user_id,
+                message=f"Adhésion mise à jour via HelloAsso - {amount}€",
+                details={
+                    "amount": amount,
+                    "membership_type": membership_type,
+                    "order_id": order_id
+                },
+                source="webhook"
+            )
             logger.info(f"HelloAsso: Updated membership for {email}")
         else:
             # Créer un nouvel utilisateur
@@ -1504,9 +1548,47 @@ async def helloasso_webhook(request: Request):
             )
             await db.users.insert_one(new_user.model_dump())
             user_id = new_user.id
+            
+            await adhesion_logger.log(
+                step=AdhesionStep.USER_CREATED,
+                status=AdhesionStatus.SUCCESS,
+                email=email,
+                user_id=user_id,
+                message=f"Nouvel adhérent créé via HelloAsso - {member_name}",
+                details={
+                    "amount": amount,
+                    "membership_type": membership_type,
+                    "order_id": order_id,
+                    "source": "helloasso_webhook"
+                },
+                source="webhook"
+            )
             logger.info(f"HelloAsso: Created new user {email}")
             
-            # TODO: Envoyer un email de bienvenue avec le mot de passe temporaire
+            # Envoyer un email de bienvenue
+            try:
+                await email_service.send_welcome_email(
+                    to_email=email,
+                    first_name=first_name
+                )
+                await adhesion_logger.log(
+                    step=AdhesionStep.EMAIL_WELCOME_SENT,
+                    status=AdhesionStatus.SUCCESS,
+                    email=email,
+                    user_id=user_id,
+                    message="Email de bienvenue envoyé",
+                    source="webhook"
+                )
+            except Exception as email_err:
+                await adhesion_logger.log(
+                    step=AdhesionStep.EMAIL_WELCOME_ERROR,
+                    status=AdhesionStatus.ERROR,
+                    email=email,
+                    user_id=user_id,
+                    message="Erreur envoi email bienvenue",
+                    error=str(email_err),
+                    source="webhook"
+                )
         
         # Mettre à jour l'adhésion si elle existe (status: pending → paid)
         membership_update = await db.memberships.update_one(
@@ -1526,6 +1608,15 @@ async def helloasso_webhook(request: Request):
         )
         
         if membership_update.modified_count > 0:
+            await adhesion_logger.log(
+                step=AdhesionStep.HELLOASSO_PAYMENT_SUCCESS,
+                status=AdhesionStatus.SUCCESS,
+                email=email,
+                user_id=user_id,
+                message=f"Paiement HelloAsso validé - {amount}€",
+                details={"order_id": order_id, "payment_id": payment_id},
+                source="webhook"
+            )
             logger.info(f"HelloAsso: Updated membership status to 'paid' for user {user_id}")
         
         # Générer un coupon pour l'adhérent (Boîte à Outils)
@@ -1562,9 +1653,50 @@ async def helloasso_webhook(request: Request):
             "processedAt": now
         })
         
+        # Notification admin nouvelle adhésion confirmée
+        try:
+            await email_service.notify_admin_new_adhesion(
+                admin_emails=ADMIN_NOTIFICATION_EMAILS,
+                member_email=email,
+                member_name=member_name,
+                membership_type=membership_type,
+                amount=amount,
+                source="HelloAsso (paiement confirmé)"
+            )
+            await adhesion_logger.log(
+                step=AdhesionStep.EMAIL_ADMIN_NOTIFIED,
+                status=AdhesionStatus.SUCCESS,
+                email=email,
+                message="Admins notifiés de la nouvelle adhésion",
+                source="webhook"
+            )
+        except Exception as e:
+            logger.error(f"Erreur notification admin: {e}")
+        
         return {"status": "success", "userId": user_id}
         
     except Exception as e:
+        # Log erreur critique
+        await adhesion_logger.log(
+            step=AdhesionStep.HELLOASSO_PAYMENT_ERROR,
+            status=AdhesionStatus.ERROR,
+            message="Erreur critique webhook HelloAsso",
+            error=str(e),
+            details={"ip_address": client_ip},
+            source="webhook"
+        )
+        
+        # Notification admin erreur
+        try:
+            await email_service.notify_admin_adhesion_error(
+                admin_emails=ADMIN_NOTIFICATION_EMAILS,
+                error_step="Webhook HelloAsso",
+                error_message=str(e),
+                details={"ip": client_ip}
+            )
+        except Exception as mail_err:
+            logger.error(f"Erreur envoi notification erreur: {mail_err}")
+        
         logger.error(f"HelloAsso webhook error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1868,6 +2000,7 @@ async def cleanup_test_data(
 
 @api_router.post("/memberships", response_model=MembershipResponse)
 async def create_membership(
+    request: Request,
     membership_data: MembershipCreate,
     current_user: dict = Depends(get_current_user)
 ):
@@ -1880,6 +2013,28 @@ async def create_membership(
     3. Génère le PDF du bordereau
     4. Retourne les données avec lien paiement HelloAsso
     """
+    member_email = membership_data.member_data.email if membership_data.member_data else current_user.get("email")
+    member_name = f"{membership_data.member_data.prenom} {membership_data.member_data.nom}" if membership_data.member_data else ""
+    
+    # Récupérer les infos de la requête pour les logs
+    client_ip = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent", "")
+    
+    # Log: Formulaire soumis
+    await adhesion_logger.log(
+        step=AdhesionStep.FORM_SUBMITTED,
+        status=AdhesionStatus.INFO,
+        email=member_email,
+        user_id=current_user.get("id"),
+        message=f"Formulaire adhésion soumis - Type: {membership_data.membership_type}, Montant: {membership_data.amount}€",
+        details={
+            "membership_type": membership_data.membership_type,
+            "amount": membership_data.amount,
+            "ip_address": client_ip,
+            "user_agent": user_agent
+        }
+    )
+    
     try:
         # Vérifier si l'utilisateur a déjà une adhésion pour l'année en cours
         current_year = datetime.utcnow().year
@@ -1890,6 +2045,14 @@ async def create_membership(
         })
         
         if existing:
+            await adhesion_logger.log(
+                step=AdhesionStep.FORM_VALIDATION_ERROR,
+                status=AdhesionStatus.WARNING,
+                email=member_email,
+                user_id=current_user.get("id"),
+                message=f"Adhésion déjà existante pour {current_year}",
+                error="Adhésion en double"
+            )
             raise HTTPException(
                 status_code=400,
                 detail=f"Vous avez déjà une adhésion pour l'année {current_year}"
@@ -1914,6 +2077,21 @@ async def create_membership(
         membership_dict = membership.model_dump()
         result = await db.memberships.insert_one(membership_dict)
         
+        # Log: Adhésion créée
+        await adhesion_logger.log(
+            step=AdhesionStep.MEMBERSHIP_CREATED,
+            status=AdhesionStatus.SUCCESS,
+            email=member_email,
+            user_id=current_user.get("id"),
+            membership_id=membership.id,
+            message=f"Adhésion créée avec succès - Ref: {reference}",
+            details={
+                "reference": reference,
+                "membership_type": membership_data.membership_type,
+                "amount": membership_data.amount
+            }
+        )
+        
         # Générer le PDF
         pdf_data = {
             "year": membership.year,
@@ -1922,6 +2100,7 @@ async def create_membership(
             "member_data": membership.member_data.model_dump()
         }
         
+        pdf_path = None
         try:
             pdf_path = generate_membership_pdf(
                 membership_data=pdf_data,
@@ -1941,10 +2120,48 @@ async def create_membership(
                 }
             )
             
+            await adhesion_logger.log(
+                step=AdhesionStep.PDF_GENERATED,
+                status=AdhesionStatus.SUCCESS,
+                email=member_email,
+                membership_id=membership.id,
+                message=f"PDF bordereau généré: {pdf_path}"
+            )
+            
             logger.info(f"PDF généré pour l'adhésion {membership.id}: {pdf_path}")
         except Exception as e:
+            await adhesion_logger.log(
+                step=AdhesionStep.PDF_ERROR,
+                status=AdhesionStatus.ERROR,
+                email=member_email,
+                membership_id=membership.id,
+                message="Erreur génération PDF",
+                error=str(e)
+            )
             logger.error(f"Erreur lors de la génération du PDF: {str(e)}")
             # Continue sans bloquer la création de l'adhésion
+        
+        # Log: Redirection HelloAsso
+        await adhesion_logger.log(
+            step=AdhesionStep.HELLOASSO_REDIRECT,
+            status=AdhesionStatus.INFO,
+            email=member_email,
+            membership_id=membership.id,
+            message="Utilisateur redirigé vers HelloAsso pour paiement"
+        )
+        
+        # Notification admin nouvelle adhésion (en attente de paiement)
+        try:
+            await email_service.notify_admin_new_adhesion(
+                admin_emails=ADMIN_NOTIFICATION_EMAILS,
+                member_email=member_email,
+                member_name=member_name,
+                membership_type=membership_data.membership_type,
+                amount=membership_data.amount,
+                source="web (en attente paiement)"
+            )
+        except Exception as e:
+            logger.error(f"Erreur notification admin: {e}")
         
         # Retourner la réponse
         return MembershipResponse(
@@ -1954,7 +2171,7 @@ async def create_membership(
             amount=membership.amount,
             membership_type=membership.membership_type,
             member_data=membership.member_data,
-            pdf_available=pdf_path is not None if 'pdf_path' in locals() else False,
+            pdf_available=pdf_path is not None,
             created_at=membership.created_at,
             updated_at=membership.updated_at
         )
@@ -1962,6 +2179,29 @@ async def create_membership(
     except HTTPException:
         raise
     except Exception as e:
+        # Log erreur critique
+        await adhesion_logger.log(
+            step=AdhesionStep.MEMBERSHIP_CREATE_ERROR,
+            status=AdhesionStatus.ERROR,
+            email=member_email,
+            message="Erreur critique création adhésion",
+            error=str(e),
+            details={"traceback": str(e)}
+        )
+        
+        # Notification admin erreur
+        try:
+            await email_service.notify_admin_adhesion_error(
+                admin_emails=ADMIN_NOTIFICATION_EMAILS,
+                error_step="Création adhésion",
+                error_message=str(e),
+                member_email=member_email,
+                member_name=member_name,
+                details={"ip": client_ip, "user_agent": user_agent}
+            )
+        except Exception as mail_err:
+            logger.error(f"Erreur envoi notification erreur: {mail_err}")
+        
         logger.error(f"Erreur lors de la création de l'adhésion: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erreur lors de la création de l'adhésion: {str(e)}")
 
@@ -2891,6 +3131,141 @@ async def revoke_api_key(
     logger.info(f"Admin {current_user['email']} revoked API key {key_id}")
     return {"status": "success"}
 
+# ===================== ADHESION LOGS ADMIN ROUTES =====================
+@api_router.get("/admin/adhesion-logs")
+async def get_adhesion_logs(
+    current_user: dict = Depends(get_admin_user),
+    email: Optional[str] = Query(None, description="Filtrer par email"),
+    step: Optional[str] = Query(None, description="Filtrer par étape"),
+    status: Optional[str] = Query(None, description="Filtrer par statut (info, success, warning, error)"),
+    from_date: Optional[str] = Query(None, description="Date début YYYY-MM-DD"),
+    to_date: Optional[str] = Query(None, description="Date fin YYYY-MM-DD"),
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0)
+):
+    """
+    Récupère les logs détaillés du parcours d'adhésion.
+    Permet de diagnostiquer les erreurs et suivre les conversions.
+    """
+    # Convertir les paramètres de date
+    from_dt = datetime.strptime(from_date, "%Y-%m-%d") if from_date else None
+    to_dt = datetime.strptime(to_date, "%Y-%m-%d") if to_date else None
+    
+    # Mapper les paramètres aux enums
+    step_enum = AdhesionStep(step) if step else None
+    status_enum = AdhesionStatus(status) if status else None
+    
+    logs = await adhesion_logger.get_logs(
+        email=email,
+        step=step_enum,
+        status=status_enum,
+        from_date=from_dt,
+        to_date=to_dt,
+        limit=limit,
+        offset=offset
+    )
+    
+    return {
+        "logs": logs,
+        "count": len(logs),
+        "filters": {
+            "email": email,
+            "step": step,
+            "status": status,
+            "from_date": from_date,
+            "to_date": to_date
+        }
+    }
+
+@api_router.get("/admin/adhesion-logs/errors")
+async def get_adhesion_errors(
+    current_user: dict = Depends(get_admin_user),
+    limit: int = Query(50, ge=1, le=200)
+):
+    """
+    Récupère les dernières erreurs d'adhésion.
+    Vue rapide pour le monitoring.
+    """
+    errors = await adhesion_logger.get_errors(limit=limit)
+    return {"errors": errors, "count": len(errors)}
+
+@api_router.get("/admin/adhesion-logs/user/{email}")
+async def get_user_adhesion_journey(
+    email: str,
+    current_user: dict = Depends(get_admin_user)
+):
+    """
+    Récupère le parcours complet d'un utilisateur.
+    Utile pour diagnostiquer les problèmes d'un adhérent spécifique.
+    """
+    journey = await adhesion_logger.get_user_journey(email)
+    
+    # Calculer des statistiques sur le parcours
+    stats = {
+        "total_events": len(journey),
+        "errors": sum(1 for j in journey if j.get("status") == "error"),
+        "success": sum(1 for j in journey if j.get("status") == "success"),
+        "first_event": journey[-1].get("timestamp") if journey else None,
+        "last_event": journey[0].get("timestamp") if journey else None
+    }
+    
+    return {
+        "email": email,
+        "journey": journey,
+        "stats": stats
+    }
+
+@api_router.get("/admin/adhesion-logs/stats")
+async def get_adhesion_stats(
+    current_user: dict = Depends(get_admin_user),
+    days: int = Query(30, ge=1, le=365)
+):
+    """
+    Statistiques des adhésions sur les N derniers jours.
+    """
+    stats = await adhesion_logger.get_stats(days=days)
+    return stats
+
+@api_router.post("/admin/adhesion-logs/test-notification")
+async def test_admin_notification(
+    current_user: dict = Depends(get_admin_user)
+):
+    """
+    Teste l'envoi de notifications admin.
+    Utile pour vérifier que les emails fonctionnent.
+    """
+    try:
+        # Test notification nouvelle adhésion
+        success1 = await email_service.notify_admin_new_adhesion(
+            admin_emails=[current_user["email"]],
+            member_email="test@example.com",
+            member_name="Test Utilisateur",
+            membership_type="individual",
+            amount=10.0,
+            source="test"
+        )
+        
+        # Test notification erreur
+        success2 = await email_service.notify_admin_adhesion_error(
+            admin_emails=[current_user["email"]],
+            error_step="Test notification",
+            error_message="Ceci est un test - tout fonctionne !",
+            member_email="test@example.com",
+            member_name="Test Utilisateur"
+        )
+        
+        return {
+            "status": "success" if (success1 and success2) else "partial",
+            "new_adhesion_notification": success1,
+            "error_notification": success2,
+            "sent_to": current_user["email"]
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e)
+        }
+
 # ===================== HELLOASSO ADMIN ROUTES =====================
 @api_router.get("/admin/helloasso/status")
 async def get_helloasso_status(current_user: dict = Depends(get_admin_user)):
@@ -3388,6 +3763,10 @@ async def startup_event():
     chat = init_live_chat_service(db)
     await chat.init_indexes()
     
+    # Initialiser le logger d'adhésions
+    init_adhesion_logger(db)
+    logger.info("✅ Adhesion Logger initialized")
+    
     # Initialiser la base de connaissances RAG
     try:
         kb = init_knowledge_base()
@@ -3398,7 +3777,7 @@ async def startup_event():
     except Exception as e:
         logger.error(f"❌ Failed to init RAG Knowledge Base: {e}")
     
-    logger.info("Analytics, Live Chat and RAG services initialized")
+    logger.info("Analytics, Live Chat, Adhesion Logger and RAG services initialized")
 
 # --- Analytics Routes ---
 

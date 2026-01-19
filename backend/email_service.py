@@ -422,6 +422,260 @@ class EmailService:
 
         return await self.send_email([to_email], subject, body_html)
 
+    # ===================== NOTIFICATIONS ADMIN =====================
+    
+    async def notify_admin_new_adhesion(
+        self,
+        admin_emails: List[str],
+        member_email: str,
+        member_name: str,
+        membership_type: str,
+        amount: float,
+        source: str = "web"
+    ) -> bool:
+        """
+        Notifie les admins d'une nouvelle adhésion
+        """
+        type_labels = {
+            "individual": "Particulier",
+            "professional": "Commerçant/Artisan",
+            "professional_plus": "Commerce +100m²",
+            "association": "Association"
+        }
+        
+        subject = f"✅ Nouvelle adhésion ETF - {member_name}"
+        
+        body_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: #16a34a; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }}
+                .content {{ background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb; }}
+                .info-box {{ background: white; padding: 15px; border-radius: 8px; margin: 10px 0; }}
+                .label {{ color: #6b7280; font-size: 12px; text-transform: uppercase; }}
+                .value {{ font-size: 16px; font-weight: bold; color: #111827; }}
+                .footer {{ text-align: center; padding: 15px; color: #6b7280; font-size: 12px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🎉 Nouvelle Adhésion</h1>
+                </div>
+                <div class="content">
+                    <p>Une nouvelle adhésion vient d'être enregistrée :</p>
+                    
+                    <div class="info-box">
+                        <div class="label">Adhérent</div>
+                        <div class="value">{member_name}</div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <div class="label">Email</div>
+                        <div class="value">{member_email}</div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <div class="label">Type d'adhésion</div>
+                        <div class="value">{type_labels.get(membership_type, membership_type)}</div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <div class="label">Montant</div>
+                        <div class="value">{amount:.2f} €</div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <div class="label">Source</div>
+                        <div class="value">{source.upper()}</div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <div class="label">Date/Heure</div>
+                        <div class="value">{datetime.now().strftime('%d/%m/%Y à %H:%M')}</div>
+                    </div>
+                    
+                    <p style="margin-top: 20px;">
+                        <a href="{FRONTEND_URL}/admin/members" 
+                           style="background: #16a34a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                            Voir dans l'admin
+                        </a>
+                    </p>
+                </div>
+                <div class="footer">
+                    <p>Notification automatique ETF</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return await self.send_email(admin_emails, subject, body_html)
+
+    async def notify_admin_adhesion_error(
+        self,
+        admin_emails: List[str],
+        error_step: str,
+        error_message: str,
+        member_email: str = None,
+        member_name: str = None,
+        details: dict = None
+    ) -> bool:
+        """
+        Notifie les admins d'une erreur lors d'une adhésion
+        CRITIQUE - Envoyé immédiatement pour intervention rapide
+        """
+        subject = f"🚨 ERREUR Adhésion ETF - {error_step}"
+        
+        details_html = ""
+        if details:
+            details_html = "<h3>Détails techniques :</h3><pre style='background: #f3f4f6; padding: 10px; border-radius: 5px; overflow-x: auto;'>"
+            for key, value in details.items():
+                details_html += f"{key}: {value}\n"
+            details_html += "</pre>"
+        
+        body_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: #dc2626; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }}
+                .content {{ background: #fef2f2; padding: 20px; border: 1px solid #fecaca; }}
+                .error-box {{ background: white; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #dc2626; }}
+                .info-box {{ background: white; padding: 15px; border-radius: 8px; margin: 10px 0; }}
+                .label {{ color: #6b7280; font-size: 12px; text-transform: uppercase; }}
+                .value {{ font-size: 16px; font-weight: bold; color: #111827; }}
+                .footer {{ text-align: center; padding: 15px; color: #6b7280; font-size: 12px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🚨 Erreur Adhésion</h1>
+                    <p style="margin: 0;">Intervention requise</p>
+                </div>
+                <div class="content">
+                    <div class="error-box">
+                        <div class="label">Étape</div>
+                        <div class="value">{error_step}</div>
+                    </div>
+                    
+                    <div class="error-box">
+                        <div class="label">Message d'erreur</div>
+                        <div class="value" style="color: #dc2626;">{error_message}</div>
+                    </div>
+                    
+                    {f'''
+                    <div class="info-box">
+                        <div class="label">Adhérent concerné</div>
+                        <div class="value">{member_name or "Non identifié"}</div>
+                        <div>{member_email or "Email non disponible"}</div>
+                    </div>
+                    ''' if member_email or member_name else ''}
+                    
+                    <div class="info-box">
+                        <div class="label">Date/Heure</div>
+                        <div class="value">{datetime.now().strftime('%d/%m/%Y à %H:%M:%S')}</div>
+                    </div>
+                    
+                    {details_html}
+                    
+                    <p style="margin-top: 20px;">
+                        <a href="{FRONTEND_URL}/admin/adhesion-logs" 
+                           style="background: #dc2626; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                            Voir les logs
+                        </a>
+                    </p>
+                </div>
+                <div class="footer">
+                    <p>⚠️ Cette erreur nécessite une vérification manuelle</p>
+                    <p>Notification automatique ETF</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        logger.warning(f"Sending admin error notification: {error_step} - {error_message}")
+        return await self.send_email(admin_emails, subject, body_html)
+
+    async def notify_admin_daily_summary(
+        self,
+        admin_emails: List[str],
+        stats: dict
+    ) -> bool:
+        """
+        Envoie un résumé quotidien des adhésions aux admins
+        """
+        subject = f"📊 Résumé ETF - {datetime.now().strftime('%d/%m/%Y')}"
+        
+        body_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: #2563eb; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }}
+                .content {{ background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb; }}
+                .stat-grid {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }}
+                .stat-box {{ background: white; padding: 15px; border-radius: 8px; text-align: center; }}
+                .stat-value {{ font-size: 28px; font-weight: bold; color: #2563eb; }}
+                .stat-label {{ color: #6b7280; font-size: 12px; }}
+                .footer {{ text-align: center; padding: 15px; color: #6b7280; font-size: 12px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>📊 Résumé Quotidien</h1>
+                    <p style="margin: 0;">{datetime.now().strftime('%d/%m/%Y')}</p>
+                </div>
+                <div class="content">
+                    <div class="stat-grid">
+                        <div class="stat-box">
+                            <div class="stat-value">{stats.get('new_members', 0)}</div>
+                            <div class="stat-label">Nouvelles adhésions</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value">{stats.get('total_amount', 0):.0f}€</div>
+                            <div class="stat-label">Total collecté</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value">{stats.get('errors', 0)}</div>
+                            <div class="stat-label" style="color: {'#dc2626' if stats.get('errors', 0) > 0 else '#6b7280'};">Erreurs</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value">{stats.get('total_members', 0)}</div>
+                            <div class="stat-label">Total membres</div>
+                        </div>
+                    </div>
+                    
+                    <p style="margin-top: 20px; text-align: center;">
+                        <a href="{FRONTEND_URL}/admin/dashboard" 
+                           style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                            Accéder au dashboard
+                        </a>
+                    </p>
+                </div>
+                <div class="footer">
+                    <p>Notification automatique ETF</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return await self.send_email(admin_emails, subject, body_html)
+
 
 # Instance globale du service
 email_service = EmailService()

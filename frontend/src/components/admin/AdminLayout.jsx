@@ -17,7 +17,8 @@ import {
   BarChart3,
   MessageCircle,
   UsersRound,
-  Bot
+  Bot,
+  ScrollText
 } from 'lucide-react';
 
 const AdminLayout = ({ children }) => {
@@ -40,6 +41,7 @@ const AdminLayout = ({ children }) => {
     { icon: UsersRound, label: 'Cohésion', path: '/admin/cohesion' },
     { icon: Users, label: 'Adherents', path: '/admin/members' },
     { icon: FileText, label: 'Adhesions', path: '/admin/adhesions' },
+    { icon: ScrollText, label: 'Logs Adhésions', path: '/admin/adhesion-logs' },
     { icon: Newspaper, label: 'Blog', path: '/admin/blog' },
     { icon: Gift, label: 'Coupons', path: '/admin/coupons' },
     { icon: CreditCard, label: 'HelloAsso', path: '/admin/helloasso' },
