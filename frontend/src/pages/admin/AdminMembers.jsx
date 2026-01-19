@@ -42,7 +42,9 @@ import {
   Mail,
   Send,
   RotateCcw,
-  ExternalLink
+  ExternalLink,
+  Star,
+  Shield
 } from 'lucide-react';
 import { API_URL } from '../../config/api';
 
@@ -51,6 +53,14 @@ const STATUS_BADGES = {
   active: <Badge className="bg-green-100 text-green-800">Actif</Badge>,
   expired: <Badge variant="secondary">Expiré</Badge>
 };
+
+const ROLE_BADGES = {
+  admin: <Badge className="bg-red-100 text-red-800">🔐 Admin</Badge>,
+  vip: <Badge className="bg-amber-100 text-amber-800">⭐ VIP</Badge>,
+  user: <Badge className="bg-gray-100 text-gray-600">Membre</Badge>
+};
+
+const getRoleBadge = (role) => ROLE_BADGES[role] || ROLE_BADGES.user;
 
 const MEMBERSHIP_TYPES = {
   individual: { label: 'Particulier', color: 'bg-blue-100 text-blue-800' },
@@ -447,6 +457,44 @@ const AdminMembers = () => {
     }
   };
 
+  // Fonction pour changer le rôle d'un membre
+  const handleChangeRole = useCallback(async (memberId, memberEmail, newRole) => {
+    const roleLabels = { user: 'Membre standard', vip: 'VIP (chat IA gratuit)', admin: 'Administrateur' };
+    if (!window.confirm(`Changer le rôle de ${memberEmail} en "${roleLabels[newRole]}" ?${newRole === 'vip' ? '\n\nCet utilisateur aura accès au chat IA sans abonnement.' : ''}`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/admin/members/${memberId}/role?role=${newRole}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(data.message || 'Rôle modifié avec succès');
+        // Rafraîchir les données
+        fetchMembers();
+        if (selectedMember && selectedMember.user?.id === memberId) {
+          setSelectedMember(prev => ({
+            ...prev,
+            user: { ...prev.user, role: newRole }
+          }));
+        }
+      } else {
+        const data = await response.json();
+        alert(`Erreur: ${data.detail || 'Impossible de modifier le rôle'}`);
+      }
+    } catch (error) {
+      console.error('Error changing role:', error);
+      alert('Erreur lors de la modification du rôle');
+    }
+  }, [fetchMembers, selectedMember]);
+
   const handleSendWelcomeEmail = useCallback(async (memberId, memberEmail) => {
     if (!window.confirm(`Envoyer un email de bienvenue a ${memberEmail} ?\n\nL'adherent recevra un lien pour creer son mot de passe.`)) {
       return;
@@ -659,6 +707,10 @@ const AdminMembers = () => {
                   <p>{getStatusBadge(selectedMember.user?.membershipStatus)}</p>
                 </div>
                 <div>
+                  <label className="text-sm text-gray-500">Rôle</label>
+                  <p>{getRoleBadge(selectedMember.user?.role)}</p>
+                </div>
+                <div>
                   <label className="text-sm text-gray-500">Début adhésion</label>
                   <p className="font-medium">{formatDate(selectedMember.user?.membershipStartDate)}</p>
                 </div>
@@ -819,6 +871,40 @@ const AdminMembers = () => {
               {/* Actions CTA */}
               <div className="border-t pt-4 mt-4">
                 <h4 className="font-semibold mb-3">Actions</h4>
+                
+                {/* Gestion du Rôle */}
+                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                  <label className="text-sm text-gray-600 block mb-2">Changer le rôle de l'utilisateur</label>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button 
+                      variant={selectedMember.user?.role === 'user' || !selectedMember.user?.role ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleChangeRole(selectedMember.user?.id || selectedMember.user?._id, selectedMember.user?.email, 'user')}
+                      disabled={selectedMember.user?.role === 'user' || !selectedMember.user?.role}
+                    >
+                      👤 Membre
+                    </Button>
+                    <Button 
+                      variant={selectedMember.user?.role === 'vip' ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleChangeRole(selectedMember.user?.id || selectedMember.user?._id, selectedMember.user?.email, 'vip')}
+                      disabled={selectedMember.user?.role === 'vip'}
+                      className={selectedMember.user?.role !== 'vip' ? "text-amber-600 border-amber-300 hover:bg-amber-50" : "bg-amber-500 text-white"}
+                    >
+                      ⭐ VIP (Chat IA gratuit)
+                    </Button>
+                    <Button 
+                      variant={selectedMember.user?.role === 'admin' ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleChangeRole(selectedMember.user?.id || selectedMember.user?._id, selectedMember.user?.email, 'admin')}
+                      disabled={selectedMember.user?.role === 'admin'}
+                      className={selectedMember.user?.role !== 'admin' ? "text-red-600 border-red-300 hover:bg-red-50" : "bg-red-500 text-white"}
+                    >
+                      🔐 Admin
+                    </Button>
+                  </div>
+                </div>
+
                 <div className="flex flex-wrap gap-2">
                   <Button 
                     variant="outline" 

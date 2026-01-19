@@ -2196,6 +2196,41 @@ async def admin_update_member_status(
     logger.info(f"Admin {current_user['email']} updated status of {member_id} to {status}")
     return {"status": "success", "newStatus": status}
 
+
+@api_router.put("/admin/members/{member_id}/role")
+async def admin_update_member_role(
+    member_id: str,
+    role: str = Query(..., description="user, vip ou admin"),
+    current_user: dict = Depends(get_admin_user)
+):
+    """
+    Met à jour le rôle d'un membre.
+    
+    Rôles disponibles:
+    - user: Membre standard (doit payer l'abonnement IA)
+    - vip: Membre VIP (accès gratuit au chat IA)
+    - admin: Administrateur (accès complet)
+    """
+    if role not in ["user", "vip", "admin"]:
+        raise HTTPException(status_code=400, detail="Rôle invalide. Utilisez: user, vip ou admin")
+
+    user = await db.users.find_one({"id": member_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Membre non trouvé")
+
+    result = await db.users.update_one(
+        {"id": member_id},
+        {"$set": {"role": role, "updatedAt": datetime.utcnow()}}
+    )
+
+    logger.info(f"Admin {current_user['email']} changed role of user {member_id} ({user.get('email')}) from {user.get('role', 'user')} to {role}")
+    return {
+        "status": "success", 
+        "newRole": role,
+        "message": f"Rôle modifié en {role}" + (" - Accès chat IA gratuit activé" if role in ["vip", "admin"] else "")
+    }
+
+
 # ===================== ADMIN MEMBERSHIP MANAGEMENT =====================
 
 @api_router.post("/admin/memberships")

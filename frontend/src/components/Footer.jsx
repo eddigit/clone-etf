@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { contactInfo } from '../mockData';
-import { Phone, Mail, MapPin, Heart } from 'lucide-react';
+import { Phone, Mail, MapPin, Heart, GitCommit } from 'lucide-react';
+import { getVersionString, BUILD_INFO } from '../config/buildInfo';
 
 const Footer = () => {
   return (
@@ -91,6 +92,10 @@ const Footer = () => {
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
           <p>© 2025 En Toute Franchise. Association apolitique, libre et indépendante.</p>
           <p className="mt-2">Ensemble, faisons respecter l'équité, la transparence et la justice.</p>
+          <div className="mt-3 flex items-center justify-center gap-2 text-xs text-gray-500">
+            <GitCommit className="h-3 w-3" />
+            <span>{getVersionString()}</span>
+          </div>
         </div>
       </div>
     </footer>
