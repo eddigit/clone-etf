@@ -101,7 +101,7 @@ const Home = () => {
           <div className="text-center mb-12">
             <Badge className="mb-6 bg-green-700 text-white hover:bg-green-800 border-green-600">
               <Shield className="h-3 w-3 mr-1" />
-              Association Loi 1901 - Défense des Franchisés
+              Association Loi 1901 - Défense des Commerçants-Artisans
             </Badge>
             
             {/* Vidéo Hero - intégrée naturellement */}
@@ -213,7 +213,7 @@ const Home = () => {
                 <ul className="space-y-3">
                   <li className="flex items-start">
                     <Shield className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-300"><strong>Défense des Franchisés :</strong> Protection face aux pratiques abusives et accompagnement dans les litiges</span>
+                    <span className="text-gray-300"><strong>Défense des Commerçants-Artisans :</strong> Protection face aux pratiques abusives et accompagnement dans les litiges</span>
                   </li>
                   <li className="flex items-start">
                     <Scale className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />

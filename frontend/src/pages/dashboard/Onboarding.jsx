@@ -21,7 +21,7 @@ export default function OnboardingPage() {
             className="h-12 mx-auto mb-4"
             onError={(e) => { e.target.style.display = 'none'; }}
           />
-          <p className="text-gray-600">Association nationale de défense des franchisés</p>
+          <p className="text-gray-600">Association nationale de défense des commerçants-artisans</p>
         </div>
         
         <Onboarding onComplete={handleComplete} />
