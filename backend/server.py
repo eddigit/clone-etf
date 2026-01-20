@@ -2141,15 +2141,73 @@ async def create_membership(
             logger.error(f"Erreur lors de la génération du PDF: {str(e)}")
             # Continue sans bloquer la création de l'adhésion
         
+        # Créer le checkout intent HelloAsso pour le paiement
+        payment_url = None
+        try:
+            # Déterminer le nom de l'article selon le type d'adhésion
+            item_names = {
+                "individual": "Adhésion Particulier 2026",
+                "professional": "Adhésion Commerçant - Artisan 2026",
+                "professional_plus": "Adhésion Commerçant +100m² 2026",
+                "association": "Adhésion Association 2026"
+            }
+            item_name = item_names.get(membership_data.membership_type, "Adhésion 2026")
+
+            # URLs de redirection
+            base_url = os.environ.get('FRONTEND_URL', 'https://clone-etf.onrender.com')
+            return_url = f"{base_url}/adhesion/success?membership_id={membership.id}"
+            error_url = f"{base_url}/adhesion/error?membership_id={membership.id}"
+            back_url = f"{base_url}/adhesion/cancel?membership_id={membership.id}"
+
+            # Créer le checkout intent
+            checkout_result = await helloasso_service.create_checkout_intent(
+                total_amount=membership_data.amount,
+                payer_email=member_email,
+                payer_first_name=membership_data.member_data.prenom,
+                payer_last_name=membership_data.member_data.nom,
+                item_name=item_name,
+                return_url=return_url,
+                error_url=error_url,
+                back_url=back_url,
+                metadata={
+                    "membership_id": membership.id,
+                    "membership_type": membership_data.membership_type,
+                    "year": str(current_year)
+                }
+            )
+
+            if checkout_result:
+                payment_url = checkout_result.get("redirectUrl")
+
+                # Sauvegarder l'ID du checkout intent dans l'adhésion
+                await db.memberships.update_one(
+                    {"id": membership.id},
+                    {
+                        "$set": {
+                            "helloasso_checkout_id": checkout_result.get("id"),
+                            "payment_url_expires_at": checkout_result.get("expirationDate"),
+                            "updated_at": datetime.utcnow()
+                        }
+                    }
+                )
+
+                logger.info(f"Checkout intent créé pour adhésion {membership.id}: {payment_url}")
+            else:
+                logger.warning(f"Impossible de créer le checkout intent pour adhésion {membership.id}")
+
+        except Exception as e:
+            logger.error(f"Erreur création checkout intent: {str(e)}")
+            # Continue sans bloquer - l'utilisateur pourra payer plus tard depuis le dashboard
+
         # Log: Redirection HelloAsso
         await adhesion_logger.log(
             step=AdhesionStep.HELLOASSO_REDIRECT,
-            status=AdhesionStatus.INFO,
+            status=AdhesionStatus.INFO if payment_url else AdhesionStatus.WARNING,
             email=member_email,
             membership_id=membership.id,
-            message="Utilisateur redirigé vers HelloAsso pour paiement"
+            message="Utilisateur redirigé vers HelloAsso pour paiement" if payment_url else "Checkout intent non créé - paiement ultérieur"
         )
-        
+
         # Notification admin nouvelle adhésion (en attente de paiement)
         try:
             await email_service.notify_admin_new_adhesion(
@@ -2162,7 +2220,7 @@ async def create_membership(
             )
         except Exception as e:
             logger.error(f"Erreur notification admin: {e}")
-        
+
         # Retourner la réponse
         return MembershipResponse(
             id=membership.id,
@@ -2172,6 +2230,7 @@ async def create_membership(
             membership_type=membership.membership_type,
             member_data=membership.member_data,
             pdf_available=pdf_path is not None,
+            payment_url=payment_url,  # URL de paiement HelloAsso
             created_at=membership.created_at,
             updated_at=membership.updated_at
         )
@@ -2306,6 +2365,107 @@ async def download_membership_pdf(
     except Exception as e:
         logger.error(f"Erreur lors du téléchargement du PDF: {str(e)}")
         raise HTTPException(status_code=500, detail="Erreur lors du téléchargement du PDF")
+
+
+@api_router.get("/memberships/{membership_id}/payment-url")
+async def get_membership_payment_url(
+    membership_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Génère une nouvelle URL de paiement HelloAsso pour une adhésion en attente
+    Utilisé quand l'utilisateur veut payer une adhésion depuis le dashboard
+    """
+    try:
+        # Récupérer l'adhésion
+        membership = await db.memberships.find_one({
+            "id": membership_id,
+            "user_id": current_user["id"]
+        })
+
+        if not membership:
+            raise HTTPException(status_code=404, detail="Adhésion non trouvée")
+
+        # Vérifier que l'adhésion est en attente de paiement
+        if membership.get("status") != "pending":
+            raise HTTPException(
+                status_code=400,
+                detail="Cette adhésion n'est pas en attente de paiement"
+            )
+
+        # Déterminer le nom de l'article selon le type d'adhésion
+        item_names = {
+            "individual": "Adhésion Particulier 2026",
+            "professional": "Adhésion Commerçant - Artisan 2026",
+            "professional_plus": "Adhésion Commerçant +100m² 2026",
+            "association": "Adhésion Association 2026"
+        }
+        item_name = item_names.get(membership["membership_type"], "Adhésion 2026")
+
+        # Récupérer les données du membre
+        member_data = membership.get("member_data", {})
+        member_email = member_data.get("email", current_user.get("email"))
+        member_prenom = member_data.get("prenom", current_user.get("firstName", ""))
+        member_nom = member_data.get("nom", current_user.get("lastName", ""))
+
+        # URLs de redirection
+        base_url = os.environ.get('FRONTEND_URL', 'https://clone-etf.onrender.com')
+        return_url = f"{base_url}/adhesion/success?membership_id={membership_id}"
+        error_url = f"{base_url}/adhesion/error?membership_id={membership_id}"
+        back_url = f"{base_url}/adhesion/cancel?membership_id={membership_id}"
+
+        # Créer le checkout intent
+        checkout_result = await helloasso_service.create_checkout_intent(
+            total_amount=membership["amount"],
+            payer_email=member_email,
+            payer_first_name=member_prenom,
+            payer_last_name=member_nom,
+            item_name=item_name,
+            return_url=return_url,
+            error_url=error_url,
+            back_url=back_url,
+            metadata={
+                "membership_id": membership_id,
+                "membership_type": membership["membership_type"],
+                "year": str(membership["year"])
+            }
+        )
+
+        if not checkout_result:
+            raise HTTPException(
+                status_code=500,
+                detail="Impossible de générer le lien de paiement. Veuillez réessayer."
+            )
+
+        payment_url = checkout_result.get("redirectUrl")
+
+        # Mettre à jour l'adhésion avec le nouveau checkout intent
+        await db.memberships.update_one(
+            {"id": membership_id},
+            {
+                "$set": {
+                    "helloasso_checkout_id": checkout_result.get("id"),
+                    "payment_url_expires_at": checkout_result.get("expirationDate"),
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+
+        logger.info(f"Nouveau checkout intent créé pour adhésion {membership_id}: {payment_url}")
+
+        return {
+            "payment_url": payment_url,
+            "expires_at": checkout_result.get("expirationDate")
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur génération lien paiement: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Erreur lors de la génération du lien de paiement"
+        )
 
 
 @api_router.get("/admin/members", response_model=List[MemberListItem])

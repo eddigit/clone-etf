@@ -375,6 +375,93 @@ class HelloAssoService:
             logger.error(f"HelloAsso get org info error: {str(e)}")
             return None
     
+    async def create_checkout_intent(
+        self,
+        total_amount: float,
+        payer_email: str,
+        payer_first_name: str,
+        payer_last_name: str,
+        item_name: str,
+        back_url: str = None,
+        error_url: str = None,
+        return_url: str = None,
+        metadata: Dict[str, Any] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Crée un checkout intent HelloAsso pour un paiement
+
+        Args:
+            total_amount: Montant total en euros (sera converti en centimes)
+            payer_email: Email du payeur
+            payer_first_name: Prénom du payeur
+            payer_last_name: Nom du payeur
+            item_name: Nom de l'article (ex: "Adhésion Commerçant 2026")
+            back_url: URL de retour si annulation
+            error_url: URL en cas d'erreur
+            return_url: URL de retour après paiement
+            metadata: Métadonnées personnalisées (ex: membership_id)
+
+        Returns:
+            Dict contenant:
+                - id: ID du checkout intent
+                - redirectUrl: URL vers laquelle rediriger l'utilisateur
+                - expirationDate: Date d'expiration du checkout intent
+        """
+        if not await self._ensure_authenticated():
+            logger.error("Cannot create checkout intent: not authenticated")
+            return None
+
+        try:
+            # Convertir le montant en centimes
+            amount_cents = int(total_amount * 100)
+
+            # Préparer le payload
+            payload = {
+                "totalAmount": amount_cents,
+                "initialAmount": amount_cents,
+                "itemName": item_name,
+                "payer": {
+                    "email": payer_email,
+                    "firstName": payer_first_name,
+                    "lastName": payer_last_name
+                }
+            }
+
+            # Ajouter les URLs de redirection si fournies
+            if back_url:
+                payload["backUrl"] = back_url
+            if error_url:
+                payload["errorUrl"] = error_url
+            if return_url:
+                payload["returnUrl"] = return_url
+
+            # Ajouter les métadonnées si fournies
+            if metadata:
+                payload["metadata"] = metadata
+
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    f"{HELLOASSO_API_BASE}/organizations/{HELLOASSO_ORGANIZATION_SLUG}/checkout-intents",
+                    headers=self._get_headers(),
+                    json=payload
+                )
+
+                if response.status_code in (200, 201):
+                    data = response.json()
+                    logger.info(f"HelloAsso checkout intent created: {data.get('id')}")
+                    return {
+                        "id": data.get("id"),
+                        "redirectUrl": data.get("redirectUrl"),
+                        "expirationDate": data.get("expirationDate")
+                    }
+                else:
+                    logger.error(f"HelloAsso checkout intent error: {response.status_code} - {response.text}")
+                    return None
+
+        except Exception as e:
+            logger.error(f"HelloAsso checkout intent error: {str(e)}")
+            return None
+
     async def check_connection(self) -> Dict[str, Any]:
         """
         Vérifie la connexion à HelloAsso et retourne le statut
@@ -389,11 +476,11 @@ class HelloAssoService:
                     "organization_slug": HELLOASSO_ORGANIZATION_SLUG
                 }
             }
-        
+
         if await self._ensure_authenticated():
             # Essayer de récupérer les infos de l'organisation
             org_info = await self.get_organization_info()
-            
+
             if org_info:
                 return {
                     "connected": True,

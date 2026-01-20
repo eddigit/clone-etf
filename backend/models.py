@@ -424,6 +424,7 @@ class MembershipResponse(BaseModel):
     payment_date: Optional[datetime] = None
     member_data: MemberData
     pdf_available: bool
+    payment_url: Optional[str] = None  # URL de paiement HelloAsso (si status = pending)
     notes: Optional[str] = None
     created_at: datetime
     updated_at: datetime
