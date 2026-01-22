@@ -48,6 +48,12 @@ from knowledge_base import init_knowledge_base
 from email_service import email_service
 from adhesion_logger import adhesion_logger, init_adhesion_logger, AdhesionStep, AdhesionStatus
 from test_agent import run_user_test_agent, get_all_test_reports, get_test_report, test_reports_cache
+from adhesion_test_agent import (
+    run_adhesion_test_agent, 
+    get_all_adhesion_test_reports, 
+    get_adhesion_test_report,
+    adhesion_test_reports_cache
+)
 from cloudinary_service import upload_image_to_cloudinary, is_cloudinary_enabled
 from partner_routes import partner_router
 from analytics_service import init_analytics_service, analytics_service
@@ -192,15 +198,24 @@ async def register(user_data: UserCreate):
     if existing_user:
         raise HTTPException(status_code=400, detail="Cet email est déjà utilisé")
     
-    # Create user
-    user_dict = user_data.model_dump()
-    user_dict["password"] = hash_password(user_data.password)
+    # Créer l'utilisateur avec le mot de passe hashé
+    hashed_password = hash_password(user_data.password)
     
-    user = User(**user_dict)
+    user = User(
+        email=user_data.email,
+        firstName=user_data.firstName,
+        lastName=user_data.lastName,
+        phone=user_data.phone,
+        businessName=user_data.businessName,
+        businessType=user_data.businessType,
+        membershipType=user_data.membershipType,
+        password=hashed_password
+    )
     
     # Set membership end date (1 year from now)
     user.membershipEndDate = user.membershipStartDate + timedelta(days=365)
     
+    # Sauvegarder en base
     await db.users.insert_one(user.model_dump())
     
     logger.info(f"New user registered: {user.email}")
@@ -1995,6 +2010,241 @@ async def cleanup_test_data(
     except Exception as e:
         logger.error(f"Error cleaning up test data: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ===================== ADHESION TEST AGENT ROUTES =====================
+
+@api_router.post("/admin/test-adhesion/run")
+async def run_adhesion_test(
+    background_tasks: BackgroundTasks,
+    membership_type: str = Query("individual", description="Type d'adhésion à tester (individual, professional, professional_plus, association)"),
+    cleanup: bool = Query(True, description="Nettoyer les données de test après"),
+    current_user: dict = Depends(get_admin_user)
+):
+    """
+    Lance l'agent de test du parcours d'adhésion.
+    
+    Simule un utilisateur complet qui:
+    1. S'inscrit sur le site
+    2. Se connecte
+    3. Choisit un type d'adhésion
+    4. Remplit le formulaire
+    5. Soumet l'adhésion
+    6. Vérifie le PDF généré
+    
+    Génère un rapport détaillé avec audit des erreurs.
+    """
+    api_base_url = os.environ.get('API_BASE_URL', 'https://etf-backend-t3j5.onrender.com')
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://www.entoutefranchise.org')
+    
+    # Valider le type d'adhésion
+    valid_types = ['individual', 'professional', 'professional_plus', 'association']
+    if membership_type not in valid_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Type d'adhésion invalide. Types valides: {valid_types}"
+        )
+    
+    try:
+        report = await run_adhesion_test_agent(
+            api_base_url=api_base_url,
+            frontend_url=frontend_url,
+            membership_type=membership_type,
+            cleanup=cleanup
+        )
+        
+        # Nettoyage en base de données si demandé
+        if cleanup and report.get('test_user_email'):
+            # Supprimer l'utilisateur test
+            await db.users.delete_one({"email": report['test_user_email']})
+            
+            # Supprimer l'adhésion test
+            if report.get('test_membership_id'):
+                await db.memberships.delete_one({"id": report['test_membership_id']})
+            
+            # Supprimer les messages de contact
+            await db.contact_messages.delete_many({"email": report['test_user_email']})
+            
+            logger.info(f"Données test nettoyées pour {report['test_user_email']}")
+        
+        # Sauvegarder le rapport en base
+        report['saved_at'] = datetime.utcnow().isoformat()
+        report['requested_by'] = current_user.get('email')
+        await db.adhesion_test_reports.insert_one(report)
+        
+        return {
+            "success": True,
+            "message": "Test d'adhésion terminé",
+            "report": report
+        }
+    except Exception as e:
+        logger.error(f"Adhesion test agent error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/admin/test-adhesion/reports")
+async def get_adhesion_test_reports(
+    limit: int = Query(20, ge=1, le=100),
+    current_user: dict = Depends(get_admin_user)
+):
+    """Récupère l'historique des rapports de test d'adhésion"""
+    try:
+        cursor = db.adhesion_test_reports.find().sort("started_at", -1).limit(limit)
+        reports = await cursor.to_list(length=limit)
+        
+        for report in reports:
+            report['_id'] = str(report['_id'])
+        
+        # Stats globales
+        total_reports = await db.adhesion_test_reports.count_documents({})
+        successful_reports = await db.adhesion_test_reports.count_documents({"overall_success": True})
+        
+        return {
+            "success": True,
+            "reports": reports,
+            "total": len(reports),
+            "stats": {
+                "total_tests": total_reports,
+                "successful_tests": successful_reports,
+                "success_rate": (successful_reports / total_reports * 100) if total_reports > 0 else 0
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error fetching adhesion test reports: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/admin/test-adhesion/reports/{report_id}")
+async def get_single_adhesion_test_report(
+    report_id: str,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Récupère un rapport de test d'adhésion spécifique"""
+    try:
+        report = await db.adhesion_test_reports.find_one({"id": report_id})
+        
+        if not report:
+            # Chercher dans le cache
+            report = get_adhesion_test_report(report_id)
+            
+        if not report:
+            raise HTTPException(status_code=404, detail="Rapport non trouvé")
+        
+        if '_id' in report:
+            report['_id'] = str(report['_id'])
+        
+        return {
+            "success": True,
+            "report": report
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching adhesion test report: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/admin/test-adhesion/run-all-types")
+async def run_all_adhesion_types_test(
+    cleanup: bool = Query(True, description="Nettoyer les données de test après"),
+    current_user: dict = Depends(get_admin_user)
+):
+    """
+    Lance le test d'adhésion pour TOUS les types.
+    Utile pour un audit complet du parcours.
+    """
+    api_base_url = os.environ.get('API_BASE_URL', 'https://etf-backend-t3j5.onrender.com')
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://www.entoutefranchise.org')
+    
+    all_types = ['individual', 'professional', 'professional_plus', 'association']
+    results = []
+    
+    for membership_type in all_types:
+        try:
+            report = await run_adhesion_test_agent(
+                api_base_url=api_base_url,
+                frontend_url=frontend_url,
+                membership_type=membership_type,
+                cleanup=cleanup
+            )
+            
+            # Nettoyage
+            if cleanup and report.get('test_user_email'):
+                await db.users.delete_one({"email": report['test_user_email']})
+                if report.get('test_membership_id'):
+                    await db.memberships.delete_one({"id": report['test_membership_id']})
+            
+            # Sauvegarder
+            report['saved_at'] = datetime.utcnow().isoformat()
+            report['requested_by'] = current_user.get('email')
+            await db.adhesion_test_reports.insert_one(report)
+            
+            results.append({
+                "type": membership_type,
+                "success": report['overall_success'],
+                "summary": report['summary'],
+                "report_id": report['id'],
+                "critical_issues": report['critical_issues'],
+                "errors": report['errors']
+            })
+            
+        except Exception as e:
+            results.append({
+                "type": membership_type,
+                "success": False,
+                "summary": f"Exception: {str(e)}",
+                "error": str(e)
+            })
+    
+    # Résumé global
+    total = len(results)
+    successful = sum(1 for r in results if r['success'])
+    
+    return {
+        "success": successful == total,
+        "message": f"Tests terminés: {successful}/{total} réussis",
+        "results": results,
+        "global_stats": {
+            "total_types_tested": total,
+            "successful": successful,
+            "failed": total - successful,
+            "success_rate": (successful / total * 100) if total > 0 else 0
+        }
+    }
+
+
+@api_router.delete("/admin/test-adhesion/cleanup")
+async def cleanup_adhesion_test_data(
+    current_user: dict = Depends(get_admin_user)
+):
+    """Nettoie toutes les données de test d'adhésion"""
+    try:
+        # Supprimer les utilisateurs test d'adhésion
+        result_users = await db.users.delete_many({
+            "email": {"$regex": "^test_adhesion_.*@test-etf\\.com$"}
+        })
+        
+        # Supprimer les adhésions test
+        result_memberships = await db.memberships.delete_many({
+            "member_data.email": {"$regex": "^test_adhesion_.*@test-etf\\.com$"}
+        })
+        
+        # Supprimer les messages de contact test
+        result_messages = await db.contact_messages.delete_many({
+            "email": {"$regex": "^test_adhesion_.*@test-etf\\.com$"}
+        })
+        
+        return {
+            "success": True,
+            "message": "Nettoyage terminé",
+            "deleted_users": result_users.deleted_count,
+            "deleted_memberships": result_memberships.deleted_count,
+            "deleted_messages": result_messages.deleted_count
+        }
+    except Exception as e:
+        logger.error(f"Error cleaning up adhesion test data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # ===================== MEMBERSHIP ENDPOINTS (ADHESIONS) =====================
 

@@ -22,6 +22,7 @@ class UserLogin(BaseModel):
 
 class User(UserBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    password: str = ""  # Mot de passe hashé
     role: str = "user"
     membershipStatus: str = "active"
     membershipStartDate: datetime = Field(default_factory=datetime.utcnow)

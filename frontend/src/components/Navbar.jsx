@@ -76,6 +76,14 @@ const Navbar = () => {
               Le Livre
             </Link>
             <Link
+              to="/partenaires"
+              className={`text-sm font-medium transition-colors ${
+                isActive('/partenaires') ? 'text-green-400' : 'text-gray-300 hover:text-green-400'
+              }`}
+            >
+              Partenaires
+            </Link>
+            <Link
               to="/contact"
               className={`text-sm font-medium transition-colors ${
                 isActive('/contact') ? 'text-green-400' : 'text-gray-300 hover:text-green-400'
@@ -163,6 +171,13 @@ const Navbar = () => {
               onClick={() => setMobileMenuOpen(false)}
             >
               Le Livre
+            </Link>
+            <Link
+              to="/partenaires"
+              className="block py-2 text-sm font-medium text-gray-300 hover:text-green-400"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Partenaires
             </Link>
             <Link
               to="/contact"

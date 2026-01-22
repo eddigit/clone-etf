@@ -12,6 +12,7 @@ import Blog from "./pages/Blog";
 import Services from "./pages/Services";
 import Contact from "./pages/Contact";
 import Adhesion from "./pages/Adhesion";
+import Partenaires from "./pages/Partenaires";
 import Livre418Milliards from "./pages/Livre418Milliards";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import AIAssistant from "./pages/dashboard/AIAssistant";
@@ -38,6 +39,7 @@ import AdminBlog from "./pages/admin/AdminBlog";
 import AdminCohesion from "./pages/admin/AdminCohesion";
 import AdminAI from "./pages/admin/AdminAI";
 import AdminTestAgent from "./pages/admin/AdminTestAgent";
+import AdminAdhesionTestAgent from "./pages/admin/AdminAdhesionTestAgent";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminChat from "./pages/admin/AdminChat";
 import AdminAdhesionLogs from "./pages/admin/AdminAdhesionLogs";
@@ -91,6 +93,7 @@ function App() {
           <Route path="/blog/:slug" element={<PublicLayout><BlogArticle /></PublicLayout>} />
           <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
           <Route path="/adhesion" element={<PublicLayout><Adhesion /></PublicLayout>} />
+          <Route path="/partenaires" element={<PublicLayout><Partenaires /></PublicLayout>} />
           <Route path="/livre-418-milliards" element={<PublicLayout><Livre418Milliards /></PublicLayout>} />
           
           {/* Auth Routes */}
@@ -292,6 +295,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminTestAgent />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/test-adhesion"
+            element={
+              <ProtectedRoute>
+                <AdminAdhesionTestAgent />
               </ProtectedRoute>
             }
           />

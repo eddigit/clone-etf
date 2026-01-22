@@ -18,7 +18,8 @@ import {
   MessageCircle,
   UsersRound,
   Bot,
-  ScrollText
+  ScrollText,
+  TestTube2
 } from 'lucide-react';
 
 const AdminLayout = ({ children }) => {
@@ -46,6 +47,7 @@ const AdminLayout = ({ children }) => {
     { icon: Gift, label: 'Coupons', path: '/admin/coupons' },
     { icon: CreditCard, label: 'HelloAsso', path: '/admin/helloasso' },
     { icon: Zap, label: 'Agent de Test', path: '/admin/test-agent' },
+    { icon: TestTube2, label: 'Test Adhésion', path: '/admin/test-adhesion' },
     { icon: Settings, label: 'Parametres', path: '/admin/settings' }
   ];
 
