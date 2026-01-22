@@ -1,12 +1,54 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { contactInfo } from '../mockData';
-import { Phone, Mail, MapPin, Heart, GitCommit } from 'lucide-react';
+import { Phone, Mail, MapPin, Heart, GitCommit, Users, ArrowRight } from 'lucide-react';
 import { getVersionString, BUILD_INFO } from '../config/buildInfo';
+import { Button } from './ui/button';
 
 const Footer = () => {
+  const navigate = useNavigate();
+  
   return (
     <footer className="bg-gray-900 text-white">
+      {/* CTA Banner */}
+      <div className="bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 border-b border-slate-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-center md:text-left">
+              <h3 className="text-xl font-bold text-white mb-2">
+                Rejoignez le mouvement pour la justice commerciale
+              </h3>
+              <p className="text-gray-400 text-sm">
+                Chaque adhésion et chaque don renforce notre combat collectif depuis 1994
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button 
+                onClick={() => navigate('/adhesion')}
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg hover:shadow-green-500/25 transition-all group"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Adhérer
+                <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
+              <a 
+                href="https://www.helloasso.com/associations/en-toute-franchise/formulaires/1" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <Button 
+                  className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white shadow-lg hover:shadow-red-500/25 transition-all group"
+                >
+                  <Heart className="h-4 w-4 mr-2 animate-pulse" />
+                  Faire un don
+                  <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo et description */}

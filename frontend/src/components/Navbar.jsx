@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
-import { Menu, X, LogIn, UserCircle } from 'lucide-react';
+import { Menu, X, LogIn, UserCircle, Heart, Users } from 'lucide-react';
 import Notifications from './Notifications';
 
 const Navbar = () => {
@@ -93,8 +93,36 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Auth Buttons */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* CTA Buttons + Auth */}
+          <div className="hidden md:flex items-center space-x-3">
+            {/* CTA Faire un don - toujours visible */}
+            <a 
+              href="https://www.helloasso.com/associations/en-toute-franchise/formulaires/1" 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
+              <Button 
+                size="sm" 
+                className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white border-0 shadow-lg hover:shadow-red-500/25 transition-all"
+              >
+                <Heart className="h-4 w-4 mr-1 animate-pulse" />
+                Faire un don
+              </Button>
+            </a>
+            
+            {/* CTA Adhérer - toujours visible */}
+            <Button 
+              onClick={() => navigate('/adhesion')} 
+              size="sm" 
+              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg hover:shadow-green-500/25 transition-all"
+            >
+              <Users className="h-4 w-4 mr-1" />
+              Adhérer
+            </Button>
+
+            {/* Separator */}
+            <div className="h-6 w-px bg-slate-600"></div>
+
             {isAuthenticated ? (
               <>
                 <Notifications />
@@ -102,24 +130,20 @@ const Navbar = () => {
                   onClick={() => navigate(userRole === 'admin' ? '/admin' : '/dashboard')}
                   variant="outline"
                   size="sm"
-                  className="flex items-center space-x-2 text-white border-white hover:text-white"
+                  className="flex items-center space-x-2 text-white border-slate-600 hover:text-white hover:border-green-500"
                 >
                   <UserCircle className="h-4 w-4" />
-                  <span>{userRole === 'admin' ? 'Admin' : 'Espace Membre'}</span>
+                  <span>{userRole === 'admin' ? 'Admin' : 'Mon espace'}</span>
                 </Button>
-                <Button onClick={handleLogout} variant="ghost" size="sm" className="text-white hover:text-white">
+                <Button onClick={handleLogout} variant="ghost" size="sm" className="text-gray-400 hover:text-white">
                   Déconnexion
                 </Button>
               </>
             ) : (
-              <>
-                <Button onClick={() => navigate('/login')} variant="ghost" size="sm" className="text-white hover:text-white">
-                  Connexion
-                </Button>
-                <Button onClick={() => navigate('/register')} size="sm" className="bg-green-600 hover:bg-green-700">
-                  S'inscrire
-                </Button>
-              </>
+              <Button onClick={() => navigate('/login')} variant="ghost" size="sm" className="text-gray-300 hover:text-white">
+                <LogIn className="h-4 w-4 mr-1" />
+                Connexion
+              </Button>
             )}
           </div>
 
@@ -186,8 +210,38 @@ const Navbar = () => {
             >
               Contact
             </Link>
+            {/* CTA Mobile - Toujours visibles */}
+            <div className="pt-4 border-t border-slate-700 space-y-3">
+              <a 
+                href="https://www.helloasso.com/associations/en-toute-franchise/formulaires/1" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block"
+              >
+                <Button 
+                  size="sm" 
+                  className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white"
+                >
+                  <Heart className="h-4 w-4 mr-2 animate-pulse" />
+                  Faire un don
+                </Button>
+              </a>
+              <Button
+                onClick={() => {
+                  navigate('/adhesion');
+                  setMobileMenuOpen(false);
+                }}
+                size="sm"
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Adhérer à l'association
+              </Button>
+            </div>
+
+            {/* Auth Mobile */}
             {isAuthenticated ? (
-              <>
+              <div className="pt-3 space-y-2">
                 <Button
                   onClick={() => {
                     navigate(userRole === 'admin' ? '/admin' : '/dashboard');
@@ -197,36 +251,26 @@ const Navbar = () => {
                   size="sm"
                   className="w-full justify-start"
                 >
-                  {userRole === 'admin' ? 'Admin' : 'Espace Membre'}
+                  <UserCircle className="h-4 w-4 mr-2" />
+                  {userRole === 'admin' ? 'Admin' : 'Mon espace'}
                 </Button>
-                <Button onClick={handleLogout} variant="ghost" size="sm" className="w-full justify-start">
+                <Button onClick={handleLogout} variant="ghost" size="sm" className="w-full justify-start text-gray-400">
                   Déconnexion
                 </Button>
-              </>
+              </div>
             ) : (
-              <>
-                <Button
-                  onClick={() => {
-                    navigate('/login');
-                    setMobileMenuOpen(false);
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                >
-                  Connexion
-                </Button>
-                <Button
-                  onClick={() => {
-                    navigate('/register');
-                    setMobileMenuOpen(false);
-                  }}
-                  size="sm"
-                  className="w-full bg-green-600 hover:bg-green-700"
-                >
-                  S'inscrire
-                </Button>
-              </>
+              <Button
+                onClick={() => {
+                  navigate('/login');
+                  setMobileMenuOpen(false);
+                }}
+                variant="ghost"
+                size="sm"
+                className="w-full mt-2 text-gray-400"
+              >
+                <LogIn className="h-4 w-4 mr-2" />
+                Déjà membre ? Connexion
+              </Button>
             )}
           </div>
         </div>

@@ -140,18 +140,25 @@ const Home = () => {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Button size="lg" className="bg-green-600 hover:bg-green-700" onClick={() => navigate('/register')}>
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-xl hover:shadow-green-500/30 transition-all transform hover:scale-105" 
+                onClick={() => navigate('/adhesion')}
+              >
                 <Users className="mr-2 h-5 w-5" />
-                Rejoindre l'association
+                Adhérer à l'association
               </Button>
               <a 
                 href="https://www.helloasso.com/associations/en-toute-franchise/formulaires/1" 
                 target="_blank" 
                 rel="noopener noreferrer"
               >
-                <Button size="lg" variant="outline">
-                  <Heart className="mr-2 h-5 w-5 text-red-500" />
-                  Faire un don Hello Asso
+                <Button 
+                  size="lg" 
+                  className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white shadow-xl hover:shadow-red-500/30 transition-all transform hover:scale-105"
+                >
+                  <Heart className="mr-2 h-5 w-5 animate-pulse" />
+                  Faire un don
                 </Button>
               </a>
             </div>
@@ -422,11 +429,28 @@ const Home = () => {
             </Card>
           </div>
 
-          <div className="text-center mt-12">
-            <Button size="lg" className="bg-green-600 hover:bg-green-700" onClick={() => navigate('/register')}>
+          <div className="text-center mt-12 flex flex-col sm:flex-row justify-center gap-4">
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-xl hover:shadow-green-500/30 transition-all transform hover:scale-105" 
+              onClick={() => navigate('/adhesion')}
+            >
               <Users className="mr-2 h-5 w-5" />
               Adhérer maintenant
             </Button>
+            <a 
+              href="https://www.helloasso.com/associations/en-toute-franchise/formulaires/1" 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
+              <Button 
+                size="lg" 
+                className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white shadow-xl hover:shadow-red-500/30 transition-all transform hover:scale-105"
+              >
+                <Heart className="mr-2 h-5 w-5 animate-pulse" />
+                Soutenir par un don
+              </Button>
+            </a>
           </div>
         </div>
       </section>
