@@ -75,7 +75,7 @@ export const membershipPlans = [
       'Soutien aux actions collectives'
     ],
     popular: false,
-    helloAssoUrl: 'https://www.helloasso.com/associations/en-toute-franchise/adhesions/adhesion-2025-particuliers'
+    helloAssoUrl: 'https://www.helloasso.com/associations/en-toute-franchise/adhesions/adhesion-2026-particuliers'
   },
   {
     id: 2,
@@ -92,16 +92,16 @@ export const membershipPlans = [
       'Modèles et ressources documentaires'
     ],
     popular: true,
-    helloAssoUrl: 'https://www.helloasso.com/associations/en-toute-franchise/adhesions/adhesion-2025-commercants-artisans',
+    helloAssoUrl: 'https://www.helloasso.com/associations/en-toute-franchise/adhesions/adhesion-2026-commercants-artisans-50-2-2',
     disclaimer: 'L\'association accompagne et oriente, ne remplace pas un avocat'
   },
   {
     id: 3,
     type: 'professional_plus',
-    name: 'Commerçants +100m²',
+    name: 'Commerçants 100-299m²',
     price: '152.32',
     currency: '€',
-    description: 'Pour les commerces de plus de 100m²',
+    description: 'Pour les commerces de 100 à 299m²',
     features: [
       'Accompagnement et orientation renforcés',
       'Mise en relation avec avocats partenaires',
@@ -110,10 +110,61 @@ export const membershipPlans = [
       'Formation et partage d\'expérience'
     ],
     popular: false,
-    helloAssoUrl: 'https://www.helloasso.com/associations/en-toute-franchise/adhesions/adhesion-2025-entreprises'
+    helloAssoUrl: 'https://www.helloasso.com/associations/en-toute-franchise/adhesions/adhesion-2026-100-m2-commercants-artisans-152-32-2'
   },
   {
     id: 4,
+    type: 'medium_store',
+    name: 'Magasins 300m² et +',
+    price: '320',
+    currency: '€',
+    description: 'Pour les magasins de 300m² et plus',
+    features: [
+      'Accompagnement et orientation renforcés',
+      'Mise en relation avec avocats partenaires',
+      'Veille réglementaire informative',
+      'Accès prioritaire au réseau',
+      'Formation et partage d\'expérience'
+    ],
+    popular: false,
+    helloAssoUrl: 'https://www.helloasso.com/associations/en-toute-franchise/adhesions/2026-magasins-de-300-m-et-plus-2'
+  },
+  {
+    id: 5,
+    type: 'large_store',
+    name: 'Magasins 1500-2500m²',
+    price: '640',
+    currency: '€',
+    description: 'Pour les magasins de 1 500 à 2 500m²',
+    features: [
+      'Accompagnement et orientation premium',
+      'Mise en relation avec avocats spécialisés',
+      'Veille réglementaire complète',
+      'Accès prioritaire au réseau national',
+      'Formation et partage d\'expérience avancé'
+    ],
+    popular: false,
+    helloAssoUrl: 'https://www.helloasso.com/associations/en-toute-franchise/adhesions/2026-magasins-de-1-500-a-2-500-m2-2'
+  },
+  {
+    id: 6,
+    type: 'hypermarket',
+    name: 'Magasins 2500m² et +',
+    price: '1280',
+    currency: '€',
+    description: 'Pour les grandes surfaces de 2 500m² et plus',
+    features: [
+      'Accompagnement et orientation VIP',
+      'Mise en relation directe avec cabinets d\'avocats',
+      'Veille réglementaire personnalisée',
+      'Accès prioritaire au réseau national et européen',
+      'Formation et partage d\'expérience exclusif'
+    ],
+    popular: false,
+    helloAssoUrl: 'https://www.helloasso.com/associations/en-toute-franchise/adhesions/2026-magasins-de-2-500-m-et-plus-2'
+  },
+  {
+    id: 7,
     type: 'association',
     name: 'Associations',
     price: '152.32',
@@ -126,7 +177,7 @@ export const membershipPlans = [
       'Coordination des initiatives'
     ],
     popular: false,
-    helloAssoUrl: 'https://www.helloasso.com/associations/en-toute-franchise/adhesions/adhesion-2025-associations'
+    helloAssoUrl: 'https://www.helloasso.com/associations/en-toute-franchise/adhesions/association-association-2026'
   }
 ];
 

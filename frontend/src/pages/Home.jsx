@@ -144,10 +144,16 @@ const Home = () => {
                 <Users className="mr-2 h-5 w-5" />
                 Rejoindre l'association
               </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate('/contact')}>
-                <Heart className="mr-2 h-5 w-5 text-red-500" />
-                Faire un don Hello Asso
-              </Button>
+              <a 
+                href="https://www.helloasso.com/associations/en-toute-franchise/formulaires/1" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <Button size="lg" variant="outline">
+                  <Heart className="mr-2 h-5 w-5 text-red-500" />
+                  Faire un don Hello Asso
+                </Button>
+              </a>
             </div>
           </div>
 
@@ -690,7 +696,7 @@ const Home = () => {
 
           <div className="text-center">
             <a 
-              href="https://www.youtube.com/@entoutefranchise5765" 
+              href="https://www.youtube.com/@EnTouteFranchise" 
               target="_blank" 
               rel="noopener noreferrer"
             >
@@ -835,10 +841,16 @@ const Home = () => {
               <Users className="mr-2 h-5 w-5" />
               Adhérer à l'association
             </Button>
-            <Button size="lg" variant="outline" className="bg-white text-blue-600 hover:bg-gray-100">
-              <Heart className="mr-2 h-5 w-5" />
-              Faire un don Hello Asso
-            </Button>
+            <a 
+              href="https://www.helloasso.com/associations/en-toute-franchise/formulaires/1" 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
+              <Button size="lg" variant="outline" className="bg-white text-blue-600 hover:bg-gray-100">
+                <Heart className="mr-2 h-5 w-5" />
+                Faire un don Hello Asso
+              </Button>
+            </a>
           </div>
         </div>
       </section>
