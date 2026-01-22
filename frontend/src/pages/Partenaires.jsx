@@ -18,14 +18,14 @@ const partenaires = [
     id: 1,
     nom: "SOS MAIRES",
     description: "Autonomie et résilience des communes - Alerter les maires et construire ensemble la résilience territoriale",
-    logo: "https://sosmaires.org/wp-content/uploads/2020/02/logososmaires.png",
+    logo: "https://sosmaires.org/wp-content/uploads/2022/01/cropped-sos-maires_logo-2.png?w=580&h=435",
     url: "https://sosmaires.org"
   },
   {
     id: 2,
     nom: "Démocraties Directes",
     description: "Initiative démocratique pour une citoyenneté mature et instruite - Vers la première démocratie directe réelle",
-    logo: "https://democratiesdirectes.org/images/logos/logo-democraties-directes.png",
+    logo: "https://www.democratie.direct/wp-content/uploads/2024/06/logo-ddf-carre-final.png",
     url: "https://democratiesdirectes.org"
   },
   {
