@@ -465,15 +465,38 @@ const Home = () => {
           <div className="text-center mb-12">
             <Badge className="bg-purple-600/20 text-purple-300 border border-purple-500 mb-4">
               <Sparkles className="h-4 w-4 mr-2" />
-              PARTENARIAT EXCLUSIF ADHÉRENTS
+              PARTENARIAT COACH DIGITAL
             </Badge>
             <h2 className="text-4xl font-bold text-white mb-4">
-              Ma Boîte Digitale
+              Accompagnement Digital
             </h2>
             <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-              Tous les outils digitaux dont vous avez besoin pour développer votre activité,
-              à un tarif préférentiel réservé aux adhérents ETF
+              Un coach digital partenaire pour accompagner les commerçants et adhérents En Toute Franchise dans leur projet digital
             </p>
+          </div>
+
+          {/* 4 services de coaching */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-purple-500/20 text-center hover:border-purple-500/50 transition-all">
+              <Globe className="h-8 w-8 text-green-400 mx-auto mb-2" />
+              <h4 className="text-white font-semibold mb-1">Site Internet</h4>
+              <p className="text-gray-400 text-xs">Conception de votre vitrine en ligne</p>
+            </div>
+            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-purple-500/20 text-center hover:border-purple-500/50 transition-all">
+              <Rocket className="h-8 w-8 text-purple-400 mx-auto mb-2" />
+              <h4 className="text-white font-semibold mb-1">Projet Digital</h4>
+              <p className="text-gray-400 text-xs">Stratégie et transformation digitale</p>
+            </div>
+            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-purple-500/20 text-center hover:border-purple-500/50 transition-all">
+              <BarChart3 className="h-8 w-8 text-blue-400 mx-auto mb-2" />
+              <h4 className="text-white font-semibold mb-1">Présence Google</h4>
+              <p className="text-gray-400 text-xs">Visibilité locale optimisée</p>
+            </div>
+            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-purple-500/20 text-center hover:border-purple-500/50 transition-all">
+              <Users className="h-8 w-8 text-orange-400 mx-auto mb-2" />
+              <h4 className="text-white font-semibold mb-1">Réseaux Sociaux</h4>
+              <p className="text-gray-400 text-xs">Gestion et animation</p>
+            </div>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-12 items-center">

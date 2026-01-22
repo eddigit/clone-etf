@@ -84,14 +84,46 @@ const Services = () => {
           <div className="text-center mb-12">
             <Badge className="mb-4 bg-purple-600 text-white text-sm px-4 py-1">
               <Sparkles className="h-4 w-4 mr-2 inline" />
-              PARTENARIAT EXCLUSIF ADHÉRENTS
+              PARTENARIAT COACH DIGITAL
             </Badge>
             <h2 className="text-4xl font-bold text-white mb-4">
-              MaBoiteDigitale.com
+              Accompagnement Digital Personnalisé
             </h2>
             <p className="text-xl text-purple-200 max-w-3xl mx-auto">
-              La plateforme tout-en-un pour digitaliser votre activité et booster votre communication
+              Un partenariat exclusif avec un coach digital pour accompagner les commerçants et adhérents En Toute Franchise dans leur projet digital
             </p>
+          </div>
+
+          {/* Services de coaching digital */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div className="bg-slate-800/70 backdrop-blur rounded-xl p-6 border border-purple-500/30 hover:border-purple-500/60 transition-all hover:transform hover:scale-105">
+              <Globe className="h-10 w-10 text-green-400 mb-4" />
+              <h3 className="text-xl font-bold text-white mb-2">Conception de Site Internet</h3>
+              <p className="text-gray-400 text-sm">
+                Créez votre vitrine en ligne professionnelle pour présenter votre activité et attirer de nouveaux clients
+              </p>
+            </div>
+            <div className="bg-slate-800/70 backdrop-blur rounded-xl p-6 border border-purple-500/30 hover:border-purple-500/60 transition-all hover:transform hover:scale-105">
+              <Rocket className="h-10 w-10 text-purple-400 mb-4" />
+              <h3 className="text-xl font-bold text-white mb-2">Projet Digital</h3>
+              <p className="text-gray-400 text-sm">
+                Accompagnement complet dans la conception et la mise en œuvre de votre stratégie digitale
+              </p>
+            </div>
+            <div className="bg-slate-800/70 backdrop-blur rounded-xl p-6 border border-purple-500/30 hover:border-purple-500/60 transition-all hover:transform hover:scale-105">
+              <BarChart3 className="h-10 w-10 text-blue-400 mb-4" />
+              <h3 className="text-xl font-bold text-white mb-2">Présence sur Google</h3>
+              <p className="text-gray-400 text-sm">
+                Optimisez votre visibilité locale et soyez trouvé facilement par vos clients potentiels
+              </p>
+            </div>
+            <div className="bg-slate-800/70 backdrop-blur rounded-xl p-6 border border-purple-500/30 hover:border-purple-500/60 transition-all hover:transform hover:scale-105">
+              <Users className="h-10 w-10 text-orange-400 mb-4" />
+              <h3 className="text-xl font-bold text-white mb-2">Réseaux Sociaux</h3>
+              <p className="text-gray-400 text-sm">
+                Apprenez à gérer efficacement vos réseaux sociaux pour développer votre communauté
+              </p>
+            </div>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -114,12 +146,12 @@ const Services = () => {
             <div className="space-y-6">
               <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-purple-500/20">
                 <h3 className="text-2xl font-bold text-white mb-4 flex items-center">
-                  <Rocket className="h-6 w-6 mr-3 text-purple-400" />
-                  Tous vos outils digitaux réunis
+                  <Bot className="h-6 w-6 mr-3 text-purple-400" />
+                  MaBoiteDigitale.com
                 </h3>
                 <p className="text-gray-300 mb-4">
-                  En tant qu'adhérent ETF, vous bénéficiez d'un accès privilégié à la plateforme MaBoiteDigitale.com 
-                  avec une <strong className="text-green-400">réduction exclusive de 20%</strong> sur tous les abonnements.
+                  Notre partenaire <strong className="text-purple-400">MaBoiteDigitale</strong> met à disposition des adhérents ETF 
+                  une plateforme complète et un <strong className="text-green-400">accompagnement personnalisé</strong> pour réussir votre transformation digitale.
                 </p>
                 
                 <div className="grid grid-cols-2 gap-4 mb-6">
@@ -144,16 +176,8 @@ const Services = () => {
                     <span>Statistiques détaillées</span>
                   </div>
                   <div className="flex items-center text-gray-300">
-                    <Users className="h-5 w-5 mr-2 text-yellow-400" />
-                    <span>Programme Affiliation</span>
-                  </div>
-                  <div className="flex items-center text-gray-300">
                     <Bot className="h-5 w-5 mr-2 text-purple-400" />
                     <span>Coach Digital IA</span>
-                  </div>
-                  <div className="flex items-center text-gray-300">
-                    <Headphones className="h-5 w-5 mr-2 text-red-400" />
-                    <span>Support & Services</span>
                   </div>
                 </div>
 
@@ -161,10 +185,10 @@ const Services = () => {
                   <Button 
                     size="lg" 
                     className="bg-purple-600 hover:bg-purple-700 flex-1"
-                    onClick={() => window.open('https://maboitedigitale.com?partner=etf', '_blank')}
+                    onClick={() => window.open('https://maboitedigitale.com', '_blank')}
                   >
                     <ExternalLink className="mr-2 h-5 w-5" />
-                    Découvrir la plateforme
+                    Découvrir maboitedigitale.com
                   </Button>
                   <div className="text-center sm:text-left">
                     <div className="text-3xl font-bold text-white">17€<span className="text-lg text-gray-400">/mois</span></div>
@@ -179,8 +203,8 @@ const Services = () => {
                   <div className="text-4xl text-purple-400">"</div>
                   <div>
                     <p className="text-gray-300 italic mb-3">
-                      Grâce à MaBoiteDigitale, j'ai pu créer ma signature email professionnelle et mon mini-site en quelques minutes. 
-                      Un vrai gain de temps pour ma communication !
+                      Le coach digital m'a accompagné dans la création de mon site et m'a appris à gérer ma présence sur Google. 
+                      Aujourd'hui, je reçois des clients grâce à internet !
                     </p>
                     <p className="text-purple-400 font-semibold">— Un adhérent ETF satisfait</p>
                   </div>

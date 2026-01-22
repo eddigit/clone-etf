@@ -115,10 +115,10 @@ export const membershipPlans = [
   {
     id: 4,
     type: 'medium_store',
-    name: 'Magasins 300m² et +',
-    price: '320',
+    name: 'Plus de 300 m²',
+    price: '304.90',
     currency: '€',
-    description: 'Pour les magasins de 300m² et plus',
+    description: 'Pour les commerces de plus de 300 m²',
     features: [
       'Accompagnement et orientation renforcés',
       'Mise en relation avec avocats partenaires',
@@ -132,10 +132,10 @@ export const membershipPlans = [
   {
     id: 5,
     type: 'large_store',
-    name: 'Magasins 1500-2500m²',
-    price: '640',
+    name: 'Plus de 1 500 m²',
+    price: '609.80',
     currency: '€',
-    description: 'Pour les magasins de 1 500 à 2 500m²',
+    description: 'Pour les commerces de plus de 1 500 m²',
     features: [
       'Accompagnement et orientation premium',
       'Mise en relation avec avocats spécialisés',
@@ -149,10 +149,10 @@ export const membershipPlans = [
   {
     id: 6,
     type: 'hypermarket',
-    name: 'Magasins 2500m² et +',
-    price: '1280',
+    name: 'Plus de 2 500 m²',
+    price: '904.69',
     currency: '€',
-    description: 'Pour les grandes surfaces de 2 500m² et plus',
+    description: 'Pour les commerces de plus de 2 500 m²',
     features: [
       'Accompagnement et orientation VIP',
       'Mise en relation directe avec cabinets d\'avocats',

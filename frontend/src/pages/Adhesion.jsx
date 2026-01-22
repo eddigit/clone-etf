@@ -24,10 +24,10 @@ const MEMBERSHIP_CATEGORIES = {
     description: 'Pour les professionnels selon la taille de leur commerce',
     types: ['professional', 'professional_plus']
   },
-  grandes_surfaces: {
-    title: 'Moyennes & Grandes Surfaces',
+  commercants_independants: {
+    title: 'Commerçants indépendants',
     icon: ShoppingCart,
-    description: 'Pour les magasins de grande taille',
+    description: 'Commerces de plus de 300 m²',
     types: ['medium_store', 'large_store', 'hypermarket']
   },
   associations: {
@@ -76,9 +76,9 @@ const MEMBERSHIP_TYPES = {
     ]
   },
   medium_store: {
-    label: 'Magasins 300m² et +',
-    amount: 320,
-    description: 'Pour les magasins de 300m² et plus',
+    label: 'Plus de 300 m²',
+    amount: 304.90,
+    description: 'Pour les commerces de plus de 300 m²',
     benefits: [
       'Accompagnement et orientation renforcés',
       'Mise en relation avec avocats partenaires',
@@ -88,9 +88,9 @@ const MEMBERSHIP_TYPES = {
     ]
   },
   large_store: {
-    label: 'Magasins 1500-2500m²',
-    amount: 640,
-    description: 'Pour les magasins de 1 500 à 2 500m²',
+    label: 'Plus de 1 500 m²',
+    amount: 609.80,
+    description: 'Pour les commerces de plus de 1 500 m²',
     benefits: [
       'Accompagnement et orientation premium',
       'Mise en relation avec avocats spécialisés',
@@ -100,9 +100,9 @@ const MEMBERSHIP_TYPES = {
     ]
   },
   hypermarket: {
-    label: 'Magasins 2500m² et +',
-    amount: 1280,
-    description: 'Pour les grandes surfaces de 2 500m² et plus',
+    label: 'Plus de 2 500 m²',
+    amount: 904.69,
+    description: 'Pour les commerces de plus de 2 500 m²',
     benefits: [
       'Accompagnement et orientation VIP',
       'Mise en relation directe avec cabinets d\'avocats',
