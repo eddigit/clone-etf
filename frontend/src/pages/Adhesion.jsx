@@ -7,8 +7,36 @@ import { Label } from '../components/ui/label';
 import { Checkbox } from '../components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Alert, AlertDescription } from '../components/ui/alert';
-import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Users, Store, Building2, Handshake, ShoppingCart, Warehouse } from 'lucide-react';
 import API from '../config/api';
+
+// Catégories d'adhésion regroupées
+const MEMBERSHIP_CATEGORIES = {
+  particuliers: {
+    title: 'Particuliers & Consommateurs',
+    icon: Users,
+    description: 'Pour les individus souhaitant soutenir notre combat',
+    types: ['individual']
+  },
+  commercants: {
+    title: 'Commerçants & Artisans',
+    icon: Store,
+    description: 'Pour les professionnels selon la taille de leur commerce',
+    types: ['professional', 'professional_plus']
+  },
+  grandes_surfaces: {
+    title: 'Moyennes & Grandes Surfaces',
+    icon: ShoppingCart,
+    description: 'Pour les magasins de grande taille',
+    types: ['medium_store', 'large_store', 'hypermarket']
+  },
+  associations: {
+    title: 'Associations Partenaires',
+    icon: Handshake,
+    description: 'Pour les associations souhaitant nous rejoindre',
+    types: ['association']
+  }
+};
 
 const MEMBERSHIP_TYPES = {
   individual: {
@@ -277,76 +305,131 @@ export default function Adhesion() {
 
   if (step === 1) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="inline-block bg-blue-100 text-blue-800 px-4 py-1 rounded-full text-sm font-medium mb-4">
-              ÉTAPE 1 • OBLIGATOIRE
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 py-16 px-4">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-16">
+            <div className="inline-block bg-green-500/20 text-green-400 px-4 py-1.5 rounded-full text-sm font-medium mb-6 border border-green-500/30">
+              ADHÉSION 2026
             </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Choisissez votre type d'adhésion
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Rejoignez le mouvement
             </h1>
-            <p className="text-lg text-gray-600">
-              Sélectionnez le type d'adhésion qui correspond à votre profil
+            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+              Choisissez l'adhésion adaptée à votre profil et soutenez notre combat pour la justice commerciale
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Object.entries(MEMBERSHIP_TYPES).map(([key, type]) => {
-              const isPopular = key === 'professional';
+          {/* Catégories */}
+          <div className="space-y-16">
+            {Object.entries(MEMBERSHIP_CATEGORIES).map(([catKey, category]) => {
+              const CategoryIcon = category.icon;
+              const categoryTypes = category.types.map(t => [t, MEMBERSHIP_TYPES[t]]);
               
               return (
-                <Card 
-                  key={key} 
-                  className={`relative cursor-pointer transition-all hover:shadow-lg ${
-                    isPopular ? 'border-blue-500 border-2' : ''
-                  }`}
-                  onClick={() => handleTypeSelect(key)}
-                >
-                  {isPopular && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                        Le plus populaire
-                      </span>
+                <div key={catKey} className="relative">
+                  {/* Titre de catégorie */}
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 flex items-center justify-center">
+                      <CategoryIcon className="h-6 w-6 text-green-400" />
                     </div>
-                  )}
-                  
-                  <CardHeader>
-                    <div className="text-sm text-gray-500 mb-2">
-                      {key}
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">{category.title}</h2>
+                      <p className="text-gray-400 text-sm">{category.description}</p>
                     </div>
-                    <CardTitle className="text-2xl mb-2">
-                      {type.label}
-                    </CardTitle>
-                    <div className="text-3xl font-bold text-gray-900">
-                      {type.amount ? (
-                        <>{type.amount}€</>
-                      ) : (
-                        <>{type.minAmount} à {type.maxAmount}€</>
-                      )}
-                    </div>
-                    <CardDescription className="mt-2">
-                      {type.description}
-                    </CardDescription>
-                  </CardHeader>
+                  </div>
 
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {type.benefits.map((benefit, idx) => (
-                        <li key={idx} className="flex items-start text-sm">
-                          <CheckCircle2 className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">{benefit}</span>
-                        </li>
-                      ))}
-                    </ul>
+                  {/* Grille de cartes */}
+                  <div className={`grid gap-6 ${
+                    categoryTypes.length === 1 ? 'md:grid-cols-1 max-w-md' :
+                    categoryTypes.length === 2 ? 'md:grid-cols-2 max-w-3xl' :
+                    categoryTypes.length === 3 ? 'md:grid-cols-3' :
+                    'md:grid-cols-2 lg:grid-cols-4'
+                  }`}>
+                    {categoryTypes.map(([key, type]) => {
+                      const isPopular = key === 'professional';
+                      
+                      return (
+                        <Card 
+                          key={key} 
+                          className={`relative cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl bg-slate-800/50 backdrop-blur border-slate-700 ${
+                            isPopular ? 'border-green-500 border-2 shadow-lg shadow-green-500/10' : 'hover:border-green-500/50'
+                          }`}
+                          onClick={() => handleTypeSelect(key)}
+                        >
+                          {isPopular && (
+                            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                              <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-lg">
+                                Le plus populaire
+                              </span>
+                            </div>
+                          )}
+                          
+                          <CardHeader className="pb-4">
+                            <CardTitle className="text-xl text-white mb-1">
+                              {type.label}
+                            </CardTitle>
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-3xl font-bold text-green-400">
+                                {type.amount ? (
+                                  <>{type.amount}</>
+                                ) : (
+                                  <>{type.minAmount} à {type.maxAmount}</>
+                                )}
+                              </span>
+                              <span className="text-lg text-gray-400">€</span>
+                              <span className="text-sm text-gray-500 ml-1">/an</span>
+                            </div>
+                            <CardDescription className="mt-2 text-gray-400 text-sm">
+                              {type.description}
+                            </CardDescription>
+                          </CardHeader>
 
-                    <Button className="w-full mt-6" variant={isPopular ? "default" : "outline"}>
-                      Adhérer
-                    </Button>
-                  </CardContent>
-                </Card>
+                          <CardContent className="pt-0">
+                            <div className="border-t border-slate-700 pt-4 mb-4">
+                              <ul className="space-y-2">
+                                {type.benefits.slice(0, 4).map((benefit, idx) => (
+                                  <li key={idx} className="flex items-start text-sm">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                                    <span className="text-gray-300">{benefit}</span>
+                                  </li>
+                                ))}
+                                {type.benefits.length > 4 && (
+                                  <li className="text-xs text-gray-500 pl-6">
+                                    + {type.benefits.length - 4} autres avantages
+                                  </li>
+                                )}
+                              </ul>
+                            </div>
+
+                            <Button 
+                              className={`w-full ${
+                                isPopular 
+                                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg' 
+                                  : 'bg-slate-700 hover:bg-slate-600 text-white border border-slate-600'
+                              }`}
+                            >
+                              Choisir cette adhésion
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
+          </div>
+
+          {/* Footer info */}
+          <div className="mt-16 text-center">
+            <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-xl p-6 max-w-2xl mx-auto">
+              <p className="text-gray-400 text-sm">
+                <strong className="text-green-400">100% sécurisé</strong> — Paiement via HelloAsso, plateforme de confiance pour les associations.
+                <br />
+                <span className="text-gray-500">Votre adhésion est valable 1 an à compter de la date de paiement.</span>
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -357,50 +440,65 @@ export default function Adhesion() {
   const selectedTypeData = MEMBERSHIP_TYPES[selectedType];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 py-12 px-4">
       <div className="max-w-3xl mx-auto">
         <Button 
           variant="ghost" 
           onClick={() => setStep(1)}
-          className="mb-6"
+          className="mb-6 text-gray-400 hover:text-white"
         >
           ← Retour au choix du type
         </Button>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-3xl">
-              Formulaire d'adhésion - {selectedTypeData.label}
-            </CardTitle>
-            <CardDescription>
-              Montant : {selectedType === 'individual' ? `${formData.custom_amount}€` : `${selectedTypeData.amount}€`}
-            </CardDescription>
+        <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
+          <CardHeader className="border-b border-slate-700">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <CardTitle className="text-2xl text-white">
+                  {selectedTypeData.label}
+                </CardTitle>
+                <CardDescription className="text-gray-400">
+                  Complétez vos informations pour finaliser l'adhésion
+                </CardDescription>
+              </div>
+              <div className="bg-green-500/20 border border-green-500/30 rounded-lg px-4 py-2">
+                <span className="text-2xl font-bold text-green-400">
+                  {selectedType === 'individual' ? `${formData.custom_amount}€` : `${selectedTypeData.amount}€`}
+                </span>
+                <span className="text-gray-400 text-sm ml-1">/an</span>
+              </div>
+            </div>
           </CardHeader>
 
-          <CardContent>
+          <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Identité */}
               <div>
-                <h3 className="text-lg font-semibold mb-4">Identité</h3>
+                <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 text-sm flex items-center justify-center">1</span>
+                  Identité
+                </h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="nom">Nom *</Label>
+                    <Label htmlFor="nom" className="text-gray-300">Nom *</Label>
                     <Input
                       id="nom"
                       name="nom"
                       value={formData.nom}
                       onChange={handleInputChange}
                       required
+                      className="bg-slate-700/50 border-slate-600 text-white placeholder:text-gray-500"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="prenom">Prénom *</Label>
+                    <Label htmlFor="prenom" className="text-gray-300">Prénom *</Label>
                     <Input
                       id="prenom"
                       name="prenom"
                       value={formData.prenom}
                       onChange={handleInputChange}
                       required
+                      className="bg-slate-700/50 border-slate-600 text-white placeholder:text-gray-500"
                     />
                   </div>
                 </div>
@@ -408,10 +506,13 @@ export default function Adhesion() {
 
               {/* Coordonnées */}
               <div>
-                <h3 className="text-lg font-semibold mb-4">Coordonnées</h3>
+                <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 text-sm flex items-center justify-center">2</span>
+                  Coordonnées
+                </h3>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="email">Email *</Label>
+                    <Label htmlFor="email" className="text-gray-300">Email *</Label>
                     <Input
                       id="email"
                       name="email"
@@ -419,11 +520,12 @@ export default function Adhesion() {
                       value={formData.email}
                       onChange={handleInputChange}
                       required
+                      className="bg-slate-700/50 border-slate-600 text-white placeholder:text-gray-500"
                     />
                   </div>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="telephone">Téléphone *</Label>
+                      <Label htmlFor="telephone" className="text-gray-300">Téléphone *</Label>
                       <Input
                         id="telephone"
                         name="telephone"
@@ -431,32 +533,35 @@ export default function Adhesion() {
                         value={formData.telephone}
                         onChange={handleInputChange}
                         required
+                        className="bg-slate-700/50 border-slate-600 text-white placeholder:text-gray-500"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="fax">Fax</Label>
+                      <Label htmlFor="fax" className="text-gray-300">Fax</Label>
                       <Input
                         id="fax"
                         name="fax"
                         type="tel"
                         value={formData.fax}
                         onChange={handleInputChange}
+                        className="bg-slate-700/50 border-slate-600 text-white placeholder:text-gray-500"
                       />
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="adresse_commerciale">Adresse *</Label>
+                    <Label htmlFor="adresse_commerciale" className="text-gray-300">Adresse *</Label>
                     <Input
                       id="adresse_commerciale"
                       name="adresse_commerciale"
                       value={formData.adresse_commerciale}
                       onChange={handleInputChange}
                       required
+                      className="bg-slate-700/50 border-slate-600 text-white placeholder:text-gray-500"
                     />
                   </div>
                   <div className="grid md:grid-cols-3 gap-4">
                     <div>
-                      <Label htmlFor="code_postal">Code postal *</Label>
+                      <Label htmlFor="code_postal" className="text-gray-300">Code postal *</Label>
                       <Input
                         id="code_postal"
                         name="code_postal"
@@ -465,16 +570,18 @@ export default function Adhesion() {
                         value={formData.code_postal}
                         onChange={handleInputChange}
                         required
+                        className="bg-slate-700/50 border-slate-600 text-white placeholder:text-gray-500"
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <Label htmlFor="ville">Ville *</Label>
+                      <Label htmlFor="ville" className="text-gray-300">Ville *</Label>
                       <Input
                         id="ville"
                         name="ville"
                         value={formData.ville}
                         onChange={handleInputChange}
                         required
+                        className="bg-slate-700/50 border-slate-600 text-white placeholder:text-gray-500"
                       />
                     </div>
                   </div>
@@ -485,20 +592,24 @@ export default function Adhesion() {
               {(selectedType === 'professional' || selectedType === 'professional_plus') && (
                 <>
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">Informations professionnelles</h3>
+                    <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 text-sm flex items-center justify-center">3</span>
+                      Informations professionnelles
+                    </h3>
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="rcs">RCS *</Label>
+                        <Label htmlFor="rcs" className="text-gray-300">RCS *</Label>
                         <Input
                           id="rcs"
                           name="rcs"
                           value={formData.rcs}
                           onChange={handleInputChange}
                           required
+                          className="bg-slate-700/50 border-slate-600 text-white placeholder:text-gray-500"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="type_activite">Type d'activité *</Label>
+                        <Label htmlFor="type_activite" className="text-gray-300">Type d'activité *</Label>
                         <Select 
                           value={formData.type_activite}
                           onValueChange={(value) => handleSelectChange('type_activite', value)}
