@@ -26,7 +26,7 @@ import {
 import API from '../../config/api';
 
 // URL de Ma Boîte Digitale
-const MABOITEDIGITALE_URL = 'https://maboitedigitale.com';
+const MABOITEDIGITALE_URL = 'https://www.maboitedigitale.com';
 
 const AIAssistant = () => {
   const [user, setUser] = useState(null);
@@ -486,7 +486,7 @@ const AIAssistant = () => {
             En cas de question, contactez-nous à contact@en-toutefranchise.com
           </p>
           <p className="text-xs text-gray-400 mt-2">
-            Les outils IA sont fournis par <a href="https://maboitedigitale.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">maboitedigitale.com</a>
+            Les outils IA sont fournis par <a href="https://www.maboitedigitale.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">maboitedigitale.com</a>
           </p>
         </div>
       </div>
