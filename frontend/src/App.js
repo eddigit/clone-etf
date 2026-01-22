@@ -3,6 +3,8 @@ import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ScrollToTop from "./components/ScrollToTop";
+import BackToTopButton from "./components/BackToTopButton";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -76,6 +78,7 @@ const PublicLayout = ({ children }) => {
       {children}
       <Footer />
       <ChatAIWidget userType={userType} />
+      <BackToTopButton />
     </>
   );
 };
@@ -84,6 +87,7 @@ function App() {
   return (
     <div className="App">
       <BrowserRouter>
+        <ScrollToTop />
         <AnalyticsTracker />
         <Routes>
           {/* Public Routes */}
