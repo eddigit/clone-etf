@@ -1498,14 +1498,28 @@ async def helloasso_webhook(request: Request):
         
         # Mapper le formulaire au type d'adhésion
         membership_mapping = {
+            # 2025
             "adhesion-2025-particuliers": "individual",
             "adhesion-2025-commercants-artisans": "professional",
             "adhesion-2025-entreprises": "professional_plus",
             "adhesion-2025-associations": "association",
+            # 2026 - Particuliers
             "adhesion-2026-particuliers": "individual",
+            # 2026 - Commerçants/Artisans (moins de 100m²)
             "adhesion-2026-commercants-artisans": "professional",
+            "adhesion-2026-commercants-artisans-50-2-2": "professional",
+            # 2026 - Commerçants 100-299m²
             "adhesion-2026-entreprises": "professional_plus",
+            "adhesion-2026-100-m2-commercants-artisans-152-32-2": "professional_plus",
+            # 2026 - Magasins 300m² et +
+            "2026-magasins-de-300-m-et-plus-2": "medium_store",
+            # 2026 - Magasins 1500-2500m²
+            "2026-magasins-de-1-500-a-2-500-m2-2": "large_store",
+            # 2026 - Magasins 2500m² et +
+            "2026-magasins-de-2-500-m-et-plus-2": "hypermarket",
+            # 2026 - Associations
             "adhesion-2026-associations": "association",
+            "association-association-2026": "association",
         }
         membership_type = membership_mapping.get(form_slug, "individual")
         
@@ -3730,14 +3744,28 @@ async def sync_helloasso_members(
     
     # Mapping des formulaires aux types d'adhésion
     membership_mapping = {
+        # 2025
         "adhesion-2025-particuliers": "individual",
         "adhesion-2025-commercants-artisans": "professional",
         "adhesion-2025-entreprises": "professional_plus",
         "adhesion-2025-associations": "association",
+        # 2026 - Particuliers
         "adhesion-2026-particuliers": "individual",
+        # 2026 - Commerçants/Artisans (moins de 100m²)
         "adhesion-2026-commercants-artisans": "professional",
+        "commercants-artisans-50": "professional",
+        # 2026 - Commerçants 100-299m²
         "adhesion-2026-entreprises": "professional_plus",
+        "100-m2-commercants": "professional_plus",
+        # 2026 - Magasins 300m² et +
+        "magasins-de-300-m": "medium_store",
+        # 2026 - Magasins 1500-2500m²
+        "magasins-de-1-500-a-2-500": "large_store",
+        # 2026 - Magasins 2500m² et +
+        "magasins-de-2-500-m": "hypermarket",
+        # 2026 - Associations
         "adhesion-2026-associations": "association",
+        "association-association": "association",
         # Fallback par défaut
         "adhesion": "individual",
     }

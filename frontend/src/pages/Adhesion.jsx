@@ -36,15 +36,51 @@ const MEMBERSHIP_TYPES = {
     ]
   },
   professional_plus: {
-    label: 'Commerçants +100m²',
+    label: 'Commerçants 100-299m²',
     amount: 152.32,
-    description: 'Pour les commerces de plus de 100m²',
+    description: 'Pour les commerces de 100 à 299m²',
     benefits: [
       'Accompagnement et orientation renforcés',
       'Mise en relation avec avocats partenaires',
       'Veille réglementaire informative',
       'Accès prioritaire au réseau',
       'Formation et partage d\'expérience'
+    ]
+  },
+  medium_store: {
+    label: 'Magasins 300m² et +',
+    amount: 320,
+    description: 'Pour les magasins de 300m² et plus',
+    benefits: [
+      'Accompagnement et orientation renforcés',
+      'Mise en relation avec avocats partenaires',
+      'Veille réglementaire informative',
+      'Accès prioritaire au réseau',
+      'Formation et partage d\'expérience'
+    ]
+  },
+  large_store: {
+    label: 'Magasins 1500-2500m²',
+    amount: 640,
+    description: 'Pour les magasins de 1 500 à 2 500m²',
+    benefits: [
+      'Accompagnement et orientation premium',
+      'Mise en relation avec avocats spécialisés',
+      'Veille réglementaire complète',
+      'Accès prioritaire au réseau national',
+      'Formation et partage d\'expérience avancé'
+    ]
+  },
+  hypermarket: {
+    label: 'Magasins 2500m² et +',
+    amount: 1280,
+    description: 'Pour les grandes surfaces de 2 500m² et plus',
+    benefits: [
+      'Accompagnement et orientation VIP',
+      'Mise en relation directe avec cabinets d\'avocats',
+      'Veille réglementaire personnalisée',
+      'Accès prioritaire au réseau national et européen',
+      'Formation et partage d\'expérience exclusif'
     ]
   },
   association: {
