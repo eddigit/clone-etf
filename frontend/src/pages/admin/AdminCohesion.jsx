@@ -504,15 +504,23 @@ const AdminCohesion = () => {
         fetchStats();
         
         // Message adapté selon le résultat
-        if (data.result.imported > 0) {
+        const imported = data.result.imported || 0;
+        const updated = data.result.updated || 0;
+        const duplicates = data.result.duplicates || 0;
+        
+        if (imported > 0 || updated > 0) {
+          let desc = [];
+          if (imported > 0) desc.push(`${imported} nouveaux contacts`);
+          if (updated > 0) desc.push(`${updated} contacts ajoutés à la catégorie`);
+          if (duplicates > 0) desc.push(`${duplicates} déjà dans cette catégorie`);
           toast({
             title: "Import réussi",
-            description: `${data.result.imported} contacts importés${data.result.duplicates > 0 ? `, ${data.result.duplicates} doublons ignorés` : ''}`
+            description: desc.join(', ')
           });
-        } else if (data.result.duplicates > 0) {
+        } else if (duplicates > 0) {
           toast({
-            title: "Aucun nouveau contact",
-            description: `Les ${data.result.duplicates} contacts existent déjà dans la base`,
+            title: "Aucun changement",
+            description: `Les ${duplicates} contacts sont déjà dans cette catégorie`,
             variant: "default"
           });
         } else {

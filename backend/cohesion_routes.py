@@ -715,16 +715,18 @@ def create_cohesion_router(db, get_current_admin_user):
         # Ignorer l'en-tête
         data_rows = rows[1:]
         
-        # Récupérer les emails existants
-        existing_cursor = db.cohesion_contacts.find({}, {"email": 1})
+        # Récupérer les emails existants avec leur id et categoryId
+        existing_cursor = db.cohesion_contacts.find({}, {"email": 1, "id": 1, "categoryId": 1})
         existing_docs = await existing_cursor.to_list(length=100000)
-        existing_emails = {doc["email"].lower() for doc in existing_docs}
+        existing_contacts_map = {doc["email"].lower(): doc for doc in existing_docs}
+        existing_emails = set(existing_contacts_map.keys())
         
         # Traiter les lignes
         stats = {
             "total": len(data_rows),
             "imported": 0,
             "duplicates": 0,
+            "updated": 0,  # Nouveau: contacts mis à jour avec nouvelle catégorie
             "invalidEmails": 0,
             "errors": []
         }
@@ -772,13 +774,25 @@ def create_cohesion_router(db, get_current_admin_user):
                     stats['errors'].append(f"Ligne {row_num}: {email_validation.error_message}")
                     continue
                 
-                # Vérifier les doublons
+                # Vérifier les doublons - Si le contact existe déjà, mettre à jour sa catégorie
                 if email in existing_emails:
-                    stats['duplicates'] += 1
+                    existing_contact = existing_contacts_map.get(email)
+                    # Si une catégorie est spécifiée et différente de l'actuelle, mettre à jour
+                    if category_id and existing_contact and existing_contact.get('categoryId') != category_id:
+                        await db.cohesion_contacts.update_one(
+                            {"id": existing_contact["id"]},
+                            {"$set": {"categoryId": category_id, "categoryName": category_name}}
+                        )
+                        stats['updated'] += 1
+                        # Mettre à jour le compteur de la nouvelle catégorie
+                        # Note: on ne décrémente pas l'ancienne car c'est géré par stats
+                    else:
+                        stats['duplicates'] += 1
                     continue
                 
                 # Ajouter à la liste des contacts à insérer
                 existing_emails.add(email)  # Éviter les doublons dans le même fichier
+                existing_contacts_map[email] = {"email": email, "categoryId": category_id}  # Pour les prochaines itérations
                 
                 contact = CohesionContact(
                     email=email,
@@ -815,18 +829,25 @@ def create_cohesion_router(db, get_current_admin_user):
         if contacts_to_insert:
             await db.cohesion_contacts.insert_many(contacts_to_insert)
             
-            # Mettre à jour le compteur de la catégorie
+            # Mettre à jour le compteur de la catégorie (nouveaux + mis à jour)
             if category_id:
                 await db.cohesion_categories.update_one(
                     {"id": category_id},
-                    {"$inc": {"contactsCount": len(contacts_to_insert)}}
+                    {"$inc": {"contactsCount": len(contacts_to_insert) + stats['updated']}}
                 )
+        elif stats['updated'] > 0 and category_id:
+            # Seulement des mises à jour, pas de nouveaux contacts
+            await db.cohesion_categories.update_one(
+                {"id": category_id},
+                {"$inc": {"contactsCount": stats['updated']}}
+            )
         
         return {
             "message": "Import terminé",
             "result": {
                 "totalRows": stats['total'],
                 "imported": stats['imported'],
+                "updated": stats['updated'],
                 "duplicates": stats['duplicates'],
                 "invalidEmails": stats['invalidEmails'],
                 "errors": stats['errors'][:20]
@@ -873,24 +894,46 @@ def create_cohesion_router(db, get_current_admin_user):
         if csv_content is None:
             raise HTTPException(status_code=400, detail="Impossible de décoder le fichier CSV")
         
-        # Récupérer les emails existants
-        existing_cursor = db.cohesion_contacts.find({}, {"email": 1})
+        # Récupérer les emails existants avec leurs infos pour mise à jour catégorie
+        existing_cursor = db.cohesion_contacts.find({}, {"email": 1, "id": 1, "categoryId": 1})
         existing_docs = await existing_cursor.to_list(length=100000)
-        existing_emails = {doc["email"].lower() for doc in existing_docs}
+        existing_contacts_map = {doc["email"].lower(): doc for doc in existing_docs}
+        existing_emails = set(existing_contacts_map.keys())
         
-        # Importer
+        # Importer (sans passer les emails existants pour avoir tous les contacts valides)
         result = await cohesion_service.import_csv(
             csv_content, 
-            existing_emails, 
+            set(),  # On gère les doublons nous-mêmes pour pouvoir mettre à jour les catégories
             validate_domains
         )
         
-        # Insérer les contacts valides
+        updated_count = 0
+        duplicate_count = 0
+        
+        # Traiter les contacts valides
         if hasattr(result, 'contacts') and result.contacts:
             contacts_to_insert = []
             for contact_data in result.contacts:
+                email = contact_data['email'].lower().strip()
+                
+                # Vérifier si le contact existe déjà
+                if email in existing_emails:
+                    existing_contact = existing_contacts_map.get(email)
+                    # Si une catégorie est spécifiée et différente, mettre à jour
+                    if category_id and existing_contact and existing_contact.get('categoryId') != category_id:
+                        await db.cohesion_contacts.update_one(
+                            {"id": existing_contact["id"]},
+                            {"$set": {"categoryId": category_id, "categoryName": category_name}}
+                        )
+                        updated_count += 1
+                    else:
+                        duplicate_count += 1
+                    continue
+                
+                # Nouveau contact
+                existing_emails.add(email)
                 contact = CohesionContact(
-                    email=contact_data['email'].lower().strip(),
+                    email=email,
                     firstName=contact_data.get('firstName'),
                     lastName=contact_data.get('lastName'),
                     phone=contact_data.get('phone'),
@@ -904,20 +947,23 @@ def create_cohesion_router(db, get_current_admin_user):
             
             if contacts_to_insert:
                 await db.cohesion_contacts.insert_many(contacts_to_insert)
-                
-                # Mettre à jour le compteur de la catégorie
-                if category_id:
-                    await db.cohesion_categories.update_one(
-                        {"id": category_id},
-                        {"$inc": {"contactsCount": len(contacts_to_insert)}}
-                    )
+            
+            # Mettre à jour le compteur de la catégorie (nouveaux + mis à jour)
+            if category_id and (len(contacts_to_insert) > 0 or updated_count > 0):
+                await db.cohesion_categories.update_one(
+                    {"id": category_id},
+                    {"$inc": {"contactsCount": len(contacts_to_insert) + updated_count}}
+                )
+            
+            result.imported = len(contacts_to_insert)
         
         return {
             "message": "Import terminé",
             "result": {
                 "totalRows": result.total_rows,
                 "imported": result.imported,
-                "duplicates": result.duplicates,
+                "updated": updated_count,
+                "duplicates": duplicate_count + result.duplicates,
                 "invalidEmails": result.invalid_emails,
                 "errors": result.errors[:20]  # Limiter les erreurs retournées
             }
