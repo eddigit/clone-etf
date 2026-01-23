@@ -962,7 +962,25 @@ class CohesionContact(BaseModel):
     lastName: Optional[str] = None
     phone: Optional[str] = None
     company: Optional[str] = None
-    source: str = "import"  # import, manual, website
+    # Nouveaux champs adhérents
+    pointDeVenteId: Optional[str] = None  # ID du point de vente
+    departement: Optional[str] = None  # Département
+    ville: Optional[str] = None  # Ville
+    codePostal: Optional[str] = None  # Code postal
+    adresse: Optional[str] = None  # Adresse complète
+    adherentNom: Optional[str] = None  # Nom adhérent (si différent)
+    montantAdhesion: Optional[float] = None  # Montant de l'adhésion
+    # Historique des règlements par année
+    reglement2023: Optional[bool] = None  # Règlement 2023 effectué
+    reglement2024: Optional[bool] = None  # Règlement 2024 effectué
+    reglement2025: Optional[bool] = None  # Règlement 2025 effectué
+    reglement2026: Optional[bool] = None  # Règlement 2026 effectué
+    # Champs HelloAsso
+    helloAssoOrderId: Optional[str] = None  # ID commande HelloAsso
+    helloAssoFormSlug: Optional[str] = None  # Formulaire HelloAsso
+    helloAssoPaymentDate: Optional[datetime] = None  # Date paiement HelloAsso
+    # Champs existants
+    source: str = "import"  # import, manual, website, helloasso
     tags: List[str] = []
     categoryId: Optional[str] = None  # ID de la catégorie
     categoryName: Optional[str] = None  # Nom de la catégorie (pour affichage)
@@ -994,6 +1012,17 @@ class CohesionContactCreate(BaseModel):
     lastName: Optional[str] = None
     phone: Optional[str] = None
     company: Optional[str] = None
+    pointDeVenteId: Optional[str] = None
+    departement: Optional[str] = None
+    ville: Optional[str] = None
+    codePostal: Optional[str] = None
+    adresse: Optional[str] = None
+    adherentNom: Optional[str] = None
+    montantAdhesion: Optional[float] = None
+    reglement2023: Optional[bool] = None
+    reglement2024: Optional[bool] = None
+    reglement2025: Optional[bool] = None
+    reglement2026: Optional[bool] = None
     tags: Optional[List[str]] = []
     categoryId: Optional[str] = None
     source: str = "manual"
@@ -1005,6 +1034,17 @@ class CohesionContactUpdate(BaseModel):
     lastName: Optional[str] = None
     phone: Optional[str] = None
     company: Optional[str] = None
+    pointDeVenteId: Optional[str] = None
+    departement: Optional[str] = None
+    ville: Optional[str] = None
+    codePostal: Optional[str] = None
+    adresse: Optional[str] = None
+    adherentNom: Optional[str] = None
+    montantAdhesion: Optional[float] = None
+    reglement2023: Optional[bool] = None
+    reglement2024: Optional[bool] = None
+    reglement2025: Optional[bool] = None
+    reglement2026: Optional[bool] = None
     tags: Optional[List[str]] = None
     categoryId: Optional[str] = None
     status: Optional[str] = None

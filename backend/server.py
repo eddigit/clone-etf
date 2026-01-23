@@ -3883,6 +3883,42 @@ async def sync_helloasso_members(
                 upsert=True
             )
             
+            # Synchroniser aussi vers cohesion_contacts
+            current_year = payment_date.year
+            reglement_field = f"reglement{current_year}"
+            
+            existing_cohesion_contact = await db.cohesion_contacts.find_one({"email": email})
+            
+            cohesion_update = {
+                "firstName": member.get("firstName"),
+                "lastName": member.get("lastName"),
+                "phone": member.get("phone"),
+                "ville": member.get("city"),
+                "codePostal": member.get("zipCode"),
+                "adresse": member.get("address"),
+                "montantAdhesion": member.get("amount", 0),
+                "helloAssoOrderId": str(member.get("helloAssoOrderId")),
+                "helloAssoFormSlug": form_slug,
+                "helloAssoPaymentDate": payment_date,
+                "source": "helloasso",
+                reglement_field: True,  # Marquer le règlement pour l'année en cours
+            }
+            
+            if existing_cohesion_contact:
+                # Mettre à jour le contact existant
+                await db.cohesion_contacts.update_one(
+                    {"email": email},
+                    {"$set": cohesion_update}
+                )
+            else:
+                # Créer un nouveau contact dans cohesion
+                from models import CohesionContact
+                cohesion_contact = CohesionContact(
+                    email=email,
+                    **cohesion_update
+                )
+                await db.cohesion_contacts.insert_one(cohesion_contact.model_dump())
+            
         except Exception as e:
             stats["errors"].append({"email": member.get("email"), "error": str(e)})
             logger.error(f"Error syncing HelloAsso member {member.get('email')}: {str(e)}")

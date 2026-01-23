@@ -387,6 +387,15 @@ def create_cohesion_router(db, get_current_admin_user):
         'surname': 'lastName',
         'name': 'lastName',
         'nom de famille': 'lastName',
+        # Nom adhérent
+        'adherent_nom': 'adherentNom',
+        'adherent nom': 'adherentNom',
+        'nom_adherent': 'adherentNom',
+        'nom adherent': 'adherentNom',
+        'adherent': 'adherentNom',
+        'nom_complet': 'adherentNom',
+        'fullname': 'adherentNom',
+        'full_name': 'adherentNom',
         # Téléphone
         'telephone': 'phone',
         'téléphone': 'phone',
@@ -416,6 +425,72 @@ def create_cohesion_router(db, get_current_admin_user):
         'raison sociale': 'company',
         'business': 'company',
         'employer': 'company',
+        # Point de vente
+        'point_de_vente_id': 'pointDeVenteId',
+        'point_de_vente': 'pointDeVenteId',
+        'pointdevente': 'pointDeVenteId',
+        'pdv_id': 'pointDeVenteId',
+        'pdv': 'pointDeVenteId',
+        'store_id': 'pointDeVenteId',
+        'magasin_id': 'pointDeVenteId',
+        'id_magasin': 'pointDeVenteId',
+        # Département
+        'departement': 'departement',
+        'département': 'departement',
+        'dept': 'departement',
+        'dpt': 'departement',
+        'department': 'departement',
+        'code_dept': 'departement',
+        'code_departement': 'departement',
+        # Ville
+        'ville': 'ville',
+        'city': 'ville',
+        'commune': 'ville',
+        'localite': 'ville',
+        'localité': 'ville',
+        'town': 'ville',
+        # Code postal
+        'code_postal': 'codePostal',
+        'codepostal': 'codePostal',
+        'cp': 'codePostal',
+        'zipcode': 'codePostal',
+        'zip_code': 'codePostal',
+        'zip': 'codePostal',
+        'postal_code': 'codePostal',
+        'postalcode': 'codePostal',
+        # Adresse
+        'adresse': 'adresse',
+        'address': 'adresse',
+        'adresse_complete': 'adresse',
+        'rue': 'adresse',
+        'street': 'adresse',
+        'adresse_postale': 'adresse',
+        # Montant adhésion
+        'montant_adhesion': 'montantAdhesion',
+        'montant adhesion': 'montantAdhesion',
+        'montant': 'montantAdhesion',
+        'amount': 'montantAdhesion',
+        'cotisation': 'montantAdhesion',
+        'adhesion_montant': 'montantAdhesion',
+        'prix': 'montantAdhesion',
+        'price': 'montantAdhesion',
+        # Règlements par année
+        'reglement_2023': 'reglement2023',
+        'reglement2023': 'reglement2023',
+        'paiement_2023': 'reglement2023',
+        'paye_2023': 'reglement2023',
+        'reglement_2024': 'reglement2024',
+        'reglement2024': 'reglement2024',
+        'paiement_2024': 'reglement2024',
+        'paye_2024': 'reglement2024',
+        'reglement_2025': 'reglement2025',
+        'reglement2025': 'reglement2025',
+        'paiement_2025': 'reglement2025',
+        'paye_2025': 'reglement2025',
+        'reglement_2026': 'reglement2026',
+        'reglement2026': 'reglement2026',
+        'paiement_2026': 'reglement2026',
+        'paye_2026': 'reglement2026',
         # Tags
         'tags': 'tags',
         'tag': 'tags',
@@ -431,8 +506,19 @@ def create_cohesion_router(db, get_current_admin_user):
         {'key': 'email', 'label': 'Email', 'required': True, 'type': 'email'},
         {'key': 'firstName', 'label': 'Prénom', 'required': False, 'type': 'text'},
         {'key': 'lastName', 'label': 'Nom', 'required': False, 'type': 'text'},
+        {'key': 'adherentNom', 'label': 'Nom adhérent', 'required': False, 'type': 'text'},
         {'key': 'phone', 'label': 'Téléphone', 'required': False, 'type': 'phone'},
         {'key': 'company', 'label': 'Entreprise', 'required': False, 'type': 'text'},
+        {'key': 'pointDeVenteId', 'label': 'ID Point de vente', 'required': False, 'type': 'text'},
+        {'key': 'departement', 'label': 'Département', 'required': False, 'type': 'text'},
+        {'key': 'ville', 'label': 'Ville', 'required': False, 'type': 'text'},
+        {'key': 'codePostal', 'label': 'Code postal', 'required': False, 'type': 'text'},
+        {'key': 'adresse', 'label': 'Adresse', 'required': False, 'type': 'text'},
+        {'key': 'montantAdhesion', 'label': 'Montant adhésion', 'required': False, 'type': 'number'},
+        {'key': 'reglement2023', 'label': 'Règlement 2023', 'required': False, 'type': 'boolean'},
+        {'key': 'reglement2024', 'label': 'Règlement 2024', 'required': False, 'type': 'boolean'},
+        {'key': 'reglement2025', 'label': 'Règlement 2025', 'required': False, 'type': 'boolean'},
+        {'key': 'reglement2026', 'label': 'Règlement 2026', 'required': False, 'type': 'boolean'},
         {'key': 'tags', 'label': 'Tags', 'required': False, 'type': 'tags'},
         {'key': '__ignore__', 'label': 'Ignorer cette colonne', 'required': False, 'type': 'ignore'},
     ]
@@ -660,6 +746,16 @@ def create_cohesion_router(db, get_current_admin_user):
                         if field_name == 'tags':
                             # Séparer les tags par virgule ou point-virgule
                             contact_data['tags'] = [t.strip() for t in value.replace(';', ',').split(',') if t.strip()]
+                        elif field_name == 'montantAdhesion':
+                            # Convertir en float
+                            try:
+                                contact_data['montantAdhesion'] = float(value.replace(',', '.').replace('€', '').replace(' ', ''))
+                            except ValueError:
+                                contact_data['montantAdhesion'] = None
+                        elif field_name in ('reglement2023', 'reglement2024', 'reglement2025', 'reglement2026'):
+                            # Convertir en boolean
+                            val_lower = value.lower()
+                            contact_data[field_name] = val_lower in ('oui', 'yes', '1', 'true', 'o', 'x', 'ok', 'payé', 'paye', 'réglé', 'regle')
                         else:
                             contact_data[field_name] = value
                 
@@ -690,6 +786,19 @@ def create_cohesion_router(db, get_current_admin_user):
                     lastName=contact_data.get('lastName'),
                     phone=contact_data.get('phone'),
                     company=contact_data.get('company'),
+                    # Nouveaux champs
+                    pointDeVenteId=contact_data.get('pointDeVenteId'),
+                    departement=contact_data.get('departement'),
+                    ville=contact_data.get('ville'),
+                    codePostal=contact_data.get('codePostal'),
+                    adresse=contact_data.get('adresse'),
+                    adherentNom=contact_data.get('adherentNom'),
+                    montantAdhesion=contact_data.get('montantAdhesion'),
+                    reglement2023=contact_data.get('reglement2023'),
+                    reglement2024=contact_data.get('reglement2024'),
+                    reglement2025=contact_data.get('reglement2025'),
+                    reglement2026=contact_data.get('reglement2026'),
+                    # Champs existants
                     tags=contact_data.get('tags', []),
                     categoryId=category_id,
                     categoryName=category_name,
