@@ -332,7 +332,7 @@ const Home = () => {
               Pourquoi Adhérer ?
             </h2>
             <p className="text-lg text-gray-400">
-              Rejoignez une communauté de franchisés et bénéficiez d'avantages exclusifs
+              Rejoignez une communauté de commerçants et bénéficiez d'avantages exclusifs
             </p>
           </div>
 
@@ -360,7 +360,7 @@ const Home = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-300">
-                  Échangez avec d'autres franchisés partageant les mêmes problématiques et bénéficiez de leur expérience
+                  Échangez avec d'autres commerçants partageant les mêmes problématiques et bénéficiez de leur expérience
                 </p>
               </CardContent>
             </Card>
@@ -374,7 +374,7 @@ const Home = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-300">
-                  Restez informé des évolutions législatives et des pratiques des réseaux de franchise
+                  Restez informé des évolutions législatives et des pratiques des réseaux de commerçants
                 </p>
               </CardContent>
             </Card>
