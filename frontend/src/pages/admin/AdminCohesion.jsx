@@ -425,10 +425,26 @@ const AdminCohesion = () => {
         fetchContacts();
         fetchCategories();
         fetchStats();
-        toast({
-          title: "Import réussi",
-          description: `${data.result.imported} contacts importés`
-        });
+        
+        // Message toast adapté selon le résultat
+        if (data.result.imported > 0) {
+          toast({
+            title: "Import réussi",
+            description: `${data.result.imported} contacts importés${data.result.duplicates > 0 ? `, ${data.result.duplicates} doublons ignorés` : ''}`
+          });
+        } else if (data.result.duplicates > 0) {
+          toast({
+            title: "Aucun nouveau contact",
+            description: `Les ${data.result.duplicates} contacts existent déjà en base`,
+            variant: "default"
+          });
+        } else {
+          toast({
+            title: "Import terminé",
+            description: "Aucun contact valide trouvé dans le fichier",
+            variant: "default"
+          });
+        }
       } else {
         const error = await res.json();
         toast({
@@ -486,10 +502,26 @@ const AdminCohesion = () => {
         fetchContacts();
         fetchCategories();
         fetchStats();
-        toast({
-          title: "Import réussi",
-          description: `${data.result.imported} contacts importés`
-        });
+        
+        // Message adapté selon le résultat
+        if (data.result.imported > 0) {
+          toast({
+            title: "Import réussi",
+            description: `${data.result.imported} contacts importés${data.result.duplicates > 0 ? `, ${data.result.duplicates} doublons ignorés` : ''}`
+          });
+        } else if (data.result.duplicates > 0) {
+          toast({
+            title: "Aucun nouveau contact",
+            description: `Les ${data.result.duplicates} contacts existent déjà dans la base`,
+            variant: "default"
+          });
+        } else {
+          toast({
+            title: "Import terminé",
+            description: "Aucun contact valide trouvé dans le fichier",
+            variant: "default"
+          });
+        }
       } else {
         const error = await res.json();
         toast({
