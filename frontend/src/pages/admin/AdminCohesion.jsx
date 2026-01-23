@@ -204,6 +204,13 @@ const AdminCohesion = () => {
   const [allContactsCount, setAllContactsCount] = useState(0);
   const [noCategoryCount, setNoCategoryCount] = useState(0);
   
+  // État pour le mapping intelligent CSV
+  const [csvAnalysis, setCsvAnalysis] = useState(null);
+  const [columnMapping, setColumnMapping] = useState({});
+  const [importStep, setImportStep] = useState('upload'); // 'upload' | 'mapping' | 'result'
+  const [analyzing, setAnalyzing] = useState(false);
+  const [importing, setImporting] = useState(false);
+  
   // Pour la création rapide de campagne depuis une audience
   const [quickCampaignAudience, setQuickCampaignAudience] = useState(null);
   
@@ -330,7 +337,128 @@ const AdminCohesion = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAudience]);
 
-  // Import CSV
+  // Analyser le fichier CSV pour proposer un mapping intelligent
+  const analyzeCSV = async (file) => {
+    if (!file) return;
+    
+    setAnalyzing(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const res = await fetch(`${API_URL}/cohesion/analyze-csv`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setCsvAnalysis(data);
+        
+        // Initialiser le mapping avec les suggestions
+        const initialMapping = {};
+        data.columns.forEach(col => {
+          if (col.suggestedField) {
+            initialMapping[col.index] = col.suggestedField;
+          }
+        });
+        setColumnMapping(initialMapping);
+        setImportStep('mapping');
+      } else {
+        const error = await res.json();
+        toast({
+          title: "Erreur d'analyse",
+          description: error.detail,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'analyse du fichier",
+        variant: "destructive"
+      });
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  // Import CSV avec mapping personnalisé
+  const handleImportWithMapping = async () => {
+    if (!importFile || !csvAnalysis) return;
+    
+    // Vérifier qu'il y a au moins un email mappé
+    if (!Object.values(columnMapping).includes('email')) {
+      toast({
+        title: "Mapping incomplet",
+        description: "Vous devez mapper au moins une colonne vers 'Email'",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setImporting(true);
+    const formData = new FormData();
+    formData.append('file', importFile);
+    
+    // Construire l'URL avec les paramètres
+    const params = new URLSearchParams({
+      mapping: JSON.stringify(columnMapping),
+      delimiter: csvAnalysis.delimiter
+    });
+    if (importCategoryId && importCategoryId !== '__none__') {
+      params.append('category_id', importCategoryId);
+    }
+    
+    try {
+      const res = await fetch(`${API_URL}/cohesion/import-with-mapping?${params}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setImportResult(data.result);
+        setImportStep('result');
+        fetchContacts();
+        fetchCategories();
+        fetchStats();
+        toast({
+          title: "Import réussi",
+          description: `${data.result.imported} contacts importés`
+        });
+      } else {
+        const error = await res.json();
+        toast({
+          title: "Erreur d'import",
+          description: error.detail,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'import",
+        variant: "destructive"
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  // Réinitialiser l'import
+  const resetImport = () => {
+    setImportFile(null);
+    setCsvAnalysis(null);
+    setColumnMapping({});
+    setImportResult(null);
+    setImportStep('upload');
+    setImportCategoryId('');
+  };
+
+  // Import CSV classique (fallback)
   const handleImport = async () => {
     if (!importFile) return;
     
@@ -1785,94 +1913,339 @@ const AdminCohesion = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Modal Import CSV */}
-      <Dialog open={showImportModal} onOpenChange={setShowImportModal}>
-        <DialogContent className="max-w-lg">
+      {/* Modal Import CSV avec Mapping Intelligent */}
+      <Dialog open={showImportModal} onOpenChange={(open) => {
+        setShowImportModal(open);
+        if (!open) resetImport();
+      }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Importer des contacts</DialogTitle>
+            <DialogTitle>
+              {importStep === 'upload' && 'Importer des contacts'}
+              {importStep === 'mapping' && 'Mapper les colonnes'}
+              {importStep === 'result' && 'Résultat de l\'import'}
+            </DialogTitle>
             <DialogDescription>
-              Importez un fichier CSV contenant vos contacts
+              {importStep === 'upload' && 'Sélectionnez un fichier CSV pour commencer'}
+              {importStep === 'mapping' && 'Associez les colonnes de votre fichier aux champs du système'}
+              {importStep === 'result' && 'Votre import a été traité'}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Fichier CSV</Label>
-              <Input
-                type="file"
-                accept=".csv"
-                onChange={(e) => {
-                  setImportFile(e.target.files[0]);
-                  setImportResult(null);
-                }}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Le fichier doit contenir une colonne "email". Colonnes optionnelles: nom, prenom, telephone, entreprise
-              </p>
-            </div>
-            
-            <div>
-              <Label>Audience de destination</Label>
-              <Select 
-                value={importCategoryId || '__none__'} 
-                onValueChange={(v) => setImportCategoryId(v === '__none__' ? '' : v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une audience (optionnel)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">Aucune audience</SelectItem>
-                  {categories.map(cat => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: cat.color }}
-                        />
-                        {cat.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500 mt-1">
-                Tous les contacts importés seront ajoutés à cette audience
-              </p>
-            </div>
-            
-            {importResult && (
-              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <span>{importResult.imported} contacts importés</span>
-                </div>
-                {importResult.duplicates > 0 && (
-                  <div className="flex items-center gap-2 text-yellow-600">
-                    <AlertCircle className="h-5 w-5" />
-                    <span>{importResult.duplicates} doublons ignorés</span>
-                  </div>
-                )}
-                {importResult.invalidEmails > 0 && (
-                  <div className="flex items-center gap-2 text-red-600">
-                    <XCircle className="h-5 w-5" />
-                    <span>{importResult.invalidEmails} emails invalides</span>
-                  </div>
-                )}
+
+          {/* Étape 1: Upload */}
+          {importStep === 'upload' && (
+            <div className="space-y-4">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <Label className="cursor-pointer">
+                  <span className="text-blue-600 hover:text-blue-700 font-medium">
+                    Choisir un fichier CSV
+                  </span>
+                  <Input
+                    type="file"
+                    accept=".csv"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setImportFile(file);
+                        analyzeCSV(file);
+                      }
+                    }}
+                  />
+                </Label>
+                <p className="text-sm text-gray-500 mt-2">
+                  ou glissez-déposez votre fichier ici
+                </p>
               </div>
-            )}
-          </div>
+              
+              {analyzing && (
+                <div className="flex items-center justify-center gap-2 py-4">
+                  <RefreshCw className="h-5 w-5 animate-spin text-blue-600" />
+                  <span>Analyse du fichier en cours...</span>
+                </div>
+              )}
+              
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-2">Formats acceptés</h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Fichiers .csv avec séparateur virgule, point-virgule ou tabulation</li>
+                  <li>• Première ligne = en-têtes de colonnes</li>
+                  <li>• Encodages supportés : UTF-8, Latin-1, Windows-1252</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Étape 2: Mapping des colonnes */}
+          {importStep === 'mapping' && csvAnalysis && (
+            <div className="space-y-6">
+              {/* Infos fichier */}
+              <div className="bg-blue-50 p-4 rounded-lg flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-blue-900">{csvAnalysis.filename}</p>
+                  <p className="text-sm text-blue-700">
+                    {csvAnalysis.totalRows} lignes • {csvAnalysis.columns.length} colonnes • 
+                    Délimiteur: {csvAnalysis.delimiter === ',' ? 'virgule' : csvAnalysis.delimiter === ';' ? 'point-virgule' : 'tabulation'}
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => {
+                  setImportStep('upload');
+                  setImportFile(null);
+                  setCsvAnalysis(null);
+                }}>
+                  Changer de fichier
+                </Button>
+              </div>
+
+              {/* Sélection de l'audience */}
+              <div>
+                <Label className="mb-2 block">Audience de destination (optionnel)</Label>
+                <Select 
+                  value={importCategoryId || '__none__'} 
+                  onValueChange={(v) => setImportCategoryId(v === '__none__' ? '' : v)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Sélectionner une audience" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Aucune audience</SelectItem>
+                    {categories.map(cat => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-3 h-3 rounded-full" 
+                            style={{ backgroundColor: cat.color }}
+                          />
+                          {cat.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Table de mapping */}
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-50">
+                      <TableHead className="w-1/4">Colonne du fichier</TableHead>
+                      <TableHead className="w-1/4">Champ système</TableHead>
+                      <TableHead className="w-1/3">Aperçu des données</TableHead>
+                      <TableHead className="w-20 text-right">Remplissage</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {csvAnalysis.columns.map((col) => (
+                      <TableRow key={col.index} className={col.isEmpty ? 'bg-gray-50 opacity-60' : ''}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {columnMapping[col.index] === 'email' && (
+                              <Badge className="bg-green-100 text-green-800">Requis</Badge>
+                            )}
+                            <span>{col.originalName}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={columnMapping[col.index] || '__none__'}
+                            onValueChange={(value) => {
+                              const newMapping = { ...columnMapping };
+                              if (value === '__none__') {
+                                delete newMapping[col.index];
+                              } else {
+                                newMapping[col.index] = value;
+                              }
+                              setColumnMapping(newMapping);
+                            }}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Ignorer" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__none__">— Ignorer cette colonne —</SelectItem>
+                              {csvAnalysis.availableFields.map(field => (
+                                <SelectItem 
+                                  key={field.key} 
+                                  value={field.key}
+                                  disabled={field.key !== '__ignore__' && Object.values(columnMapping).includes(field.key) && columnMapping[col.index] !== field.key}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    {field.required && <span className="text-red-500">*</span>}
+                                    {field.label}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm text-gray-600 truncate max-w-xs">
+                            {col.sampleValues.length > 0 
+                              ? col.sampleValues.join(' • ')
+                              : <span className="text-gray-400 italic">Aucune donnée</span>
+                            }
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant={col.fillRate > 80 ? 'default' : col.fillRate > 50 ? 'secondary' : 'outline'}>
+                            {col.fillRate}%
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Prévisualisation */}
+              {csvAnalysis.preview && csvAnalysis.preview.length > 0 && (
+                <div>
+                  <Label className="mb-2 block">Aperçu des données (5 premières lignes)</Label>
+                  <div className="border rounded-lg overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-gray-50">
+                          {Object.entries(columnMapping).map(([idx, field]) => (
+                            <TableHead key={idx} className="whitespace-nowrap">
+                              {csvAnalysis.availableFields.find(f => f.key === field)?.label || field}
+                            </TableHead>
+                          ))}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {csvAnalysis.preview.slice(0, 3).map((row, rowIdx) => (
+                          <TableRow key={rowIdx}>
+                            {Object.entries(columnMapping).map(([idx, field]) => (
+                              <TableCell key={idx} className="truncate max-w-32">
+                                {row[csvAnalysis.headers[parseInt(idx)]] || '-'}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
+
+              {/* Validation */}
+              {!Object.values(columnMapping).includes('email') && (
+                <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg flex items-center gap-3">
+                  <AlertCircle className="h-5 w-5 text-yellow-600" />
+                  <p className="text-yellow-800">
+                    Vous devez mapper au moins une colonne vers le champ <strong>Email</strong> pour continuer.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Étape 3: Résultat */}
+          {importStep === 'result' && importResult && (
+            <div className="space-y-4">
+              <div className="bg-green-50 p-6 rounded-lg text-center">
+                <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-3" />
+                <h3 className="text-xl font-semibold text-green-800">Import terminé !</h3>
+                <p className="text-green-700 mt-1">
+                  {importResult.imported} contacts ont été importés avec succès
+                </p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="pt-6 text-center">
+                    <p className="text-3xl font-bold text-gray-900">{importResult.totalRows}</p>
+                    <p className="text-sm text-gray-500">Lignes analysées</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6 text-center">
+                    <p className="text-3xl font-bold text-green-600">{importResult.imported}</p>
+                    <p className="text-sm text-gray-500">Contacts importés</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6 text-center">
+                    <p className="text-3xl font-bold text-yellow-600">{importResult.duplicates}</p>
+                    <p className="text-sm text-gray-500">Doublons ignorés</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {importResult.invalidEmails > 0 && (
+                <div className="bg-red-50 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 text-red-800">
+                    <XCircle className="h-5 w-5" />
+                    <span className="font-medium">{importResult.invalidEmails} emails invalides</span>
+                  </div>
+                </div>
+              )}
+
+              {importResult.errors && importResult.errors.length > 0 && (
+                <div className="bg-gray-50 p-4 rounded-lg max-h-40 overflow-y-auto">
+                  <h4 className="font-medium mb-2">Détails des erreurs</h4>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    {importResult.errors.map((err, i) => (
+                      <li key={i}>• {typeof err === 'string' ? err : err.message}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setShowImportModal(false);
-              setImportFile(null);
-              setImportCategoryId('');
-              setImportResult(null);
-            }}>
-              Fermer
-            </Button>
-            <Button onClick={handleImport} disabled={!importFile}>
-              <Upload className="h-4 w-4 mr-2" />
-              Importer
-            </Button>
+            {importStep === 'upload' && (
+              <Button variant="outline" onClick={() => setShowImportModal(false)}>
+                Annuler
+              </Button>
+            )}
+            
+            {importStep === 'mapping' && (
+              <>
+                <Button variant="outline" onClick={() => {
+                  setImportStep('upload');
+                  setImportFile(null);
+                  setCsvAnalysis(null);
+                }}>
+                  Retour
+                </Button>
+                <Button 
+                  onClick={handleImportWithMapping} 
+                  disabled={!Object.values(columnMapping).includes('email') || importing}
+                >
+                  {importing ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Import en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Importer {csvAnalysis?.totalRows} contacts
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
+            
+            {importStep === 'result' && (
+              <>
+                <Button variant="outline" onClick={() => {
+                  resetImport();
+                }}>
+                  Nouvel import
+                </Button>
+                <Button onClick={() => {
+                  setShowImportModal(false);
+                  resetImport();
+                }}>
+                  Terminer
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

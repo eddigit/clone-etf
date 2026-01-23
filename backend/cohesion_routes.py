@@ -355,6 +355,375 @@ def create_cohesion_router(db, get_current_admin_user):
     
     # ==================== IMPORT CSV ====================
     
+    # Mapping intelligent des colonnes CSV vers les champs du système
+    COLUMN_MAPPING_SUGGESTIONS = {
+        # Email
+        'email': 'email',
+        'e-mail': 'email',
+        'mail': 'email',
+        'courriel': 'email',
+        'adresse_email': 'email',
+        'adresse email': 'email',
+        'email_address': 'email',
+        'emailaddress': 'email',
+        'contact_email': 'email',
+        'adresse mail': 'email',
+        # Prénom
+        'prenom': 'firstName',
+        'prénom': 'firstName',
+        'firstname': 'firstName',
+        'first_name': 'firstName',
+        'first name': 'firstName',
+        'given_name': 'firstName',
+        'givenname': 'firstName',
+        'forename': 'firstName',
+        # Nom
+        'nom': 'lastName',
+        'lastname': 'lastName',
+        'last_name': 'lastName',
+        'last name': 'lastName',
+        'family_name': 'lastName',
+        'familyname': 'lastName',
+        'surname': 'lastName',
+        'name': 'lastName',
+        'nom de famille': 'lastName',
+        # Téléphone
+        'telephone': 'phone',
+        'téléphone': 'phone',
+        'phone': 'phone',
+        'tel': 'phone',
+        'tél': 'phone',
+        'mobile': 'phone',
+        'portable': 'phone',
+        'phone_number': 'phone',
+        'phonenumber': 'phone',
+        'numero_telephone': 'phone',
+        'numéro téléphone': 'phone',
+        'cell': 'phone',
+        'cellphone': 'phone',
+        # Entreprise
+        'entreprise': 'company',
+        'societe': 'company',
+        'société': 'company',
+        'company': 'company',
+        'organization': 'company',
+        'organisation': 'company',
+        'org': 'company',
+        'company_name': 'company',
+        'companyname': 'company',
+        'nom_entreprise': 'company',
+        'raison_sociale': 'company',
+        'raison sociale': 'company',
+        'business': 'company',
+        'employer': 'company',
+        # Tags
+        'tags': 'tags',
+        'tag': 'tags',
+        'etiquettes': 'tags',
+        'étiquettes': 'tags',
+        'labels': 'tags',
+        'categories': 'tags',
+        'catégories': 'tags',
+    }
+    
+    # Champs disponibles pour le mapping
+    AVAILABLE_FIELDS = [
+        {'key': 'email', 'label': 'Email', 'required': True, 'type': 'email'},
+        {'key': 'firstName', 'label': 'Prénom', 'required': False, 'type': 'text'},
+        {'key': 'lastName', 'label': 'Nom', 'required': False, 'type': 'text'},
+        {'key': 'phone', 'label': 'Téléphone', 'required': False, 'type': 'phone'},
+        {'key': 'company', 'label': 'Entreprise', 'required': False, 'type': 'text'},
+        {'key': 'tags', 'label': 'Tags', 'required': False, 'type': 'tags'},
+        {'key': '__ignore__', 'label': 'Ignorer cette colonne', 'required': False, 'type': 'ignore'},
+    ]
+    
+    @router.post("/analyze-csv", response_model=dict)
+    async def analyze_csv(
+        file: UploadFile = File(...),
+        current_user: dict = Depends(get_current_admin_user)
+    ):
+        """
+        Analyse un fichier CSV et propose un mapping intelligent des colonnes
+        
+        Returns:
+            - columns: Liste des colonnes trouvées avec les suggestions de mapping
+            - preview: Aperçu des premières lignes
+            - availableFields: Champs disponibles pour le mapping
+        """
+        import csv
+        import io
+        
+        if not file.filename.endswith('.csv'):
+            raise HTTPException(status_code=400, detail="Le fichier doit être au format CSV")
+        
+        content = await file.read()
+        
+        # Essayer différents encodages
+        csv_content = None
+        detected_encoding = None
+        for encoding in ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252', 'iso-8859-1']:
+            try:
+                csv_content = content.decode(encoding)
+                detected_encoding = encoding
+                break
+            except UnicodeDecodeError:
+                continue
+        
+        if csv_content is None:
+            raise HTTPException(status_code=400, detail="Impossible de décoder le fichier CSV")
+        
+        # Détecter le délimiteur
+        csv_content = csv_content.replace('\r\n', '\n').replace('\r', '\n')
+        first_line = csv_content.split('\n')[0] if csv_content else ''
+        
+        # Compter les délimiteurs potentiels
+        delimiters = {',': 0, ';': 0, '\t': 0, '|': 0}
+        for delim in delimiters:
+            delimiters[delim] = first_line.count(delim)
+        
+        # Choisir le délimiteur le plus fréquent
+        detected_delimiter = max(delimiters, key=delimiters.get)
+        if delimiters[detected_delimiter] == 0:
+            detected_delimiter = ','
+        
+        # Parser le CSV
+        reader = csv.reader(io.StringIO(csv_content), delimiter=detected_delimiter)
+        rows = list(reader)
+        
+        if not rows:
+            raise HTTPException(status_code=400, detail="Fichier CSV vide")
+        
+        # Analyser les en-têtes
+        headers = rows[0]
+        data_rows = rows[1:] if len(rows) > 1 else []
+        
+        # Proposer un mapping intelligent pour chaque colonne
+        columns = []
+        for idx, header in enumerate(headers):
+            header_clean = header.strip()
+            header_lower = header_clean.lower().strip()
+            
+            # Chercher une correspondance dans le mapping
+            suggested_field = COLUMN_MAPPING_SUGGESTIONS.get(header_lower)
+            
+            # Si pas de correspondance exacte, chercher par contenu partiel
+            if not suggested_field:
+                for key, field in COLUMN_MAPPING_SUGGESTIONS.items():
+                    if key in header_lower or header_lower in key:
+                        suggested_field = field
+                        break
+            
+            # Analyser le contenu de la colonne pour affiner la suggestion
+            sample_values = []
+            for row in data_rows[:5]:
+                if idx < len(row) and row[idx].strip():
+                    sample_values.append(row[idx].strip())
+            
+            # Si toujours pas de suggestion, analyser le format des données
+            if not suggested_field and sample_values:
+                # Vérifier si c'est un email
+                email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+                import re
+                if all(re.match(email_pattern, v) for v in sample_values if v):
+                    suggested_field = 'email'
+                # Vérifier si c'est un téléphone
+                elif all(re.match(r'^[\d\s\+\-\.\(\)]+$', v) for v in sample_values if v):
+                    if all(len(re.sub(r'[^\d]', '', v)) >= 8 for v in sample_values if v):
+                        suggested_field = 'phone'
+            
+            # Calculer le taux de remplissage
+            filled_count = sum(1 for row in data_rows if idx < len(row) and row[idx].strip())
+            fill_rate = (filled_count / len(data_rows) * 100) if data_rows else 0
+            
+            columns.append({
+                'index': idx,
+                'originalName': header_clean,
+                'suggestedField': suggested_field,
+                'sampleValues': sample_values[:3],
+                'fillRate': round(fill_rate, 1),
+                'isEmpty': fill_rate == 0
+            })
+        
+        # Prévisualisation des données
+        preview = []
+        for row in data_rows[:5]:
+            row_data = {}
+            for idx, header in enumerate(headers):
+                row_data[header.strip()] = row[idx].strip() if idx < len(row) else ''
+            preview.append(row_data)
+        
+        return {
+            "filename": file.filename,
+            "encoding": detected_encoding,
+            "delimiter": detected_delimiter,
+            "totalRows": len(data_rows),
+            "columns": columns,
+            "preview": preview,
+            "availableFields": AVAILABLE_FIELDS,
+            "headers": [h.strip() for h in headers]
+        }
+    
+    @router.post("/import-with-mapping", response_model=dict)
+    async def import_csv_with_mapping(
+        file: UploadFile = File(...),
+        mapping: str = Query(..., description="JSON mapping des colonnes: {colIndex: fieldName}"),
+        validate_domains: bool = Query(False),
+        category_id: Optional[str] = Query(None, description="ID de la catégorie à affecter"),
+        delimiter: str = Query(',', description="Délimiteur CSV"),
+        current_user: dict = Depends(get_current_admin_user)
+    ):
+        """
+        Importe un fichier CSV avec un mapping personnalisé des colonnes
+        
+        Args:
+            mapping: JSON string avec le mapping {index_colonne: nom_champ}
+                     Ex: {"0": "email", "1": "firstName", "2": "lastName"}
+        """
+        import csv
+        import io
+        import json
+        
+        if not file.filename.endswith('.csv'):
+            raise HTTPException(status_code=400, detail="Le fichier doit être au format CSV")
+        
+        # Parser le mapping
+        try:
+            column_mapping = json.loads(mapping)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="Format de mapping invalide")
+        
+        # Vérifier qu'il y a au moins une colonne email
+        if 'email' not in column_mapping.values():
+            raise HTTPException(status_code=400, detail="Le mapping doit contenir au moins une colonne 'email'")
+        
+        # Récupérer la catégorie si fournie
+        category_name = None
+        if category_id:
+            category = await db.cohesion_categories.find_one({"id": category_id})
+            if category:
+                category_name = category.get("name")
+        
+        # Lire le contenu du fichier
+        content = await file.read()
+        
+        # Essayer différents encodages
+        csv_content = None
+        for encoding in ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252', 'iso-8859-1']:
+            try:
+                csv_content = content.decode(encoding)
+                break
+            except UnicodeDecodeError:
+                continue
+        
+        if csv_content is None:
+            raise HTTPException(status_code=400, detail="Impossible de décoder le fichier CSV")
+        
+        # Parser le CSV
+        csv_content = csv_content.replace('\r\n', '\n').replace('\r', '\n')
+        reader = csv.reader(io.StringIO(csv_content), delimiter=delimiter)
+        rows = list(reader)
+        
+        if len(rows) < 2:
+            raise HTTPException(status_code=400, detail="Le fichier doit contenir au moins une ligne de données")
+        
+        # Ignorer l'en-tête
+        data_rows = rows[1:]
+        
+        # Récupérer les emails existants
+        existing_cursor = db.cohesion_contacts.find({}, {"email": 1})
+        existing_docs = await existing_cursor.to_list(length=100000)
+        existing_emails = {doc["email"].lower() for doc in existing_docs}
+        
+        # Traiter les lignes
+        stats = {
+            "total": len(data_rows),
+            "imported": 0,
+            "duplicates": 0,
+            "invalidEmails": 0,
+            "errors": []
+        }
+        
+        contacts_to_insert = []
+        
+        for row_num, row in enumerate(data_rows, start=2):
+            try:
+                contact_data = {}
+                
+                # Appliquer le mapping
+                for col_idx_str, field_name in column_mapping.items():
+                    col_idx = int(col_idx_str)
+                    if field_name == '__ignore__' or col_idx >= len(row):
+                        continue
+                    
+                    value = row[col_idx].strip()
+                    if value:
+                        if field_name == 'tags':
+                            # Séparer les tags par virgule ou point-virgule
+                            contact_data['tags'] = [t.strip() for t in value.replace(';', ',').split(',') if t.strip()]
+                        else:
+                            contact_data[field_name] = value
+                
+                # Vérifier l'email
+                email = contact_data.get('email', '').lower().strip()
+                if not email:
+                    stats['errors'].append(f"Ligne {row_num}: Email manquant")
+                    continue
+                
+                # Valider le format de l'email
+                email_validation = cohesion_service.validate_email_format(email)
+                if not email_validation.is_valid:
+                    stats['invalidEmails'] += 1
+                    stats['errors'].append(f"Ligne {row_num}: {email_validation.error_message}")
+                    continue
+                
+                # Vérifier les doublons
+                if email in existing_emails:
+                    stats['duplicates'] += 1
+                    continue
+                
+                # Ajouter à la liste des contacts à insérer
+                existing_emails.add(email)  # Éviter les doublons dans le même fichier
+                
+                contact = CohesionContact(
+                    email=email,
+                    firstName=contact_data.get('firstName'),
+                    lastName=contact_data.get('lastName'),
+                    phone=contact_data.get('phone'),
+                    company=contact_data.get('company'),
+                    tags=contact_data.get('tags', []),
+                    categoryId=category_id,
+                    categoryName=category_name,
+                    source="import",
+                    emailValidated=True
+                )
+                contacts_to_insert.append(contact.model_dump())
+                stats['imported'] += 1
+                
+            except Exception as e:
+                stats['errors'].append(f"Ligne {row_num}: Erreur - {str(e)}")
+        
+        # Insérer les contacts
+        if contacts_to_insert:
+            await db.cohesion_contacts.insert_many(contacts_to_insert)
+            
+            # Mettre à jour le compteur de la catégorie
+            if category_id:
+                await db.cohesion_categories.update_one(
+                    {"id": category_id},
+                    {"$inc": {"contactsCount": len(contacts_to_insert)}}
+                )
+        
+        return {
+            "message": "Import terminé",
+            "result": {
+                "totalRows": stats['total'],
+                "imported": stats['imported'],
+                "duplicates": stats['duplicates'],
+                "invalidEmails": stats['invalidEmails'],
+                "errors": stats['errors'][:20]
+            }
+        }
+    
     @router.post("/import", response_model=dict)
     async def import_csv(
         file: UploadFile = File(...),
@@ -363,10 +732,12 @@ def create_cohesion_router(db, get_current_admin_user):
         current_user: dict = Depends(get_current_admin_user)
     ):
         """
-        Importe un fichier CSV de contacts
+        Importe un fichier CSV de contacts (mode automatique)
         
         Le fichier doit contenir au minimum une colonne 'email'.
         Colonnes optionnelles: nom, prenom, telephone, entreprise
+        
+        Note: Pour un contrôle plus précis du mapping, utilisez /analyze-csv puis /import-with-mapping
         """
         if not file.filename.endswith('.csv'):
             raise HTTPException(status_code=400, detail="Le fichier doit être au format CSV")
