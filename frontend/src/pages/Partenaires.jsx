@@ -38,8 +38,8 @@ const partenaires = [
   {
     id: 4,
     nom: "GADSECA",
-    description: "Groupement d'action pour la défense des commerçants et artisans",
-    logo: null,
+    description: "Collectif départemental qui coordonne et soutient les associations de protection de l'environnement et agit pour préserver les sites, espaces naturels, paysages et ressources des Alpes-Maritimes",
+    logo: "/gadseca.png",
     url: null
   },
   {
