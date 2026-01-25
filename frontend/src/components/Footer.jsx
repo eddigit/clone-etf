@@ -152,6 +152,21 @@ const Footer = () => {
               </Link>
             </div>
             
+            {/* Crédits développement */}
+            <div className="mt-4 text-xs text-gray-500">
+              <p>
+                Développement et design réalisés par{' '}
+                <a 
+                  href="https://www.maboitedigitale.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-white transition-colors font-medium"
+                >
+                  MaBoiteDigitale.com
+                </a>
+              </p>
+            </div>
+            
             <div className="mt-3 flex items-center justify-center gap-2 text-xs text-gray-500">
               <GitCommit className="h-3 w-3" />
               <span>{getVersionString()}</span>

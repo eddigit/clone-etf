@@ -142,14 +142,15 @@ const Navbar = () => {
                 </Button>
               </a>
               
-              <Button 
-                onClick={() => handleNavigate('/adhesion')} 
-                size="sm" 
-                className="hidden sm:flex bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg hover:shadow-green-500/25 transition-all"
-              >
-                <Users className="h-4 w-4 mr-1" />
-                <span className="hidden md:inline">Adhérer</span>
-              </Button>
+              <Link to="/adhesion">
+                <Button 
+                  size="sm" 
+                  className="hidden sm:flex bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg hover:shadow-green-500/25 transition-all"
+                >
+                  <Users className="h-4 w-4 mr-1" />
+                  <span className="hidden md:inline">Adhérer</span>
+                </Button>
+              </Link>
 
               {/* Auth - Desktop */}
               {isAuthenticated && (

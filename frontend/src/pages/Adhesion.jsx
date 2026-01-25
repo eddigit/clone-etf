@@ -19,22 +19,16 @@ const MEMBERSHIP_CATEGORIES = {
     types: ['individual']
   },
   commercants: {
-    title: 'Commerçants & Artisans',
+    title: 'Commerçants, Artisans & Associations',
     icon: Store,
-    description: 'Pour les professionnels selon la taille de leur commerce',
-    types: ['professional', 'professional_plus']
+    description: 'Pour les professionnels et associations partenaires',
+    types: ['professional', 'association', 'professional_plus']
   },
   commercants_independants: {
     title: 'Commerçants indépendants',
     icon: ShoppingCart,
     description: 'Commerces de plus de 300 m²',
     types: ['medium_store', 'large_store', 'hypermarket']
-  },
-  associations: {
-    title: 'Associations Partenaires',
-    icon: Handshake,
-    description: 'Pour les associations souhaitant nous rejoindre',
-    types: ['association']
   }
 };
 
@@ -61,6 +55,18 @@ const MEMBERSHIP_TYPES = {
       'Partage de retours d\'expérience',
       'Orientation vers avocats partenaires',
       'Modèles et ressources documentaires'
+    ]
+  },
+  association: {
+    label: 'Associations',
+    amount: 50,
+    description: 'Pour les associations partenaires',
+    benefits: [
+      'Partenariat privilégié',
+      'Actions et orientations conjointes',
+      'Partage de ressources',
+      'Coordination des initiatives',
+      'Réseau associatif étendu'
     ]
   },
   professional_plus: {
@@ -109,17 +115,6 @@ const MEMBERSHIP_TYPES = {
       'Veille réglementaire personnalisée',
       'Accès prioritaire au réseau national et européen',
       'Formation et partage d\'expérience exclusif'
-    ]
-  },
-  association: {
-    label: 'Associations',
-    amount: 152.32,
-    description: 'Pour les associations partenaires',
-    benefits: [
-      'Partenariat privilégié',
-      'Actions et orientations conjointes',
-      'Partage de ressources',
-      'Coordination des initiatives'
     ]
   }
 };
