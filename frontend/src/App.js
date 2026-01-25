@@ -16,6 +16,7 @@ import Contact from "./pages/Contact";
 import Adhesion from "./pages/Adhesion";
 import Partenaires from "./pages/Partenaires";
 import Livre418Milliards from "./pages/Livre418Milliards";
+import MentionsLegales from "./pages/MentionsLegales";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import AIAssistant from "./pages/dashboard/AIAssistant";
 import Documents from "./pages/dashboard/Documents";
@@ -99,6 +100,7 @@ function App() {
           <Route path="/adhesion" element={<PublicLayout><Adhesion /></PublicLayout>} />
           <Route path="/partenaires" element={<PublicLayout><Partenaires /></PublicLayout>} />
           <Route path="/livre-418-milliards" element={<PublicLayout><Livre418Milliards /></PublicLayout>} />
+          <Route path="/mentions-legales" element={<PublicLayout><MentionsLegales /></PublicLayout>} />
           
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
