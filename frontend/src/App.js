@@ -46,6 +46,7 @@ import AdminAdhesionTestAgent from "./pages/admin/AdminAdhesionTestAgent";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminChat from "./pages/admin/AdminChat";
 import AdminAdhesionLogs from "./pages/admin/AdminAdhesionLogs";
+import AdminSocialMedia from "./pages/admin/AdminSocialMedia";
 import BlogArticle from "./pages/BlogArticle";
 import ChatAIWidget from "./components/ChatAIWidget";
 import AnalyticsTracker from "./components/AnalyticsTracker";
@@ -341,6 +342,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminLayout><AdminAI /></AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/social-media"
+            element={
+              <ProtectedRoute>
+                <AdminLayout><AdminSocialMedia /></AdminLayout>
               </ProtectedRoute>
             }
           />

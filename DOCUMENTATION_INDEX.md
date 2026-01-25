@@ -88,6 +88,13 @@
     - Modèles de requêtes/réponses
     - Exemples d'utilisation
 
+### Intégrations Externes
+11. **[SOCIAL_MEDIA_INTEGRATION.md](SOCIAL_MEDIA_INTEGRATION.md)** 📱
+    - Configuration Facebook, LinkedIn, X (Twitter)
+    - Obtention des tokens d'API
+    - Publication automatique des articles
+    - Dépannage
+
 ---
 
 ## 🎓 Parcours Recommandés

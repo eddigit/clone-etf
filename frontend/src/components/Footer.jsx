@@ -64,10 +64,14 @@ const Footer = () => {
             <p className="text-gray-400 text-sm mb-4">
               30 ans de combat pour la justice
             </p>
-            <div className="flex items-center space-x-2 text-sm text-gray-400">
-              <Heart className="h-4 w-4 text-red-500" />
+            <Link 
+              to="/mentions-legales#mission" 
+              className="flex items-center space-x-2 text-sm text-gray-400 hover:text-white transition-colors group cursor-pointer"
+              title="Voir l'objet statutaire de l'association"
+            >
+              <Heart className="h-4 w-4 text-red-500 group-hover:scale-110 transition-transform" />
               <span>Apolitique depuis 1994</span>
-            </div>
+            </Link>
           </div>
 
           {/* Navigation */}

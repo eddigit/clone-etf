@@ -1074,6 +1074,122 @@ async def get_social_media_platforms(
     }
 
 
+@api_router.post("/admin/social-media/test")
+async def test_social_media_connection(
+    platform: str = Body(..., embed=True),
+    current_user: dict = Depends(get_admin_user)
+):
+    """
+    Teste la connexion à une plateforme de réseau social.
+    Vérifie que les tokens sont valides sans publier de contenu.
+    """
+    import httpx
+    
+    if platform not in ["facebook", "linkedin", "twitter", "instagram"]:
+        raise HTTPException(status_code=400, detail="Plateforme non supportée")
+    
+    result = {"platform": platform, "success": False, "message": "", "details": {}}
+    
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            if platform == "facebook":
+                page_id = os.environ.get("FACEBOOK_PAGE_ID")
+                access_token = os.environ.get("FACEBOOK_ACCESS_TOKEN")
+                
+                if not page_id or not access_token:
+                    result["message"] = "Configuration manquante: FACEBOOK_PAGE_ID ou FACEBOOK_ACCESS_TOKEN"
+                    return result
+                
+                # Tester en récupérant les infos de la page
+                response = await client.get(
+                    f"https://graph.facebook.com/v18.0/{page_id}",
+                    params={"access_token": access_token, "fields": "name,id"}
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    result["success"] = True
+                    result["message"] = f"Connecté à la page: {data.get('name')}"
+                    result["details"] = {"page_name": data.get("name"), "page_id": data.get("id")}
+                else:
+                    error_data = response.json()
+                    result["message"] = f"Erreur: {error_data.get('error', {}).get('message', 'Inconnu')}"
+            
+            elif platform == "linkedin":
+                org_id = os.environ.get("LINKEDIN_ORGANIZATION_ID")
+                access_token = os.environ.get("LINKEDIN_ACCESS_TOKEN")
+                
+                if not org_id or not access_token:
+                    result["message"] = "Configuration manquante: LINKEDIN_ORGANIZATION_ID ou LINKEDIN_ACCESS_TOKEN"
+                    return result
+                
+                # Tester en récupérant les infos de l'organisation
+                response = await client.get(
+                    f"https://api.linkedin.com/v2/organizations/{org_id}",
+                    headers={
+                        "Authorization": f"Bearer {access_token}",
+                        "X-Restli-Protocol-Version": "2.0.0"
+                    }
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    org_name = data.get("localizedName", "Inconnu")
+                    result["success"] = True
+                    result["message"] = f"Connecté à l'organisation: {org_name}"
+                    result["details"] = {"organization_name": org_name, "organization_id": org_id}
+                else:
+                    result["message"] = f"Erreur LinkedIn: {response.status_code} - {response.text[:200]}"
+            
+            elif platform == "twitter":
+                bearer_token = os.environ.get("TWITTER_BEARER_TOKEN")
+                
+                if not bearer_token:
+                    result["message"] = "Configuration manquante: TWITTER_BEARER_TOKEN"
+                    return result
+                
+                # Tester en récupérant les infos du compte
+                response = await client.get(
+                    "https://api.twitter.com/2/users/me",
+                    headers={"Authorization": f"Bearer {bearer_token}"}
+                )
+                
+                if response.status_code == 200:
+                    data = response.json().get("data", {})
+                    result["success"] = True
+                    result["message"] = f"Connecté au compte: @{data.get('username')}"
+                    result["details"] = {"username": data.get("username"), "name": data.get("name")}
+                else:
+                    result["message"] = f"Erreur Twitter: {response.status_code}"
+            
+            elif platform == "instagram":
+                account_id = os.environ.get("INSTAGRAM_ACCOUNT_ID")
+                access_token = os.environ.get("INSTAGRAM_ACCESS_TOKEN")
+                
+                if not account_id or not access_token:
+                    result["message"] = "Configuration manquante: INSTAGRAM_ACCOUNT_ID ou INSTAGRAM_ACCESS_TOKEN"
+                    return result
+                
+                response = await client.get(
+                    f"https://graph.facebook.com/v18.0/{account_id}",
+                    params={"access_token": access_token, "fields": "username,name"}
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    result["success"] = True
+                    result["message"] = f"Connecté au compte: @{data.get('username')}"
+                    result["details"] = data
+                else:
+                    result["message"] = f"Erreur Instagram: {response.text[:200]}"
+    
+    except Exception as e:
+        result["message"] = f"Erreur de connexion: {str(e)}"
+        logger.error(f"Test social media {platform}: {str(e)}")
+    
+    return result
+
+
 @api_router.post("/admin/articles/{article_id}/share-social")
 async def share_article_to_social_media(
     article_id: str,

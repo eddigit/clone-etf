@@ -19,7 +19,8 @@ import {
   UsersRound,
   Bot,
   ScrollText,
-  TestTube2
+  TestTube2,
+  Share2
 } from 'lucide-react';
 
 const AdminLayout = ({ children }) => {
@@ -44,6 +45,7 @@ const AdminLayout = ({ children }) => {
     { icon: FileText, label: 'Adhesions', path: '/admin/adhesions' },
     { icon: ScrollText, label: 'Logs Adhésions', path: '/admin/adhesion-logs' },
     { icon: Newspaper, label: 'Blog', path: '/admin/blog' },
+    { icon: Share2, label: 'Réseaux Sociaux', path: '/admin/social-media' },
     { icon: Gift, label: 'Coupons', path: '/admin/coupons' },
     { icon: CreditCard, label: 'HelloAsso', path: '/admin/helloasso' },
     { icon: Zap, label: 'Agent de Test', path: '/admin/test-agent' },

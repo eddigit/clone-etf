@@ -57,8 +57,8 @@ const MentionsLegales = () => {
                 </div>
               </div>
 
-              <div className="mt-4 space-y-2 text-sm">
-                <p className="font-semibold text-gray-900">Mission de l'Association</p>
+              <div id="mission" className="mt-4 space-y-2 text-sm scroll-mt-24">
+                <p className="font-semibold text-gray-900">Mission de l'Association (Objet Statutaire)</p>
                 <p>
                   L'Association EN TOUTE FRANCHISE, apolitique depuis 1994, a pour mission de :
                 </p>
@@ -93,10 +93,25 @@ const MentionsLegales = () => {
           {/* 3. Hébergement */}
           <section className="mb-8">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">3. Hébergement</h3>
-            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-              <p className="text-gray-700">
-                <strong>(Les informations relatives à l'hébergeur du site seront précisées ici)</strong>
-              </p>
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 space-y-4">
+              <div>
+                <p className="font-semibold text-gray-900 mb-2">Nom de domaine</p>
+                <div className="text-gray-700 text-sm space-y-1">
+                  <p><strong>Online SAS (Scaleway)</strong></p>
+                  <p>8 rue de la Ville l'Évêque</p>
+                  <p>75008 Paris, France</p>
+                  <p>Site web : <a href="https://www.online.net" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">www.online.net</a></p>
+                </div>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900 mb-2">Hébergement de l'application</p>
+                <div className="text-gray-700 text-sm space-y-1">
+                  <p><strong>Vercel Inc.</strong></p>
+                  <p>340 S Lemon Ave #4133</p>
+                  <p>Walnut, CA 91789, États-Unis</p>
+                  <p>Site web : <a href="https://vercel.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">vercel.com</a></p>
+                </div>
+              </div>
             </div>
           </section>
 
