@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
+import MembershipSelector from '../components/MembershipSelector';
 import {
   Shield,
   FileText,
@@ -33,7 +34,6 @@ import {
 import {
   stats,
   services,
-  membershipPlans,
   aiPlans,
   digitalServices,
   testimonials,
@@ -641,44 +641,7 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {membershipPlans.map((plan) => (
-              <Card
-                key={plan.id}
-                className={`relative hover:shadow-lg transition-shadow ${
-                  plan.popular ? 'border-2 border-blue-500' : ''
-                }`}
-              >
-                {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-600">
-                    Le plus populaire
-                  </Badge>
-                )}
-                <CardHeader>
-                  <div className="text-sm text-gray-500 mb-2">{plan.type}</div>
-                  <CardTitle className="text-2xl mb-2">{plan.name}</CardTitle>
-                  <div className="mb-4">
-                    <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
-                    <span className="text-xl text-gray-600">{plan.currency}</span>
-                  </div>
-                  <CardDescription>{plan.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-start text-sm">
-                        <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                    Adhérer
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <MembershipSelector variant="light" showTitle={false} />
 
           <div className="mt-12 p-6 bg-blue-50 rounded-xl">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Services inclus avec toute adhésion :</h3>
