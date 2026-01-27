@@ -55,7 +55,7 @@ async def seed_database():
         "password": hash_password("Admin2026!"),
         "firstName": "Administrateur",
         "lastName": "ETF",
-        "phone": "0609780963",
+        "phone": "0609780953",
         "businessName": "En Toute Franchise",
         "businessType": "Association",
         "membershipType": "professional",

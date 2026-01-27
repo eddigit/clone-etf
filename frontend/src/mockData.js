@@ -409,7 +409,7 @@ export const resources = [
 ];
 
 export const contactInfo = {
-  phone: '06 09 78 09 63',
+  phone: '06 09 78 09 53',
   emergencyPhone: '06 09 78 09 53',
   email: 'assoentoutefranchise@sfr.fr',
   website: 'en-toutefranchise.com',
