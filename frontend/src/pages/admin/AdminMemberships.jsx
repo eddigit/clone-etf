@@ -234,7 +234,10 @@ const AdminMemberships = () => {
       individual: 'Particulier',
       professional: 'Commercant/Artisan',
       professional_plus: 'Entreprise',
-      association: 'Association'
+      association: 'Association',
+      medium_store: 'Commercant 300m²+',
+      large_store: 'Commercant 1 500-2 500m²',
+      hypermarket: 'Commercant 2 500m²+'
     };
     return labels[type] || type;
   };
@@ -532,7 +535,10 @@ const AdminMemberships = () => {
                         individual: 50,
                         professional: 100,
                         professional_plus: 200,
-                        association: 150
+                        association: 150,
+                        medium_store: 304.90,
+                        large_store: 609.80,
+                        hypermarket: 904.69
                       };
                       setCreateForm({...createForm, membership_type: type, amount: amounts[type] || 50});
                     }}
@@ -543,6 +549,9 @@ const AdminMemberships = () => {
                     <option value="professional">Commercant/Artisan (100 EUR)</option>
                     <option value="professional_plus">Entreprise (200 EUR)</option>
                     <option value="association">Association (150 EUR)</option>
+                    <option value="medium_store">Commercant 300m²+ (304.90 EUR)</option>
+                    <option value="large_store">Commercant 1 500-2 500m² (609.80 EUR)</option>
+                    <option value="hypermarket">Commercant 2 500m²+ (904.69 EUR)</option>
                   </select>
                 </div>
                 <div>

@@ -1608,9 +1608,19 @@ async def helloasso_webhook(request: Request):
         
         # Déterminer le type d'adhésion selon le formulaire
         form_slug = data.get("formSlug", "")
-        amount = data.get("amount", 0) / 100  # HelloAsso envoie en centimes
+        raw_amount = data.get("amount", 0)
+        if isinstance(raw_amount, dict):
+            amount_cents = raw_amount.get("total", 0)
+        elif isinstance(raw_amount, (int, float)):
+            amount_cents = raw_amount
+        else:
+            amount_cents = 0
+        amount = amount_cents / 100  # HelloAsso envoie en centimes
         order_id = data.get("id", "")
         payment_id = data.get("paymentId", "")
+        metadata = data.get("metadata") or {}
+        if not isinstance(metadata, dict):
+            metadata = {}
         
         # Mapper le formulaire au type d'adhésion
         membership_mapping = {
@@ -1638,13 +1648,28 @@ async def helloasso_webhook(request: Request):
             "association-association-2026": "association",
         }
         membership_type = membership_mapping.get(form_slug, "individual")
+        membership_id_from_metadata = metadata.get("membership_id")
+
+        # Déterminer la date de paiement si fournie par HelloAsso
+        payment_date = None
+        for date_key in ("paymentDate", "date", "createdAt"):
+            raw_date = data.get(date_key)
+            if raw_date:
+                try:
+                    payment_date = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
+                except Exception:
+                    payment_date = None
+                if payment_date:
+                    break
+        if not payment_date:
+            payment_date = datetime.utcnow()
         
         # Vérifier si l'utilisateur existe déjà
         existing_user = await db.users.find_one({"email": email})
         
         now = datetime.utcnow()
-        end_date = now + timedelta(days=365)
-        current_year = now.year
+        end_date = payment_date + timedelta(days=365)
+        current_year = payment_date.year
         
         if existing_user:
             # Mettre à jour l'adhésion existante
@@ -1654,7 +1679,7 @@ async def helloasso_webhook(request: Request):
                     "$set": {
                         "membershipStatus": "active",
                         "membershipType": membership_type,
-                        "membershipStartDate": now,
+                        "membershipStartDate": payment_date,
                         "membershipEndDate": end_date,
                         "updatedAt": now
                     }
@@ -1688,7 +1713,7 @@ async def helloasso_webhook(request: Request):
                 password=hash_password(temp_password),
                 membershipType=membership_type,
                 membershipStatus="active",
-                membershipStartDate=now,
+                membershipStartDate=payment_date,
                 membershipEndDate=end_date
             )
             await db.users.insert_one(new_user.model_dump())
@@ -1710,11 +1735,29 @@ async def helloasso_webhook(request: Request):
             )
             logger.info(f"HelloAsso: Created new user {email}")
             
+            # Générer un token pour la création du mot de passe
+            reset_token = secrets.token_urlsafe(32)
+            reset_expires = datetime.utcnow() + timedelta(hours=48)
+
+            await db.users.update_one(
+                {"id": user_id},
+                {
+                    "$set": {
+                        "resetToken": reset_token,
+                        "resetTokenExpires": reset_expires,
+                        "mustChangePassword": True,
+                        "updatedAt": datetime.utcnow()
+                    }
+                }
+            )
+
             # Envoyer un email de bienvenue
             try:
                 await email_service.send_welcome_email(
                     to_email=email,
-                    first_name=first_name
+                    first_name=first_name,
+                    last_name=last_name,
+                    reset_token=reset_token
                 )
                 await adhesion_logger.log(
                     step=AdhesionStep.EMAIL_WELCOME_SENT,
@@ -1736,17 +1779,23 @@ async def helloasso_webhook(request: Request):
                 )
         
         # Mettre à jour l'adhésion si elle existe (status: pending → paid)
+        membership_filter = {
+            "user_id": user_id,
+            "year": current_year,
+            "status": "pending"
+        }
+        if membership_id_from_metadata:
+            membership_filter = {"id": membership_id_from_metadata}
+
         membership_update = await db.memberships.update_one(
-            {
-                "user_id": user_id,
-                "year": current_year,
-                "status": "pending"
-            },
+            membership_filter,
             {
                 "$set": {
                     "status": "paid",
                     "payment_id": payment_id,
                     "helloasso_order_id": order_id,
+                    "payment_date": payment_date,
+                    "payment_method": "helloasso",
                     "updated_at": now
                 }
             }
@@ -1763,6 +1812,111 @@ async def helloasso_webhook(request: Request):
                 source="webhook"
             )
             logger.info(f"HelloAsso: Updated membership status to 'paid' for user {user_id}")
+
+        # Créer une adhésion si elle n'existe pas (paiement direct HelloAsso)
+        existing_membership = None
+        if membership_id_from_metadata:
+            existing_membership = await db.memberships.find_one({"id": membership_id_from_metadata})
+        if not existing_membership and order_id:
+            existing_membership = await db.memberships.find_one({"helloasso_order_id": order_id})
+        if not existing_membership and payment_id:
+            existing_membership = await db.memberships.find_one({"payment_id": payment_id})
+        if not existing_membership:
+            existing_membership = await db.memberships.find_one({"user_id": user_id, "year": current_year})
+
+        if existing_membership:
+            if existing_membership.get("status") != "paid":
+                await db.memberships.update_one(
+                    {"id": existing_membership["id"]},
+                    {
+                        "$set": {
+                            "status": "paid",
+                            "payment_id": payment_id,
+                            "helloasso_order_id": order_id,
+                            "payment_date": payment_date,
+                            "payment_method": "helloasso",
+                            "updated_at": now
+                        }
+                    }
+                )
+        else:
+            address_value = payer.get("address") or ""
+            if isinstance(address_value, dict):
+                address_parts = [
+                    address_value.get("address1"),
+                    address_value.get("address2"),
+                    address_value.get("address3"),
+                    address_value.get("line1"),
+                    address_value.get("line2")
+                ]
+                address_value = " ".join([part for part in address_parts if part])
+            if not address_value:
+                address_value = payer.get("address1") or payer.get("address2") or ""
+
+            phone_value = payer.get("phone") or payer.get("phoneNumber") or ""
+
+            member_data_payload = {
+                "nom": last_name or "",
+                "prenom": first_name or "",
+                "adresse_commerciale": address_value,
+                "code_postal": payer.get("zipCode") or payer.get("postalCode") or "",
+                "ville": payer.get("city") or "",
+                "telephone": phone_value,
+                "fax": None,
+                "email": email,
+                "rcs": None,
+                "type_activite": None,
+                "activite_detail": None,
+                "is_franchise": False,
+                "franchise_status": None,
+                "enseigne": None,
+                "date_creation_commerce": None,
+                "nom_association": None,
+                "siret": None
+            }
+
+            membership = Membership(
+                user_id=user_id,
+                year=current_year,
+                reference=generate_membership_reference(current_year, source="web"),
+                source="helloasso",
+                status="paid",
+                amount=amount,
+                membership_type=membership_type,
+                payment_method="helloasso",
+                payment_id=payment_id,
+                helloasso_order_id=order_id,
+                payment_date=payment_date,
+                member_data=MemberData(**member_data_payload)
+            )
+
+            await db.memberships.insert_one(membership.model_dump())
+
+            pdf_path = None
+            try:
+                pdf_path = generate_membership_pdf(
+                    membership_data={
+                        "year": membership.year,
+                        "membership_type": membership.membership_type,
+                        "amount": membership.amount,
+                        "member_data": membership.member_data.model_dump()
+                    },
+                    membership_id=membership.id,
+                    output_dir="pdf_memberships"
+                )
+
+                await db.memberships.update_one(
+                    {"id": membership.id},
+                    {
+                        "$set": {
+                            "pdf_path": pdf_path,
+                            "pdf_generated_at": datetime.utcnow(),
+                            "updated_at": datetime.utcnow()
+                        }
+                    }
+                )
+            except Exception as pdf_err:
+                logger.error(f"Erreur génération PDF (HelloAsso): {pdf_err}")
         
         # Générer un coupon pour l'adhérent (Boîte à Outils)
         existing_coupon = await db.coupons.find_one({
@@ -3961,6 +4115,91 @@ async def sync_helloasso_members(
                 stats["created"] += 1
                 
                 # TODO: Envoyer email de bienvenue avec mot de passe temporaire
+
+            # Créer l'adhésion si elle n'existe pas
+            order_id = member.get("helloAssoOrderId")
+            order_id_str = str(order_id) if order_id is not None else None
+
+            membership_filters = [{"user_id": user_id, "year": payment_date.year}]
+            if order_id_str:
+                membership_filters.insert(0, {"helloasso_order_id": order_id_str})
+
+            existing_membership = await db.memberships.find_one({"$or": membership_filters})
+
+            if not existing_membership:
+                address_value = member.get("address") or ""
+                if isinstance(address_value, dict):
+                    address_parts = [
+                        address_value.get("address1"),
+                        address_value.get("address2"),
+                        address_value.get("address3"),
+                        address_value.get("line1"),
+                        address_value.get("line2")
+                    ]
+                    address_value = " ".join([part for part in address_parts if part])
+
+                member_data_payload = {
+                    "nom": member.get("lastName", ""),
+                    "prenom": member.get("firstName", ""),
+                    "adresse_commerciale": address_value,
+                    "code_postal": member.get("zipCode", ""),
+                    "ville": member.get("city", ""),
+                    "telephone": member.get("phone", ""),
+                    "fax": None,
+                    "email": email,
+                    "rcs": None,
+                    "type_activite": None,
+                    "activite_detail": None,
+                    "is_franchise": False,
+                    "franchise_status": None,
+                    "enseigne": None,
+                    "date_creation_commerce": None,
+                    "nom_association": None,
+                    "siret": None
+                }
+
+                membership = Membership(
+                    user_id=user_id,
+                    year=payment_date.year,
+                    reference=generate_membership_reference(payment_date.year, source="web"),
+                    source="helloasso",
+                    status="paid",
+                    amount=member.get("amount", 0),
+                    membership_type=membership_type,
+                    payment_method="helloasso",
+                    payment_id=None,
+                    helloasso_order_id=order_id_str,
+                    payment_date=payment_date,
+                    member_data=MemberData(**member_data_payload)
+                )
+
+                await db.memberships.insert_one(membership.model_dump())
+
+                pdf_path = None
+                try:
+                    pdf_path = generate_membership_pdf(
+                        membership_data={
+                            "year": membership.year,
+                            "membership_type": membership.membership_type,
+                            "amount": membership.amount,
+                            "member_data": membership.member_data.model_dump()
+                        },
+                        membership_id=membership.id,
+                        output_dir="pdf_memberships"
+                    )
+
+                    await db.memberships.update_one(
+                        {"id": membership.id},
+                        {
+                            "$set": {
+                                "pdf_path": pdf_path,
+                                "pdf_generated_at": datetime.utcnow(),
+                                "updated_at": datetime.utcnow()
+                            }
+                        }
+                    )
+                except Exception as pdf_err:
+                    logger.error(f"Erreur génération PDF (HelloAsso sync): {pdf_err}")
             
             # Vérifier/créer le coupon
             existing_coupon = await db.coupons.find_one({

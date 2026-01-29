@@ -41,7 +41,10 @@ const MEMBERSHIP_TYPE_LABELS = {
   individual: 'Particulier',
   professional: 'Commerçant - Artisan',
   professional_plus: 'Commerçant +100m²',
-  association: 'Association'
+  association: 'Association',
+  medium_store: 'Commerçant 300m²+',
+  large_store: 'Commerçant 1 500-2 500m²',
+  hypermarket: 'Commerçant 2 500m²+'
 };
 
 export default function Adhesions() {
@@ -239,8 +242,7 @@ export default function Adhesions() {
                     </div>
 
                     {/* Informations professionnelles si applicable */}
-                    {(membership.membership_type === 'professional' || 
-                      membership.membership_type === 'professional_plus') && 
+                    {(['professional', 'professional_plus', 'medium_store', 'large_store', 'hypermarket'].includes(membership.membership_type)) &&
                       membership.member_data.activite_detail && (
                       <div className="mt-3 pt-3 border-t">
                         <span className="text-gray-600 text-sm">Activité :</span>{' '}

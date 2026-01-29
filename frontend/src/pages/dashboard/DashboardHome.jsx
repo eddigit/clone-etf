@@ -59,7 +59,10 @@ const DashboardHome = () => {
       individual: 'Particulier',
       professional: 'Commercant - Artisan',
       professional_plus: 'Entreprise',
-      association: 'Association'
+      association: 'Association',
+      medium_store: 'Commercant 300m²+',
+      large_store: 'Commercant 1 500-2 500m²',
+      hypermarket: 'Commercant 2 500m²+'
     };
     return labels[type] || type || 'Non defini';
   };
