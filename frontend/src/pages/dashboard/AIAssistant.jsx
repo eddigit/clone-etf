@@ -158,7 +158,7 @@ const AIAssistant = () => {
     {
       number: '1',
       title: 'Créez votre compte',
-      description: 'Rendez-vous sur maboitedigitale.com et créez votre compte utilisateur.'
+      description: <span>Rendez-vous sur <a href="https://maboitedigitale.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">maboitedigitale.com</a> et créez votre compte utilisateur.</span>
     },
     {
       number: '2',
@@ -173,7 +173,7 @@ const AIAssistant = () => {
     {
       number: '4',
       title: 'Accédez à vos outils',
-      description: 'Connectez-vous directement depuis votre espace ETF ou maboitedigitale.com.'
+      description: <span>Connectez-vous directement depuis votre espace ETF ou <a href="https://maboitedigitale.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">maboitedigitale.com</a>.</span>
     }
   ];
 
@@ -288,7 +288,7 @@ const AIAssistant = () => {
                       <div>
                         <h3 className="font-semibold text-purple-900">Abonnement IA actif</h3>
                         <p className="text-purple-700 text-sm">
-                          Vous avez accès à tous les outils IA de Ma Boîte Digitale.
+                          Vous avez accès à tous les outils IA de <a href="https://maboitedigitale.com/" target="_blank" rel="noopener noreferrer" className="hover:underline font-medium">Ma Boîte Digitale</a>.
                         </p>
                       </div>
                     </div>
@@ -341,7 +341,7 @@ const AIAssistant = () => {
                   Nouveau
                 </Badge>
                 <h2 className="text-3xl font-bold mb-4">
-                  Accédez à Ma Boîte Digitale
+                  Accédez à <a href="https://maboitedigitale.com/" target="_blank" rel="noopener noreferrer" className="hover:text-blue-200 transition-colors">Ma Boîte Digitale</a>
                 </h2>
                 <p className="text-blue-100 mb-6 text-lg">
                   Votre plateforme d'outils IA dédiée aux adhérents En Toute Franchise. 
@@ -445,7 +445,7 @@ const AIAssistant = () => {
                 <h3 className="font-semibold text-green-900 mb-2">Avantage Adhérent ETF</h3>
                 <p className="text-green-800 text-sm mb-3">
                   En tant qu'adhérent En Toute Franchise, vous bénéficiez d'une <strong>remise exclusive</strong> sur 
-                  l'abonnement aux outils IA de Ma Boîte Digitale. Utilisez votre numéro d'adhérent 
+                  l'abonnement aux outils IA de <a href="https://maboitedigitale.com/" target="_blank" rel="noopener noreferrer" className="hover:underline font-medium">Ma Boîte Digitale</a>. Utilisez votre numéro d'adhérent
                   {memberNumber && <strong> ({memberNumber})</strong>} lors de votre inscription pour activer la remise.
                 </p>
                 <div className="flex flex-wrap items-center gap-4 text-sm">
@@ -486,7 +486,7 @@ const AIAssistant = () => {
             En cas de question, contactez-nous à contact@en-toutefranchise.com
           </p>
           <p className="text-xs text-gray-400 mt-2">
-            Les outils IA sont fournis par <a href="https://www.maboitedigitale.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">maboitedigitale.com</a>
+            Les outils IA sont fournis par <a href="https://maboitedigitale.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">maboitedigitale.com</a>
           </p>
         </div>
       </div>

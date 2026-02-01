@@ -398,7 +398,11 @@ const Home = () => {
                 <div className="w-12 h-12 bg-green-900/50 rounded-lg flex items-center justify-center mb-4">
                   <Rocket className="h-6 w-6 text-green-400" />
                 </div>
-                <CardTitle className="text-xl text-white">Ma Boîte Digitale</CardTitle>
+                <CardTitle className="text-xl text-white">
+                  <a href="https://maboitedigitale.com/" target="_blank" rel="noopener noreferrer" className="hover:text-green-400 transition-colors">
+                    Ma Boîte Digitale
+                  </a>
+                </CardTitle>
                 <Badge className="bg-green-600 mt-2">NOUVEAU PARTENAIRE</Badge>
               </CardHeader>
               <CardContent>
