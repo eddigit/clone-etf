@@ -14,6 +14,9 @@ import Blog from "./pages/Blog";
 import Services from "./pages/Services";
 import Contact from "./pages/Contact";
 import Adhesion from "./pages/Adhesion";
+import AdhesionSuccess from "./pages/AdhesionSuccess";
+import AdhesionError from "./pages/AdhesionError";
+import AdhesionCancel from "./pages/AdhesionCancel";
 import Partenaires from "./pages/Partenaires";
 import Livre418Milliards from "./pages/Livre418Milliards";
 import MentionsLegales from "./pages/MentionsLegales";
@@ -99,6 +102,9 @@ function App() {
           <Route path="/blog/:slug" element={<PublicLayout><BlogArticle /></PublicLayout>} />
           <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
           <Route path="/adhesion" element={<PublicLayout><Adhesion /></PublicLayout>} />
+          <Route path="/adhesion/success" element={<PublicLayout><AdhesionSuccess /></PublicLayout>} />
+          <Route path="/adhesion/error" element={<PublicLayout><AdhesionError /></PublicLayout>} />
+          <Route path="/adhesion/cancel" element={<PublicLayout><AdhesionCancel /></PublicLayout>} />
           <Route path="/partenaires" element={<PublicLayout><Partenaires /></PublicLayout>} />
           <Route path="/livre-418-milliards" element={<PublicLayout><Livre418Milliards /></PublicLayout>} />
           <Route path="/mentions-legales" element={<PublicLayout><MentionsLegales /></PublicLayout>} />
