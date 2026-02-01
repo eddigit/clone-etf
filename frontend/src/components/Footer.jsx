@@ -161,7 +161,7 @@ const Footer = () => {
               <p>
                 Développement et design réalisés par{' '}
                 <a 
-                  href="https://www.maboitedigitale.com" 
+                  href="https://maboitedigitale.com/"
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-gray-400 hover:text-white transition-colors font-medium"

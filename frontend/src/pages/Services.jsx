@@ -148,10 +148,12 @@ const Services = () => {
               <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-purple-500/20">
                 <h3 className="text-2xl font-bold text-white mb-4 flex items-center">
                   <Bot className="h-6 w-6 mr-3 text-purple-400" />
-                  MaBoiteDigitale.com
+                  <a href="https://maboitedigitale.com/" target="_blank" rel="noopener noreferrer" className="hover:text-purple-400 transition-colors">
+                    MaBoiteDigitale.com
+                  </a>
                 </h3>
                 <p className="text-gray-300 mb-4">
-                  Notre partenaire <strong className="text-purple-400">MaBoiteDigitale</strong> met à disposition des adhérents ETF 
+                  Notre partenaire <a href="https://maboitedigitale.com/" target="_blank" rel="noopener noreferrer" className="text-purple-400 font-bold hover:text-purple-300">MaBoiteDigitale</a> met à disposition des adhérents ETF
                   une plateforme complète et un <strong className="text-green-400">accompagnement personnalisé</strong> pour réussir votre transformation digitale.
                 </p>
                 

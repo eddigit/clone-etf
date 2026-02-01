@@ -156,7 +156,7 @@ const Subscription = () => {
                     </li>
                     <li className="flex items-start text-sm">
                       <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      <span>Remise adhérent sur MaBoiteDigitale</span>
+                      <span>Remise adhérent sur <a href="https://maboitedigitale.com/" target="_blank" rel="noopener noreferrer" className="hover:underline text-purple-600">MaBoiteDigitale</a></span>
                     </li>
                   </ul>
                 </div>
@@ -174,7 +174,7 @@ const Subscription = () => {
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Services Digitaux Partenaires</h2>
               <p className="text-gray-600">
-                Propulsés par <span className="font-semibold text-purple-600">Ma Boîte Digitale</span>
+                Propulsés par <a href="https://maboitedigitale.com/" target="_blank" rel="noopener noreferrer" className="font-semibold text-purple-600 hover:underline">Ma Boîte Digitale</a>
               </p>
             </div>
           </div>
@@ -189,7 +189,7 @@ const Subscription = () => {
                 <div className="flex-1">
                   <h3 className="font-bold text-purple-900">Avantage Adhérent ETF</h3>
                   <p className="text-sm text-purple-700">
-                    Bénéficiez de tarifs préférentiels sur tous les services MaBoiteDigitale en tant qu'adhérent
+                    Bénéficiez de tarifs préférentiels sur tous les services <a href="https://maboitedigitale.com/" target="_blank" rel="noopener noreferrer" className="hover:underline font-medium">MaBoiteDigitale</a> en tant qu'adhérent
                   </p>
                 </div>
                 <Button 
@@ -266,7 +266,7 @@ const Subscription = () => {
           <p>
             Les services digitaux sont fournis par notre partenaire{' '}
             <a 
-              href="https://www.maboitedigitale.com" 
+              href="https://maboitedigitale.com/"
               target="_blank" 
               rel="noopener noreferrer"
               className="text-purple-600 hover:underline font-medium"

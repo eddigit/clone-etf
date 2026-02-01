@@ -653,7 +653,7 @@ const AdminMemberships = () => {
                   <option value="admin">🔐 Admin (Accès complet)</option>
                 </select>
                 <p className="text-xs text-amber-700 mt-1">
-                  Les VIP et Admins ont accès au chat IA sans abonnement MaBoiteDigitale
+                  Les VIP et Admins ont accès au chat IA sans abonnement <a href="https://maboitedigitale.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-amber-900">MaBoiteDigitale</a>
                 </p>
               </div>
 
