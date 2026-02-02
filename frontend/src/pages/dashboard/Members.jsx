@@ -64,7 +64,10 @@ const Members = () => {
       individual: 'Particulier',
       professional: 'Professionnel',
       professional_plus: 'Professionnel +',
-      association: 'Association'
+      association: 'Association',
+      medium_store: 'Commerçant 300m²+',
+      large_store: 'Commerçant 1 500-2 500m²',
+      hypermarket: 'Commerçant 2 500m²+'
     };
     return types[type] || type;
   };
@@ -115,6 +118,9 @@ const Members = () => {
                 <SelectItem value="professional">Professionnel</SelectItem>
                 <SelectItem value="professional_plus">Professionnel +</SelectItem>
                 <SelectItem value="association">Association</SelectItem>
+                <SelectItem value="medium_store">Commerçant 300m²+</SelectItem>
+                <SelectItem value="large_store">Commerçant 1 500-2 500m²</SelectItem>
+                <SelectItem value="hypermarket">Commerçant 2 500m²+</SelectItem>
               </SelectContent>
             </Select>
 

@@ -20,7 +20,10 @@ class MembershipPDFGenerator:
         "individual": {"min": 10, "max": 50, "label": "Particuliers"},
         "professional": {"amount": 50, "label": "Commerçants - Artisans"},
         "professional_plus": {"amount": 152.32, "label": "Commerçants +100m²"},
-        "association": {"amount": 152.32, "label": "Associations"}
+        "association": {"amount": 152.32, "label": "Associations"},
+        "medium_store": {"amount": 304.90, "label": "Commerçants 300m²+"},
+        "large_store": {"amount": 609.80, "label": "Commerçants 1 500-2 500m²"},
+        "hypermarket": {"amount": 904.69, "label": "Commerçants 2 500m²+"}
     }
     
     def __init__(self, output_dir: str = "pdf_memberships"):

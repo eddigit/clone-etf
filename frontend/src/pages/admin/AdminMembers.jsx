@@ -66,7 +66,10 @@ const MEMBERSHIP_TYPES = {
   individual: { label: 'Particulier', color: 'bg-blue-100 text-blue-800' },
   professional: { label: 'Commerçant', color: 'bg-purple-100 text-purple-800' },
   professional_plus: { label: 'Entreprise', color: 'bg-orange-100 text-orange-800' },
-  association: { label: 'Association', color: 'bg-teal-100 text-teal-800' }
+  association: { label: 'Association', color: 'bg-teal-100 text-teal-800' },
+  medium_store: { label: 'Commerçant 300m²+', color: 'bg-indigo-100 text-indigo-800' },
+  large_store: { label: 'Commerçant 1 500-2 500m²', color: 'bg-slate-100 text-slate-800' },
+  hypermarket: { label: 'Commerçant 2 500m²+', color: 'bg-emerald-100 text-emerald-800' }
 };
 
 const getStatusBadge = (status) => STATUS_BADGES[status] || STATUS_BADGES.expired;
@@ -588,6 +591,9 @@ const AdminMembers = () => {
                 <SelectItem value="professional">Commerçants</SelectItem>
                 <SelectItem value="professional_plus">Entreprises</SelectItem>
                 <SelectItem value="association">Associations</SelectItem>
+                <SelectItem value="medium_store">Commerçants 300m²+</SelectItem>
+                <SelectItem value="large_store">Commerçants 1 500-2 500m²</SelectItem>
+                <SelectItem value="hypermarket">Commerçants 2 500m²+</SelectItem>
               </SelectContent>
             </Select>
 
@@ -1018,6 +1024,9 @@ const AdminMembers = () => {
                     <SelectItem value="professional">Commerçant - Artisan (30€)</SelectItem>
                     <SelectItem value="professional_plus">Commerçant +100m² (50€)</SelectItem>
                     <SelectItem value="association">Association (50€)</SelectItem>
+                    <SelectItem value="medium_store">Commerçant 300m²+ (304.90€)</SelectItem>
+                    <SelectItem value="large_store">Commerçant 1 500-2 500m² (609.80€)</SelectItem>
+                    <SelectItem value="hypermarket">Commerçant 2 500m²+ (904.69€)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
