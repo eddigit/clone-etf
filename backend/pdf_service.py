@@ -20,6 +20,9 @@ class MembershipPDFGenerator:
         "individual": {"min": 10, "max": 50, "label": "Particuliers"},
         "professional": {"amount": 50, "label": "Commerçants - Artisans"},
         "professional_plus": {"amount": 152.32, "label": "Commerçants +100m²"},
+        "medium_store": {"amount": 304.90, "label": "Commerçants indépendants"},
+        "large_store": {"amount": 609.80, "label": "Commerçants indépendants"},
+        "hypermarket": {"amount": 904.69, "label": "Commerçants indépendants"},
         "association": {"amount": 152.32, "label": "Associations"}
     }
     
@@ -182,7 +185,7 @@ class MembershipPDFGenerator:
         ])
         
         # Informations professionnelles pour professional et professional_plus
-        if membership_type in ['professional', 'professional_plus']:
+        if membership_type in ['professional', 'professional_plus', 'medium_store', 'large_store', 'hypermarket']:
             info_data.extend([
                 ["", ""],  # Ligne vide
                 ["<b>INFORMATIONS PROFESSIONNELLES</b>", ""],

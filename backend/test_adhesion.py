@@ -89,7 +89,7 @@ def test_pdf_generation():
             "ville": "Marignane",
             "rcs": "987654321",
             "type_activite": "commercant",
-            "activite_detail": "Supermarché",
+            "activite_detail": "Commerce Alimentaire",
             "date_creation_commerce": datetime(2015, 6, 1),
             "is_franchise": False
         }
@@ -128,6 +128,40 @@ def test_pdf_generation():
         pdf_path = generate_membership_pdf(
             membership_data=membership_data_asso,
             membership_id="test-asso-001",
+            output_dir="pdf_memberships"
+        )
+        print(f"✅ PDF généré: {pdf_path}")
+    except Exception as e:
+        print(f"❌ Erreur: {e}")
+
+    # Test 5: Adhésion Hypermarché (renommé Commerçant indépendant)
+    print("\n5️⃣ Test adhésion Hypermarché (Commerçant indépendant > 2500m²)")
+    membership_data_hyper = {
+        "year": 2026,
+        "membership_type": "hypermarket",
+        "amount": 904.69,
+        "member_data": {
+            "nom": "Grand",
+            "prenom": "Directeur",
+            "email": "directeur@hyper-example.com",
+            "telephone": "0499887766",
+            "adresse_commerciale": "Route Nationale 7",
+            "code_postal": "13000",
+            "ville": "Marseille",
+            "rcs": "555666777",
+            "type_activite": "commercant",
+            "activite_detail": "Grande Surface Alimentaire",
+            "date_creation_commerce": datetime(2010, 10, 10),
+            "is_franchise": True,
+            "franchise_status": "actif",
+            "enseigne": "Hyper Indépendant"
+        }
+    }
+
+    try:
+        pdf_path = generate_membership_pdf(
+            membership_data=membership_data_hyper,
+            membership_id="test-hyper-001",
             output_dir="pdf_memberships"
         )
         print(f"✅ PDF généré: {pdf_path}")

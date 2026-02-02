@@ -115,7 +115,7 @@ export const membershipPlans = [
   {
     id: 4,
     type: 'medium_store',
-    name: 'Plus de 300 m²',
+    name: 'Commerçants indépendants',
     price: '304.90',
     currency: '€',
     description: 'Pour les commerces de plus de 300 m²',
@@ -132,7 +132,7 @@ export const membershipPlans = [
   {
     id: 5,
     type: 'large_store',
-    name: 'Plus de 1 500 m²',
+    name: 'Commerçants indépendants',
     price: '609.80',
     currency: '€',
     description: 'Pour les commerces de plus de 1 500 m²',
@@ -149,7 +149,7 @@ export const membershipPlans = [
   {
     id: 6,
     type: 'hypermarket',
-    name: 'Plus de 2 500 m²',
+    name: 'Commerçants indépendants',
     price: '904.69',
     currency: '€',
     description: 'Pour les commerces de plus de 2 500 m²',
