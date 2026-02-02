@@ -399,7 +399,7 @@ const Home = () => {
                   <Rocket className="h-6 w-6 text-green-400" />
                 </div>
                 <CardTitle className="text-xl text-white">
-                  <a href="https://maboitedigitale.com/" target="_blank" rel="noopener noreferrer" className="hover:text-green-400 transition-colors">
+                  <a href="https://maboitedigitale.com/" target="_blank" rel="noopener noreferrer" className="inline-block transition-all duration-300 hover:text-emerald-400 hover:translate-x-1">
                     Ma Boîte Digitale
                   </a>
                 </CardTitle>
@@ -415,6 +415,14 @@ const Home = () => {
                   <li>• Signature mail professionnelle</li>
                   <li>• Et bien plus d'outils</li>
                 </ul>
+                <a
+                  href="https://maboitedigitale.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block mt-5 px-6 py-3 bg-transparent border-2 border-emerald-500 rounded-lg text-emerald-500 no-underline font-semibold text-sm transition-all duration-300 hover:bg-emerald-500 hover:text-slate-800 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/30"
+                >
+                  Découvrir la plateforme →
+                </a>
               </CardContent>
             </Card>
 
