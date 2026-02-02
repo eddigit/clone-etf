@@ -72,7 +72,7 @@ const MEMBERSHIP_LIST = [
   },
   {
     id: 'medium_store',
-    title: 'Commerçants - Magasins',
+    title: 'Commerçants indépendants',
     subtitle: 'Plus de 300 m²',
     icon: Store,
     price: '304.90',
@@ -89,7 +89,7 @@ const MEMBERSHIP_LIST = [
   },
   {
     id: 'large_store',
-    title: 'Grands Magasins',
+    title: 'Commerçants indépendants',
     subtitle: 'Plus de 1 500 m²',
     icon: Store,
     price: '609.80',
@@ -106,7 +106,7 @@ const MEMBERSHIP_LIST = [
   },
   {
     id: 'hypermarket',
-    title: 'Hypermarchés',
+    title: 'Commerçants indépendants',
     subtitle: 'Plus de 2 500 m²',
     icon: Store,
     price: '904.69',

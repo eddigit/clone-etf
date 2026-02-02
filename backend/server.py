@@ -1627,11 +1627,11 @@ async def helloasso_webhook(request: Request):
             # 2026 - Commerçants 100-299m²
             "adhesion-2026-entreprises": "professional_plus",
             "adhesion-2026-100-m2-commercants-artisans-152-32-2": "professional_plus",
-            # 2026 - Magasins 300m² et +
+            # 2026 - Commerçants indépendants 300m² et +
             "2026-magasins-de-300-m-et-plus-2": "medium_store",
-            # 2026 - Magasins 1500-2500m²
+            # 2026 - Commerçants indépendants 1500-2500m²
             "2026-magasins-de-1-500-a-2-500-m2-2": "large_store",
-            # 2026 - Magasins 2500m² et +
+            # 2026 - Commerçants indépendants 2500m² et +
             "2026-magasins-de-2-500-m-et-plus-2": "hypermarket",
             # 2026 - Associations
             "adhesion-2026-associations": "association",
@@ -3873,11 +3873,11 @@ async def sync_helloasso_members(
         # 2026 - Commerçants 100-299m²
         "adhesion-2026-entreprises": "professional_plus",
         "100-m2-commercants": "professional_plus",
-        # 2026 - Magasins 300m² et +
+        # 2026 - Commerçants indépendants 300m² et +
         "magasins-de-300-m": "medium_store",
-        # 2026 - Magasins 1500-2500m²
+        # 2026 - Commerçants indépendants 1500-2500m²
         "magasins-de-1-500-a-2-500": "large_store",
-        # 2026 - Magasins 2500m² et +
+        # 2026 - Commerçants indépendants 2500m² et +
         "magasins-de-2-500-m": "hypermarket",
         # 2026 - Associations
         "adhesion-2026-associations": "association",
