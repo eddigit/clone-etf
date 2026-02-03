@@ -723,15 +723,15 @@ const Home = () => {
               rel="noopener noreferrer"
             >
               <Button variant="outline" size="lg">
-                Voir nos 120 vidéos et reportages TV
+                Voir nos 300 vidéos et reportages TV
               </Button>
             </a>
           </div>
 
           <div className="grid grid-cols-3 gap-6 mt-12 text-center">
             <div>
-              <div className="text-3xl font-bold text-blue-600">50+</div>
-              <div className="text-sm text-gray-600">Vidéos éducatives</div>
+              <div className="text-3xl font-bold text-blue-600">25</div>
+              <div className="text-sm text-gray-600">Reportages (France2, TF1, FR3, M6)</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-blue-600">15K</div>
