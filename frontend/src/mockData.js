@@ -26,22 +26,10 @@ export const services = [
     title: 'Assistance Administrative',
     description: 'Aide et orientation face aux organismes officiels',
     features: [
-      'Accompagnement URSSAF et caisses',
+      'Accompagnement spécifique de 30 ans d\'expérience',
       'Aide à la préparation aux contrôles',
       'Orientation sur les procédures',
       'Partage d\'expériences réussies'
-    ]
-  },
-  {
-    id: 3,
-    icon: 'TrendingUp',
-    title: 'Conseil & Orientation',
-    description: 'Partage d\'expertise basé sur 30 ans d\'expérience',
-    features: [
-      'Orientation pour votre activité',
-      'Partage de bonnes pratiques',
-      'Mise en relation avec experts',
-      'Veille réglementaire informative'
     ]
   },
   {
