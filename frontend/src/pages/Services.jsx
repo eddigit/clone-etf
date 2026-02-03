@@ -40,7 +40,7 @@ const Services = () => {
             <p className="text-lg text-gray-600">Inclus dans toutes les adhésions professionnelles</p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {services.map((service) => {
               const IconComponent = iconMap[service.icon];
               return (
