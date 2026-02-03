@@ -734,7 +734,7 @@ const Home = () => {
               <div className="text-sm text-gray-600">Reportages (France2, TF1, FR3, M6)</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-blue-600">15K</div>
+              <div className="text-3xl font-bold text-blue-600">+1M</div>
               <div className="text-sm text-gray-600">Vues totales</div>
             </div>
             <div>
