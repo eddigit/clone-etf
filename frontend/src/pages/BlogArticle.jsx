@@ -94,13 +94,45 @@ const BlogArticle = () => {
   // et convertir les liens YouTube en iframes
   const processContent = (htmlContent) => {
     if (!htmlContent) return '';
-    
+
     // Remplacer les src d'images relatives par des URLs complètes
     let processed = htmlContent.replace(
-      /src="(\/uploads\/[^"]+)"/g, 
+      /src="(\/uploads\/[^"]+)"/g,
       `src="${API_URL}$1"`
     );
-    
+
+    // Traiter les iframes Quill (ql-video) - s'assurer qu'elles ont les bons attributs
+    processed = processed.replace(
+      /<iframe([^>]*class="[^"]*ql-video[^"]*"[^>]*)><\/iframe>/gi,
+      (match, attrs) => {
+        // Extraire l'URL src
+        const srcMatch = attrs.match(/src="([^"]+)"/);
+        if (srcMatch) {
+          const videoId = extractYouTubeId(srcMatch[1]);
+          if (videoId) {
+            return createYouTubeEmbed(videoId);
+          }
+        }
+        // Si pas YouTube, retourner l'iframe avec les bons attributs
+        return `<div class="youtube-container my-8"><div class="youtube-wrapper"><iframe${attrs} allowfullscreen loading="lazy"></iframe></div></div>`;
+      }
+    );
+
+    // Traiter aussi les iframes sans classe ql-video mais avec YouTube
+    processed = processed.replace(
+      /<iframe([^>]*src="[^"]*(?:youtube\.com|youtu\.be)[^"]*"[^>]*)><\/iframe>/gi,
+      (match, attrs) => {
+        const srcMatch = attrs.match(/src="([^"]+)"/);
+        if (srcMatch) {
+          const videoId = extractYouTubeId(srcMatch[1]);
+          if (videoId) {
+            return createYouTubeEmbed(videoId);
+          }
+        }
+        return match;
+      }
+    );
+
     // Convertir les liens YouTube en iframes responsives
     // Format: [youtube:VIDEO_ID] ou [youtube:URL_COMPLETE]
     processed = processed.replace(
@@ -110,13 +142,13 @@ const BlogArticle = () => {
         return createYouTubeEmbed(videoId);
       }
     );
-    
+
     // Détecter automatiquement les URLs YouTube dans les paragraphes (URLs seules)
     processed = processed.replace(
       /<p>\s*(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})[^\s<]*)\s*<\/p>/gi,
       (match, url, videoId) => createYouTubeEmbed(videoId)
     );
-    
+
     // Détecter les liens YouTube cliquables et les convertir
     processed = processed.replace(
       /<a[^>]*href="(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})[^"]*)"[^>]*>([^<]*)<\/a>/gi,
@@ -127,7 +159,7 @@ const BlogArticle = () => {
         return match;
       }
     );
-    
+
     return processed;
   };
 

@@ -323,10 +323,13 @@ code {
 .prose .ql-video {
     width: 100% !important;
     max-width: 100% !important;
+    height: auto !important;
+    min-height: 315px !important;
     aspect-ratio: 16/9 !important;
     margin: 1.5rem 0 !important;
     border-radius: 12px !important;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15) !important;
+    display: block !important;
 }
 
 .youtube-embed {
