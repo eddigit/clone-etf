@@ -156,15 +156,15 @@ const BlogArticle = () => {
       (match, url, videoId) => createYouTubeEmbed(videoId)
     );
 
-    // Détecter les liens YouTube cliquables et les convertir
+    // Convertir TOUS les liens YouTube en embed (watch, youtu.be, /embed/)
     processed = processed.replace(
-      /<a[^>]*href="(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})[^"]*)"[^>]*>([^<]*)<\/a>/gi,
-      (match, url, videoId, linkText) => {
-        if (linkText.includes('youtube') || linkText.includes('youtu.be') || linkText === url) {
-          return createYouTubeEmbed(videoId);
-        }
-        return match;
-      }
+      /<a[^>]*href="(https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})[^"]*)"[^>]*>([^<]*)<\/a>/gi,
+      (match, url, videoId) => createYouTubeEmbed(videoId)
+    );
+    // URLs embed en texte brut dans un paragraphe
+    processed = processed.replace(
+      /<p>\s*(https?:\/\/(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})[^\s<]*)\s*<\/p>/gi,
+      (match, url, videoId) => createYouTubeEmbed(videoId)
     );
 
     return processed;
@@ -393,7 +393,7 @@ const BlogArticle = () => {
       {/* Contenu de l'article */}
       <div className="relative">
         {/* Barre de partage flottante (desktop) */}
-        <div className="hidden lg:flex fixed left-8 top-1/2 transform -translate-y-1/2 flex-col gap-3 z-40">
+        <div className="hidden xl:flex fixed left-8 top-1/2 transform -translate-y-1/2 flex-col gap-3 z-40">
           <div className="bg-white rounded-full shadow-xl p-2 flex flex-col gap-2">
             <button
               onClick={() => handleShare('facebook')}
