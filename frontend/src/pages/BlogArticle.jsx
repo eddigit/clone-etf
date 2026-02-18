@@ -428,7 +428,7 @@ const BlogArticle = () => {
         </div>
 
         {/* Article principal */}
-        <article className="max-w-2xl mx-auto px-8 sm:px-10 lg:px-12 py-12 pb-24">
+        <article className="max-w-2xl mx-auto px-10 sm:px-12 lg:px-16 py-12 pb-24">
           {/* Corps de l'article */}
           <div
             className="article-content prose prose-lg max-w-none mb-12"
