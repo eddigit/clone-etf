@@ -115,12 +115,40 @@ const RichTextEditor = ({
     onChange(content);
   }, [onChange]);
 
+  // Conversion YouTube watch URL → embed URL pour l'aperçu
+  const processVideoForPreview = (html) => {
+    if (!html) return '<p class="text-gray-400">Aucun contenu à afficher...</p>';
+    // Remplacer &nbsp; par espaces normaux
+    html = html.replace(/&nbsp;/g, ' ');
+    // Convertir iframes ql-video YouTube watch → embed
+    html = html.replace(
+      /<iframe([^>]*src="(https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})[^"]*)"[^>]*)><\/iframe>/gi,
+      (match, attrs, watchUrl, videoId) =>
+        `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;margin:1rem 0">
+          <iframe src="https://www.youtube.com/embed/${videoId}?rel=0" 
+            style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"
+            allowfullscreen loading="lazy"></iframe>
+        </div>`
+    );
+    // Convertir iframes ql-video youtu.be → embed
+    html = html.replace(
+      /<iframe([^>]*src="https?:\/\/youtu\.be\/([a-zA-Z0-9_-]{11})[^"]*"[^>]*)><\/iframe>/gi,
+      (match, attrs, videoId) =>
+        `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;margin:1rem 0">
+          <iframe src="https://www.youtube.com/embed/${videoId}?rel=0"
+            style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"
+            allowfullscreen loading="lazy"></iframe>
+        </div>`
+    );
+    return html;
+  };
+
   // Rendu du contenu HTML pour la prévisualisation
   const renderPreview = () => {
     return (
       <div 
         className="prose prose-lg max-w-none p-4 bg-white rounded-lg article-content"
-        dangerouslySetInnerHTML={{ __html: value || '<p class="text-gray-400">Aucun contenu à afficher...</p>' }}
+        dangerouslySetInnerHTML={{ __html: processVideoForPreview(value) }}
       />
     );
   };
