@@ -436,19 +436,19 @@ const BlogArticle = () => {
             dangerouslySetInnerHTML={{ __html: processContent(article.content) }}
           />
 
-          {/* 📚 Petit encart livre 418 Milliards — sans photo */}
-          <div className="my-8 flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm">
+          {/* 📚 Encart livre 418 Milliards — texte agrandi x2 */}
+          <div className="my-8 flex items-center gap-4 p-5 rounded-lg bg-slate-50 border border-slate-200">
             <div className="flex-1 min-w-0">
-              <span className="font-semibold text-slate-800">📕 418 Milliards</span>
-              <span className="text-slate-500 mx-1">—</span>
-              <span className="text-slate-600 text-xs">La fraude de la grande distribution</span>
-              <span className="text-slate-400 text-xs ml-1">· Martine Donnette & Claude Diot</span>
+              <span className="font-bold text-slate-800 text-lg">📕 418 Milliards</span>
+              <span className="text-slate-500 mx-2 text-lg">—</span>
+              <span className="text-slate-600 text-base">La fraude de la grande distribution</span>
+              <span className="text-slate-400 text-sm ml-2">· Martine Donnette & Claude Diot</span>
             </div>
             <a
               href="https://www.novimondi.com/fr/societe/47-418-milliards-la-fraude-de-la-grande-distribution-avec-la-complicite-des-elus-et-de-l-administration.html"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-shrink-0 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-md transition-colors whitespace-nowrap"
+              className="flex-shrink-0 bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2 rounded-md transition-colors whitespace-nowrap"
             >
               Commander →
             </a>
