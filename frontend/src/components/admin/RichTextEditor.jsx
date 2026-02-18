@@ -30,19 +30,21 @@ const RichTextEditor = ({
   const [isPreview, setIsPreview] = React.useState(false);
   const quillRef = useRef(null);
 
-  // Insérer une grille d'images (2 ou 3 colonnes)
+  // Insérer une grille d'images via tableau HTML (plus stable dans Quill)
   const insertImageGrid = useCallback((cols) => {
     const quill = quillRef.current?.getEditor();
     if (!quill) return;
     const range = quill.getSelection(true);
     const index = range ? range.index + range.length : quill.getLength();
-    const colClass = cols === 2 ? 'img-grid-2' : 'img-grid-3';
-    const placeholder = 'https://placehold.co/600x400?text=Image';
-    let imgs = '';
+    const width = cols === 2 ? '49' : '32';
+    const gap = cols === 2 ? '2' : '2';
+    const placeholder = 'https://placehold.co/600x400/e2e8f0/64748b?text=Image';
+    let cells = '';
     for (let i = 1; i <= cols; i++) {
-      imgs += `<img src="${placeholder}+${i}" alt="Image ${i}">`;
+      const marginRight = i < cols ? `margin-right:${gap}%;` : '';
+      cells += `<img src="${placeholder}+${i}" alt="Image ${i}" style="width:${width}%;${marginRight}display:inline-block;vertical-align:top;height:180px;object-fit:cover;border-radius:6px;">`;
     }
-    const html = `<div class="${colClass}">${imgs}</div><p><br></p>`;
+    const html = `<p style="font-size:0;line-height:0;white-space:nowrap;">${cells}</p><p><br></p>`;
     quill.clipboard.dangerouslyPasteHTML(index, html);
     quill.setSelection(index + 1, 0);
   }, []);
