@@ -1,11 +1,11 @@
 // Ce fichier est généré automatiquement par le script de build
-// Dernière mise à jour: 22/01/2026 18:55
+// Dernière mise à jour: 18/02/2026 11:16
 
 export const BUILD_INFO = {
-  commitHash: process.env.REACT_APP_COMMIT_HASH || '1224531d5352dc32498f7124c2e219c68b1784da',
-  commitShort: process.env.REACT_APP_COMMIT_SHORT || '1224531',
-  buildDate: process.env.REACT_APP_BUILD_DATE || '2026-01-22T18:55:00+01:00',
-  buildTime: process.env.REACT_APP_BUILD_TIME || '18:55',
+  commitHash: process.env.REACT_APP_COMMIT_HASH || '7f6b2142f80f8ffce562574f3ddb48bcac4a1d50',
+  commitShort: process.env.REACT_APP_COMMIT_SHORT || '7f6b214',
+  buildDate: process.env.REACT_APP_BUILD_DATE || '2026-02-18T11:16:41+01:00',
+  buildTime: process.env.REACT_APP_BUILD_TIME || '11:16',
   environment: process.env.NODE_ENV || 'development'
 };
 
