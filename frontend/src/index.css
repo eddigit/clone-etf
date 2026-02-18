@@ -803,3 +803,51 @@ article table,
         overflow-x: hidden !important;
     }
 }
+
+
+/* ============================================================
+   CORRECTIF FINAL — div et pre dans le contenu article
+   Le sélecteur * avec !important cible TOUT incluant div/pre
+   ============================================================ */
+
+/* Cibler TOUS les éléments sans exception dans le contenu */
+.article-content > *,
+.article-content > * > *,
+.article-content > * > * > * {
+    white-space: normal !important;
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    hyphens: none !important;
+    -webkit-hyphens: none !important;
+    box-sizing: border-box !important;
+}
+
+/* Spécifiquement neutraliser ql-editor dans le contenu rendu */
+.article-content .ql-editor,
+.article-content div,
+.article-content pre {
+    white-space: normal !important;
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+}
+
+/* Même chose pour prose */
+.prose > *,
+.prose > * > *,
+.prose > * > * > * {
+    white-space: normal !important;
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+}
+
+.prose div,
+.prose pre,
+.prose .ql-editor {
+    white-space: normal !important;
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+}
