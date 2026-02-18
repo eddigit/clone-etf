@@ -807,8 +807,17 @@ article table,
 .prose iframe,
 .prose table {
     max-width: 100% !important;
-    width: auto !important;
     overflow-x: auto !important;
+}
+
+/* Images autonomes (hors grille) : centrage automatique */
+.article-content p > img:only-child,
+.prose p > img:only-child {
+    display: block !important;
+    margin: 1rem auto !important;
+    max-width: 100% !important;
+    height: auto !important;
+    border-radius: 8px;
 }
 
 @media (max-width: 768px) {
