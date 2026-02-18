@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   RÈGLE GLOBALE — ZÉRO CÉSURE sur tout le site
+   lang="fr" déclenche la césure auto sur mobile — on la désactive
+   ============================================================ */
+html, body {
+    hyphens: none !important;
+    -webkit-hyphens: none !important;
+    -ms-hyphens: none !important;
+    -moz-hyphens: none !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+}
+
+* {
+    hyphens: none !important;
+    -webkit-hyphens: none !important;
+    -ms-hyphens: none !important;
+    -moz-hyphens: none !important;
+}
+
+
 body {
     margin: 0;
     font-family:
