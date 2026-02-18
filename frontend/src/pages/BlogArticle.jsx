@@ -95,9 +95,28 @@ const BlogArticle = () => {
   const processContent = (htmlContent) => {
     if (!htmlContent) return '';
     // CORRECTIF PRINCIPAL : remplacer &nbsp; par des espaces normaux
-    // Le contenu Quill sauvegarde tous les espaces en &nbsp; ce qui empêche
-    // le retour à la ligne automatique → texte en une seule ligne horizontale
     htmlContent = htmlContent.replace(/&nbsp;/g, ' ');
+
+    // AUTO-GRILLE : plusieurs images dans le même paragraphe → affichage côte à côte
+    // 2 images dans un <p> → grille 2 colonnes
+    htmlContent = htmlContent.replace(
+      /<p>\s*(<img[^>]+>)\s*(<img[^>]+>)\s*<\/p>/gi,
+      (match, img1, img2) =>
+        `<div style="display:flex;gap:8px;margin:1rem 0;">` +
+        `<div style="flex:1;"><img ${img1.replace(/^<img/,'').replace(/>$/,'')} style="width:100%;height:180px;object-fit:cover;border-radius:6px;display:block;"></div>` +
+        `<div style="flex:1;"><img ${img2.replace(/^<img/,'').replace(/>$/,'')} style="width:100%;height:180px;object-fit:cover;border-radius:6px;display:block;"></div>` +
+        `</div>`
+    );
+    // 3 images dans un <p> → grille 3 colonnes
+    htmlContent = htmlContent.replace(
+      /<p>\s*(<img[^>]+>)\s*(<img[^>]+>)\s*(<img[^>]+>)\s*<\/p>/gi,
+      (match, img1, img2, img3) =>
+        `<div style="display:flex;gap:8px;margin:1rem 0;">` +
+        `<div style="flex:1;"><img ${img1.replace(/^<img/,'').replace(/>$/,'')} style="width:100%;height:160px;object-fit:cover;border-radius:6px;display:block;"></div>` +
+        `<div style="flex:1;"><img ${img2.replace(/^<img/,'').replace(/>$/,'')} style="width:100%;height:160px;object-fit:cover;border-radius:6px;display:block;"></div>` +
+        `<div style="flex:1;"><img ${img3.replace(/^<img/,'').replace(/>$/,'')} style="width:100%;height:160px;object-fit:cover;border-radius:6px;display:block;"></div>` +
+        `</div>`
+    );
     // Supprimer white-space: pre-wrap des styles inline (cause débordement mobile)
     htmlContent = htmlContent.replace(/white-space\s*:\s*pre-wrap/gi, 'white-space: normal');
     htmlContent = htmlContent.replace(/white-space\s*:\s*pre/gi, 'white-space: normal');
