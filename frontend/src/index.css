@@ -474,6 +474,19 @@ article {
     color: #1f2937;
     font-size: 1.125rem;
     line-height: 1.9;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+    hyphens: none !important;
+    -webkit-hyphens: none !important;
+    -ms-hyphens: none !important;
+}
+
+.article-content * {
+    word-break: normal !important;
+    hyphens: none !important;
+    -webkit-hyphens: none !important;
+    overflow-wrap: break-word !important;
 }
 
 .article-content h1,
