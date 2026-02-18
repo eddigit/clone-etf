@@ -30,21 +30,28 @@ const RichTextEditor = ({
   const [isPreview, setIsPreview] = React.useState(false);
   const quillRef = useRef(null);
 
-  // Insérer une grille d'images via tableau HTML (plus stable dans Quill)
+  // Insérer une grille d'images — demande les URLs via prompt, génère HTML avec classes CSS
   const insertImageGrid = useCallback((cols) => {
     const quill = quillRef.current?.getEditor();
     if (!quill) return;
+
+    const urls = [];
+    for (let i = 1; i <= cols; i++) {
+      const url = window.prompt(`Image ${i}/${cols} — Collez l'URL de l'image :`, 'https://');
+      if (url === null) return; // Annulé par l'utilisateur
+      const trimmed = url.trim();
+      if (!trimmed || !trimmed.startsWith('http')) {
+        alert(`URL invalide pour l'image ${i}. Opération annulée.`);
+        return;
+      }
+      urls.push(trimmed);
+    }
+
     const range = quill.getSelection(true);
     const index = range ? range.index + range.length : quill.getLength();
-    const width = cols === 2 ? '49' : '32';
-    const gap = cols === 2 ? '2' : '2';
-    const placeholder = 'https://placehold.co/600x400/e2e8f0/64748b?text=Image';
-    let cells = '';
-    for (let i = 1; i <= cols; i++) {
-      const marginRight = i < cols ? `margin-right:${gap}%;` : '';
-      cells += `<img src="${placeholder}+${i}" alt="Image ${i}" style="width:${width}%;${marginRight}display:inline-block;vertical-align:top;height:180px;object-fit:cover;border-radius:6px;">`;
-    }
-    const html = `<p style="font-size:0;line-height:0;white-space:nowrap;">${cells}</p><p><br></p>`;
+    const gridClass = cols === 2 ? 'img-grid-2' : 'img-grid-3';
+    const imgTags = urls.map((url, i) => `<img src="${url}" alt="Image ${i + 1}" />`).join('');
+    const html = `<div class="${gridClass}">${imgTags}</div><p><br></p>`;
     quill.clipboard.dangerouslyPasteHTML(index, html);
     quill.setSelection(index + 1, 0);
   }, []);
@@ -257,7 +264,7 @@ const RichTextEditor = ({
               >
                 🖼️🖼️🖼️ 3 colonnes
               </button>
-              <span className="text-xs text-gray-400 italic">→ insérez 2 ou 3 images dans le même paragraphe pour les afficher côte à côte</span>
+              <span className="text-xs text-gray-400 italic">→ Collez l'URL de chaque image dans les fenêtres qui s'ouvrent</span>
             </div>
             <ReactQuill
               ref={quillRef}
@@ -308,3 +315,4 @@ const RichTextEditor = ({
 };
 
 export default RichTextEditor;
+
