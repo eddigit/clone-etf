@@ -72,6 +72,18 @@ const BlogArticle = () => {
     return null;
   };
 
+  // Créer une vignette YouTube cliquable (thumbnail + bouton play)
+  const createYouTubeThumbnail = (videoId, youtubeUrl) => {
+    const thumbUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    const videoLink = youtubeUrl || `https://www.youtube.com/watch?v=${videoId}`;
+    return `<a href="${videoLink}" target="_blank" rel="noopener noreferrer" style="display:block;position:relative;border-radius:8px;overflow:hidden;text-decoration:none;">` +
+      `<img src="${thumbUrl}" alt="Vidéo YouTube" style="width:100%;height:180px;object-fit:cover;display:block;">` +
+      `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.25);">` +
+      `<div style="width:52px;height:52px;background:rgba(255,0,0,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;">` +
+      `<div style="width:0;height:0;border-style:solid;border-width:10px 0 10px 20px;border-color:transparent transparent transparent white;margin-left:4px;"></div>` +
+      `</div></div></a>`;
+  };
+
   // Créer l'embed YouTube avec un design moderne
   const createYouTubeEmbed = (videoId) => {
     return `
@@ -96,6 +108,26 @@ const BlogArticle = () => {
     if (!htmlContent) return '';
     // CORRECTIF PRINCIPAL : remplacer &nbsp; par des espaces normaux
     htmlContent = htmlContent.replace(/&nbsp;/g, ' ');
+
+    // IMAGE + VIDÉO côte à côte : image et lien YouTube dans le même paragraphe
+    htmlContent = htmlContent.replace(
+      /<p>\s*(<img[^>]+>)\s*(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\|youtube\.com\/embed\/)([a-zA-Z0-9_-]{10,15})[^\s<]*)\s*<\/p>/gi,
+      (match, img, ytUrl, videoId) => {
+        const thumb = createYouTubeThumbnail(videoId, ytUrl);
+        return `<div style="display:flex;gap:8px;margin:1rem 0;">` +
+          `<div style="flex:1;"><img ${img.replace(/^<img/,'').replace(/>$/,'')} style="width:100%;height:180px;object-fit:cover;border-radius:6px;display:block;"></div>` +
+          `<div style="flex:1;">${thumb}</div></div>`;
+      }
+    );
+    htmlContent = htmlContent.replace(
+      /<p>\s*(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\|youtube\.com\/embed\/)([a-zA-Z0-9_-]{10,15})[^\s<]*)\s*(<img[^>]+>)\s*<\/p>/gi,
+      (match, ytUrl, videoId, img) => {
+        const thumb = createYouTubeThumbnail(videoId, ytUrl);
+        return `<div style="display:flex;gap:8px;margin:1rem 0;">` +
+          `<div style="flex:1;">${thumb}</div>` +
+          `<div style="flex:1;"><img ${img.replace(/^<img/,'').replace(/>$/,'')} style="width:100%;height:180px;object-fit:cover;border-radius:6px;display:block;"></div></div>`;
+      }
+    );
 
     // AUTO-GRILLE : plusieurs images dans le même paragraphe → affichage côte à côte
     // 2 images dans un <p> → grille 2 colonnes
