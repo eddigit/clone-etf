@@ -30,30 +30,43 @@ const RichTextEditor = ({
   const [isPreview, setIsPreview] = React.useState(false);
   const quillRef = useRef(null);
 
-  // Insérer une grille d'images — demande les URLs via prompt, génère HTML avec classes CSS
+  // Insérer une grille d'images — sélection fichiers depuis l'ordinateur, lecture base64
   const insertImageGrid = useCallback((cols) => {
     const quill = quillRef.current?.getEditor();
     if (!quill) return;
 
-    const urls = [];
-    for (let i = 1; i <= cols; i++) {
-      const url = window.prompt(`Image ${i}/${cols} — Collez l'URL de l'image :`, 'https://');
-      if (url === null) return; // Annulé par l'utilisateur
-      const trimmed = url.trim();
-      if (!trimmed || !trimmed.startsWith('http')) {
-        alert(`URL invalide pour l'image ${i}. Opération annulée.`);
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+
+    input.onchange = (e) => {
+      const files = Array.from(e.target.files).slice(0, cols);
+      if (files.length === 0) return;
+      if (files.length !== cols) {
+        alert(`Veuillez sélectionner exactement ${cols} image${cols > 1 ? 's' : ''}.`);
         return;
       }
-      urls.push(trimmed);
-    }
 
-    const range = quill.getSelection(true);
-    const index = range ? range.index + range.length : quill.getLength();
-    const gridClass = cols === 2 ? 'img-grid-2' : 'img-grid-3';
-    const imgTags = urls.map((url, i) => `<img src="${url}" alt="Image ${i + 1}" />`).join('');
-    const html = `<div class="${gridClass}">${imgTags}</div><p><br></p>`;
-    quill.clipboard.dangerouslyPasteHTML(index, html);
-    quill.setSelection(index + 1, 0);
+      // Lire toutes les images en base64
+      const readers = files.map(file => new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve(ev.target.result);
+        reader.readAsDataURL(file);
+      }));
+
+      Promise.all(readers).then(dataUrls => {
+        const range = quill.getSelection(true);
+        const index = range ? range.index + range.length : quill.getLength();
+        const gridClass = cols === 2 ? 'img-grid-2' : 'img-grid-3';
+        const imgTags = dataUrls.map((url, i) => `<img src="${url}" alt="Image ${i + 1}" />`).join('');
+        const html = `<div class="${gridClass}">${imgTags}</div><p><br></p>`;
+        quill.clipboard.dangerouslyPasteHTML(index, html);
+        quill.setSelection(index + 1, 0);
+      });
+    };
+
+    input.click();
   }, []);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
   const [viewMode, setViewMode] = React.useState('editor'); // 'editor', 'preview', 'split'
@@ -264,7 +277,7 @@ const RichTextEditor = ({
               >
                 🖼️🖼️🖼️ 3 colonnes
               </button>
-              <span className="text-xs text-gray-400 italic">→ Collez l'URL de chaque image dans les fenêtres qui s'ouvrent</span>
+              <span className="text-xs text-gray-400 italic">→ Sélectionne 2 ou 3 images depuis ton ordinateur</span>
             </div>
             <ReactQuill
               ref={quillRef}
