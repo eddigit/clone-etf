@@ -257,7 +257,7 @@ const RichTextEditor = ({
               >
                 🖼️🖼️🖼️ 3 colonnes
               </button>
-              <span className="text-xs text-gray-400 italic">→ cliquez sur l'image placeholder pour la remplacer</span>
+              <span className="text-xs text-gray-400 italic">→ insérez 2 ou 3 images dans le même paragraphe pour les afficher côte à côte</span>
             </div>
             <ReactQuill
               ref={quillRef}
