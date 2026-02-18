@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useRef } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import './RichTextEditor.css';
@@ -28,6 +28,24 @@ const RichTextEditor = ({
   showPreview = true 
 }) => {
   const [isPreview, setIsPreview] = React.useState(false);
+  const quillRef = useRef(null);
+
+  // Insérer une grille d'images (2 ou 3 colonnes)
+  const insertImageGrid = useCallback((cols) => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
+    const range = quill.getSelection(true);
+    const index = range ? range.index + range.length : quill.getLength();
+    const colClass = cols === 2 ? 'img-grid-2' : 'img-grid-3';
+    const placeholder = 'https://placehold.co/600x400?text=Image';
+    let imgs = '';
+    for (let i = 1; i <= cols; i++) {
+      imgs += `<img src="${placeholder}+${i}" alt="Image ${i}">`;
+    }
+    const html = `<div class="${colClass}">${imgs}</div><p><br></p>`;
+    quill.clipboard.dangerouslyPasteHTML(index, html);
+    quill.setSelection(index + 1, 0);
+  }, []);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
   const [viewMode, setViewMode] = React.useState('editor'); // 'editor', 'preview', 'split'
 
@@ -218,7 +236,29 @@ const RichTextEditor = ({
         {/* Éditeur */}
         {(viewMode === 'editor' || viewMode === 'split') && (
           <div className={`${viewMode === 'split' ? 'w-1/2 border-r' : 'w-full'} flex flex-col`}>
+            {/* Barre grilles d'images */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border-b border-gray-200">
+              <span className="text-xs text-gray-500 font-medium">Grille images :</span>
+              <button
+                type="button"
+                onClick={() => insertImageGrid(2)}
+                title="Insérer une grille 2 images côte à côte"
+                className="flex items-center gap-1 px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-blue-50 hover:border-blue-400 transition-colors"
+              >
+                🖼️🖼️ 2 colonnes
+              </button>
+              <button
+                type="button"
+                onClick={() => insertImageGrid(3)}
+                title="Insérer une grille 3 images côte à côte"
+                className="flex items-center gap-1 px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-blue-50 hover:border-blue-400 transition-colors"
+              >
+                🖼️🖼️🖼️ 3 colonnes
+              </button>
+              <span className="text-xs text-gray-400 italic">→ cliquez sur l'image placeholder pour la remplacer</span>
+            </div>
             <ReactQuill
+              ref={quillRef}
               theme="snow"
               value={value}
               onChange={handleChange}
@@ -227,7 +267,7 @@ const RichTextEditor = ({
               placeholder={placeholder}
               className="rich-text-editor flex-1"
               style={{ 
-                height: isFullscreen ? 'calc(100vh - 120px)' : `calc(${minHeight} - 10px)`,
+                height: isFullscreen ? 'calc(100vh - 150px)' : `calc(${minHeight} - 10px)`,
               }}
             />
           </div>
