@@ -94,6 +94,10 @@ const BlogArticle = () => {
   // et convertir les liens YouTube en iframes
   const processContent = (htmlContent) => {
     if (!htmlContent) return '';
+    // CORRECTIF PRINCIPAL : remplacer &nbsp; par des espaces normaux
+    // Le contenu Quill sauvegarde tous les espaces en &nbsp; ce qui empêche
+    // le retour à la ligne automatique → texte en une seule ligne horizontale
+    htmlContent = htmlContent.replace(/&nbsp;/g, ' ');
     // Supprimer white-space: pre-wrap des styles inline (cause débordement mobile)
     htmlContent = htmlContent.replace(/white-space\s*:\s*pre-wrap/gi, 'white-space: normal');
     htmlContent = htmlContent.replace(/white-space\s*:\s*pre/gi, 'white-space: normal');
