@@ -436,6 +436,46 @@ const BlogArticle = () => {
             dangerouslySetInnerHTML={{ __html: processContent(article.content) }}
           />
 
+          {/* 📚 Bloc Livre 418 Milliards — affiché après chaque article */}
+          <div className="my-12 rounded-2xl overflow-hidden shadow-xl bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 border border-slate-600">
+            <div className="flex flex-col sm:flex-row items-center gap-6 p-6 sm:p-8">
+              {/* Couverture */}
+              <div className="flex-shrink-0">
+                <img
+                  src="https://res.cloudinary.com/dx4fqegqb/image/upload/v1768839304/Couverture-418_Milliards_f2duv2.jpg"
+                  alt="Couverture 418 Milliards"
+                  className="w-28 sm:w-36 rounded-lg shadow-2xl"
+                />
+              </div>
+              {/* Texte */}
+              <div className="flex-1 text-center sm:text-left">
+                <p className="text-xs font-semibold text-red-400 uppercase tracking-widest mb-1">Le livre de l'association</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-white leading-tight mb-1">
+                  <span className="text-red-500">418 MILLIARDS</span>
+                </h3>
+                <p className="text-sm text-slate-300 mb-1">La fraude de la grande distribution</p>
+                <p className="text-xs text-slate-400 italic mb-4">Martine Donnette & Claude Diot, avec Patrick Pasin</p>
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <span className="text-2xl font-bold text-green-400">18,00 €</span>
+                  <a
+                    href="https://www.novimondi.com/fr/societe/47-418-milliards-la-fraude-de-la-grande-distribution-avec-la-complicite-des-elus-et-de-l-administration.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-lg transition-colors text-sm"
+                  >
+                    🛒 Commander le livre
+                  </a>
+                  <a
+                    href="/livre-418-milliards"
+                    className="inline-flex items-center gap-1 text-slate-300 hover:text-white text-sm underline transition-colors"
+                  >
+                    En savoir plus →
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Séparateur décoratif */}
           <div className="flex items-center gap-4 my-12">
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
