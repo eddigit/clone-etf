@@ -673,3 +673,67 @@ article {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
 }
 
+
+
+/* ============================================================
+   CORRECTIF GLOBAL ANTI-COUPURE DE MOTS — blog & articles
+   Tous les textes du site passent entiers à la ligne suivante
+   ============================================================ */
+
+/* Page blog — cartes articles */
+.min-h-screen p,
+.min-h-screen h1,
+.min-h-screen h2,
+.min-h-screen h3,
+.min-h-screen h4,
+.min-h-screen h5,
+.min-h-screen h6,
+.min-h-screen span,
+.min-h-screen li,
+.min-h-screen a {
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    hyphens: none !important;
+    -webkit-hyphens: none !important;
+    -ms-hyphens: none !important;
+}
+
+/* Contenu article — maximum priorité */
+.prose p,
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose li,
+.prose span,
+.prose blockquote,
+.prose td,
+.prose th,
+.article-content p,
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content li,
+.article-content span,
+.article-content blockquote {
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+    hyphens: none !important;
+    -webkit-hyphens: none !important;
+    -ms-hyphens: none !important;
+    white-space: normal !important;
+}
+
+/* Mobile — renforcement */
+@media (max-width: 768px) {
+    .prose, .prose *,
+    .article-content, .article-content * {
+        word-break: normal !important;
+        hyphens: none !important;
+        -webkit-hyphens: none !important;
+        overflow-wrap: break-word !important;
+        white-space: normal !important;
+    }
+}
