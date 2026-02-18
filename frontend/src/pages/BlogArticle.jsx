@@ -94,6 +94,9 @@ const BlogArticle = () => {
   // et convertir les liens YouTube en iframes
   const processContent = (htmlContent) => {
     if (!htmlContent) return '';
+    // Supprimer white-space: pre-wrap des styles inline (cause débordement mobile)
+    htmlContent = htmlContent.replace(/white-space\s*:\s*pre-wrap/gi, 'white-space: normal');
+    htmlContent = htmlContent.replace(/white-space\s*:\s*pre/gi, 'white-space: normal');
 
     // Remplacer les src d'images relatives par des URLs complètes
     let processed = htmlContent.replace(
@@ -425,6 +428,7 @@ const BlogArticle = () => {
           {/* Corps de l'article */}
           <div
             className="article-content prose prose-lg max-w-none mb-12"
+            style={{ whiteSpace: 'normal', overflowX: 'hidden', wordBreak: 'normal', overflowWrap: 'break-word' }}
             dangerouslySetInnerHTML={{ __html: processContent(article.content) }}
           />
 
