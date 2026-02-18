@@ -737,3 +737,69 @@ article {
         white-space: normal !important;
     }
 }
+
+
+/* ============================================================
+   CORRECTIF DÉBORDEMENT HORIZONTAL — texte coupé sur mobile
+   Le contenu ne doit jamais dépasser la largeur de l'écran
+   ============================================================ */
+
+html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+}
+
+/* Conteneur principal de chaque page */
+.min-h-screen {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+}
+
+/* Article et contenu blog */
+article,
+.article-content,
+.prose {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+}
+
+/* Tout élément qui pourrait déborder */
+article *,
+.article-content *,
+.prose * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Images, vidéos, iframes — ne jamais dépasser le conteneur */
+article img,
+article video,
+article iframe,
+article table,
+.article-content img,
+.article-content video,
+.article-content iframe,
+.article-content table,
+.prose img,
+.prose video,
+.prose iframe,
+.prose table {
+    max-width: 100% !important;
+    width: auto !important;
+    overflow-x: auto !important;
+}
+
+@media (max-width: 768px) {
+    html, body {
+        overflow-x: hidden !important;
+    }
+    article,
+    .article-content,
+    .prose {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+    }
+}
