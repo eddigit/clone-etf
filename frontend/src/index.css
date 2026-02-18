@@ -939,6 +939,8 @@ article table,
     object-fit: cover !important;
     border-radius: 8px !important;
     display: block !important;
+    margin: 0 !important;
+    box-shadow: none !important;
 }
 
 /* Sur mobile : une seule colonne */
@@ -952,3 +954,4 @@ article table,
         height: 180px !important;
     }
 }
+
