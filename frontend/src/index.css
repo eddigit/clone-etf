@@ -415,16 +415,23 @@ code {
     font-size: 1.5rem !important;
 }
 
-/* Cadrage du contenu des articles - éviter débordement sur le widget chat */
+/* Cadrage du contenu des articles - mots jamais coupés, passage à la ligne entier */
 .prose {
     overflow-wrap: break-word !important;
     word-wrap: break-word !important;
     word-break: normal !important;
-    hyphens: auto !important;
-    -webkit-hyphens: auto !important;
-    -ms-hyphens: auto !important;
+    hyphens: none !important;
+    -webkit-hyphens: none !important;
+    -ms-hyphens: none !important;
     max-width: 100% !important;
     overflow-x: hidden !important;
+}
+
+.prose p, .prose li, .prose span, .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    word-break: normal !important;
+    hyphens: none !important;
+    -webkit-hyphens: none !important;
+    overflow-wrap: break-word !important;
 }
 
 .prose pre,
