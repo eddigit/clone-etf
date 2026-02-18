@@ -872,3 +872,74 @@ article table,
     overflow-x: hidden !important;
     max-width: 100% !important;
 }
+
+
+/* ============================================================
+   VIDÉOS YOUTUBE — taille réduite et centrée dans les articles
+   ============================================================ */
+.youtube-container,
+.article-content .youtube-container,
+.prose .youtube-container {
+    max-width: 600px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 100% !important;
+}
+
+.youtube-wrapper {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+}
+
+.youtube-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: 8px;
+}
+
+/* ============================================================
+   GRILLES D'IMAGES — 2 ou 3 images côte à côte dans les articles
+   ============================================================ */
+
+/* Grille 2 images */
+.img-grid-2 {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+    margin: 1.5rem 0 !important;
+}
+
+/* Grille 3 images */
+.img-grid-3 {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 10px !important;
+    margin: 1.5rem 0 !important;
+}
+
+.img-grid-2 img,
+.img-grid-3 img {
+    width: 100% !important;
+    height: 200px !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+    display: block !important;
+}
+
+/* Sur mobile : une seule colonne */
+@media (max-width: 640px) {
+    .img-grid-2,
+    .img-grid-3 {
+        grid-template-columns: 1fr !important;
+    }
+    .img-grid-2 img,
+    .img-grid-3 img {
+        height: 180px !important;
+    }
+}
