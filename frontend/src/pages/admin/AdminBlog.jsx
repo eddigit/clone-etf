@@ -946,62 +946,57 @@ const AdminBlog = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            <p className="text-sm text-gray-600">Sélectionnez les plateformes :</p>
-            
-            <div className="grid grid-cols-2 gap-3">
-              {socialPlatforms.map((platform) => (
-                <label 
-                  key={platform.id} 
-                  className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                    selectedSharePlatforms.includes(platform.id)
-                      ? 'bg-blue-50 border-blue-400'
-                      : 'bg-white border-gray-200 hover:border-gray-300'
-                  } ${!platform.configured ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedSharePlatforms.includes(platform.id)}
-                    onChange={(e) => {
-                      const newPlatforms = e.target.checked
-                        ? [...selectedSharePlatforms, platform.id]
-                        : selectedSharePlatforms.filter(p => p !== platform.id);
-                      setSelectedSharePlatforms(newPlatforms);
-                    }}
-                    disabled={!platform.configured}
-                    className="h-4 w-4 text-blue-600 rounded"
-                  />
-                  <div className="flex items-center gap-2">
-                    {platform.id === 'facebook' && <Facebook className="h-5 w-5 text-blue-600" />}
-                    {platform.id === 'instagram' && <Instagram className="h-5 w-5 text-pink-600" />}
-                    {platform.id === 'linkedin' && <Linkedin className="h-5 w-5 text-blue-700" />}
-                    {platform.id === 'twitter' && <Twitter className="h-5 w-5 text-sky-500" />}
-                    <span className="font-medium">{platform.name}</span>
-                  </div>
-                  {!platform.configured && (
-                    <span className="text-xs text-orange-500 ml-auto">Non configuré</span>
-                  )}
-                </label>
-              ))}
-            </div>
-
-            {selectedSharePlatforms.length === 0 && (
-              <p className="text-sm text-orange-600">
-                Veuillez sélectionner au moins une plateforme
-              </p>
-            )}
+          <div className="space-y-3 py-4">
+            <p className="text-sm text-gray-500 mb-4">
+              Cliquez sur un réseau — la page s'ouvre avec l'article prêt à publier.
+            </p>
+            {sharingArticle && (() => {
+              const articleUrl = encodeURIComponent(`https://www.en-toutefranchise.com/blog/${sharingArticle.slug}`);
+              const articleTitle = encodeURIComponent(sharingArticle.title || '');
+              const articleExcerpt = encodeURIComponent(sharingArticle.excerpt || sharingArticle.title || '');
+              return (
+                <div className="flex flex-col gap-3">
+                  {/* Facebook */}
+                  <a
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${articleUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setShowShareModal(false)}
+                    className="flex items-center gap-3 p-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors"
+                  >
+                    <Facebook className="h-5 w-5" />
+                    Partager sur Facebook
+                  </a>
+                  {/* LinkedIn */}
+                  <a
+                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${articleUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setShowShareModal(false)}
+                    className="flex items-center gap-3 p-4 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold transition-colors"
+                  >
+                    <Linkedin className="h-5 w-5" />
+                    Partager sur LinkedIn
+                  </a>
+                  {/* X (Twitter) */}
+                  <a
+                    href={`https://twitter.com/intent/tweet?text=${articleTitle}&url=${articleUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setShowShareModal(false)}
+                    className="flex items-center gap-3 p-4 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-semibold transition-colors"
+                  >
+                    <Twitter className="h-5 w-5" />
+                    Partager sur X (Twitter)
+                  </a>
+                </div>
+              );
+            })()}
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowShareModal(false)}>
-              Annuler
-            </Button>
-            <Button 
-              onClick={handleShareToSocial} 
-              disabled={sharing || selectedSharePlatforms.length === 0}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {sharing ? 'Publication...' : 'Publier maintenant'}
+              Fermer
             </Button>
           </DialogFooter>
         </DialogContent>
