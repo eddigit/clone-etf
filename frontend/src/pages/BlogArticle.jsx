@@ -436,17 +436,13 @@ const BlogArticle = () => {
             dangerouslySetInnerHTML={{ __html: processContent(article.content) }}
           />
 
-          {/* 📚 Petit encart livre 418 Milliards */}
+          {/* 📚 Petit encart livre 418 Milliards — sans photo */}
           <div className="my-8 flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm">
-            <img
-              src="https://res.cloudinary.com/dx4fqegqb/image/upload/v1768839304/Couverture-418_Milliards_f2duv2.jpg"
-              alt="418 Milliards"
-              className="w-10 h-auto rounded shadow flex-shrink-0"
-            />
             <div className="flex-1 min-w-0">
               <span className="font-semibold text-slate-800">📕 418 Milliards</span>
               <span className="text-slate-500 mx-1">—</span>
               <span className="text-slate-600 text-xs">La fraude de la grande distribution</span>
+              <span className="text-slate-400 text-xs ml-1">· Martine Donnette & Claude Diot</span>
             </div>
             <a
               href="https://www.novimondi.com/fr/societe/47-418-milliards-la-fraude-de-la-grande-distribution-avec-la-complicite-des-elus-et-de-l-administration.html"
