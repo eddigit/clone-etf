@@ -278,8 +278,8 @@ const ChatAIWidget = ({
         <div 
           className={`fixed bottom-6 right-6 z-50 bg-white rounded-2xl shadow-2xl flex flex-col transition-all duration-300 ${
             isMinimized 
-              ? 'w-80 h-16' 
-              : 'w-96 h-[600px] max-h-[80vh]'
+              ? 'w-72 h-16 sm:w-80' 
+              : 'w-[calc(100vw-2rem)] sm:w-96 h-[600px] max-h-[80vh]'
           }`}
           style={{ 
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)' 
