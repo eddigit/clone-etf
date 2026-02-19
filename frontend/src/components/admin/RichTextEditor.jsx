@@ -69,7 +69,7 @@ const RichTextEditor = ({
     input.click();
   }, []);
 
-  // Insérer un viewer PDF — demande URL, insère iframe Google Docs Viewer
+  // Insérer un viewer PDF — détection auto Google Drive, conversion en preview
   const insertPDF = useCallback(() => {
     const quill = quillRef.current?.getEditor();
     if (!quill) return;
@@ -87,14 +87,33 @@ const RichTextEditor = ({
       return;
     }
 
-    // Encoder l'URL pour Google Docs Viewer
-    const encodedUrl = encodeURIComponent(trimmed);
-    const viewerUrl = `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`;
+    let viewerUrl = '';
+
+    // Détection et conversion Google Drive
+    if (trimmed.includes('drive.google.com')) {
+      // Extraire l'ID du fichier Google Drive
+      const driveIdMatch = trimmed.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      const openIdMatch = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      
+      const fileId = driveIdMatch ? driveIdMatch[1] : (openIdMatch ? openIdMatch[1] : null);
+      
+      if (fileId) {
+        // Utiliser le format preview de Google Drive (fonctionne dans iframe)
+        viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+      } else {
+        alert("Impossible d'extraire l'ID du fichier Google Drive. Vérifiez le lien.");
+        return;
+      }
+    } else {
+      // Autres liens PDF : utiliser Google Docs Viewer
+      const encodedUrl = encodeURIComponent(trimmed);
+      viewerUrl = `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`;
+    }
 
     const range = quill.getSelection(true);
     const index = range ? range.index + range.length : quill.getLength();
 
-    const html = `<div class="pdf-viewer-container" style="position:relative;width:100%;max-width:800px;margin:2rem auto;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.1);">
+    const html = `<div class="pdf-viewer-container" style="position:relative;width:100%;max-width:800px;margin:2rem auto;padding-bottom:141.42%;height:0;overflow:hidden;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.1);">
       <iframe src="${viewerUrl}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen></iframe>
     </div><p><br></p>`;
 
