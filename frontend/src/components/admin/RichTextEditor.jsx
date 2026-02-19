@@ -68,6 +68,40 @@ const RichTextEditor = ({
 
     input.click();
   }, []);
+
+  // Insérer un viewer PDF — demande URL, insère iframe Google Docs Viewer
+  const insertPDF = useCallback(() => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
+
+    const pdfUrl = window.prompt(
+      "Collez l'URL de votre PDF (Google Drive, Dropbox, ou lien direct) :",
+      "https://"
+    );
+
+    if (!pdfUrl || pdfUrl.trim() === '' || pdfUrl === 'https://') return;
+
+    const trimmed = pdfUrl.trim();
+    if (!trimmed.startsWith('http')) {
+      alert("URL invalide. Elle doit commencer par https://");
+      return;
+    }
+
+    // Encoder l'URL pour Google Docs Viewer
+    const encodedUrl = encodeURIComponent(trimmed);
+    const viewerUrl = `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`;
+
+    const range = quill.getSelection(true);
+    const index = range ? range.index + range.length : quill.getLength();
+
+    const html = `<div class="pdf-viewer-container" style="position:relative;width:100%;max-width:800px;margin:2rem auto;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.1);">
+      <iframe src="${viewerUrl}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen></iframe>
+    </div><p><br></p>`;
+
+    quill.clipboard.dangerouslyPasteHTML(index, html);
+    quill.setSelection(index + 1, 0);
+  }, []);
+
   const [isFullscreen, setIsFullscreen] = React.useState(false);
   const [viewMode, setViewMode] = React.useState('editor'); // 'editor', 'preview', 'split'
 
@@ -258,9 +292,9 @@ const RichTextEditor = ({
         {/* Éditeur */}
         {(viewMode === 'editor' || viewMode === 'split') && (
           <div className={`${viewMode === 'split' ? 'w-1/2 border-r' : 'w-full'} flex flex-col`}>
-            {/* Barre grilles d'images */}
+            {/* Barre médias (grilles images + PDF) */}
             <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border-b border-gray-200">
-              <span className="text-xs text-gray-500 font-medium">Grille images :</span>
+              <span className="text-xs text-gray-500 font-medium">Médias :</span>
               <button
                 type="button"
                 onClick={() => insertImageGrid(2)}
@@ -277,7 +311,16 @@ const RichTextEditor = ({
               >
                 🖼️🖼️🖼️ 3 colonnes
               </button>
-              <span className="text-xs text-gray-400 italic">→ Sélectionne 2 ou 3 images depuis ton ordinateur</span>
+              <span className="mx-2 text-gray-300">|</span>
+              <button
+                type="button"
+                onClick={insertPDF}
+                title="Insérer un viewer PDF (Google Drive, Dropbox, URL directe)"
+                className="flex items-center gap-1 px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-green-50 hover:border-green-400 transition-colors"
+              >
+                📄 PDF
+              </button>
+              <span className="text-xs text-gray-400 italic">→ Images : sélectionne 2 ou 3 fichiers | PDF : colle l'URL</span>
             </div>
             <ReactQuill
               ref={quillRef}
