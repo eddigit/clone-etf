@@ -702,7 +702,7 @@ CASE_CATEGORIES = [
     "Dossier en cours",
     "Information",
     "Alerte",
-    "Autre"
+    "Parlementaires"
 ]
 
 # Catégories prédéfinies pour les articles/blog
