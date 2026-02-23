@@ -956,18 +956,10 @@ article table,
 }
 
 
-/* Couleurs personnalisées Quill — priorité absolue sur les styles inline */
+/* Couleurs personnalisées Quill — les styles inline ont priorité */
 .prose [style*="color"],
+.prose * [style*="color"],
 .article-content [style*="color"],
-.prose h1[style*="color"],
-.prose h2[style*="color"],
-.prose h3[style*="color"],
-.prose h4[style*="color"],
-.article-content h1[style*="color"],
-.article-content h2[style*="color"],
-.article-content h3[style*="color"],
-.article-content h4[style*="color"],
-.prose span[style*="color"],
-.article-content span[style*="color"] {
-    color: inherit !important;
+.article-content * [style*="color"] {
+    color: unset !important;
 }
