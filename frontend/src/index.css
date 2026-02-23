@@ -161,7 +161,7 @@ code {
 }
 
 .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
-    color: #111827 !important;
+    color: #111827;
     font-weight: 700 !important;
     line-height: 1.3 !important;
 }
@@ -516,7 +516,7 @@ article {
 .article-content h4,
 .article-content h5,
 .article-content h6 {
-    color: #111827 !important;
+    color: #111827;
     font-weight: 700 !important;
     line-height: 1.3 !important;
     margin-top: 2.5rem !important;
@@ -531,7 +531,7 @@ article {
 
 .article-content h3 {
     font-size: 1.5rem !important;
-    color: #1e40af !important;
+    color: #1e40af;
 }
 
 .article-content h4 {
