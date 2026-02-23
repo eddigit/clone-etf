@@ -156,7 +156,7 @@ code {
 }
 
 /* Blog articles - texte visible */
-.prose, .prose * {
+.prose {
     color: #1f2937;
 }
 
@@ -193,7 +193,7 @@ code {
 }
 
 .prose p, .prose li, .prose span {
-    color: #1f2937 !important;
+    color: #1f2937;
     line-height: 1.8 !important;
 }
 
