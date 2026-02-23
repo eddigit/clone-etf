@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Clock, User, ArrowRight, FileText, Filter } from 'lucide-react';
-import { articles as mockArticles } from '../mockData';
+// Mock data disabled - only real articles from backend
 
 // API URL - utiliser l'API si disponible
 const API_URL = process.env.REACT_APP_API_URL || 'https://clone-etf.onrender.com';
@@ -46,18 +46,15 @@ const Blog = () => {
             setArticles(data.articles);
           } else {
             // Utiliser les donnees mock si pas d'articles en base
-            setUseMockData(true);
-            setArticles(mockArticles);
+            setArticles([]);
           }
         } else {
-          setUseMockData(true);
-          setArticles(mockArticles);
+          setArticles([]);
         }
       } catch (error) {
         console.error('Error fetching articles:', error);
         // Fallback sur les donnees mock
-        setUseMockData(true);
-        setArticles(mockArticles);
+        setArticles([]);
       } finally {
         setLoading(false);
       }
