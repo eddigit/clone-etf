@@ -709,7 +709,7 @@ CASE_CATEGORIES = [
 ARTICLE_CATEGORIES = [
     "Juridique",
     "Actualités",
-    "Conseils",
+    "Droits",
     "Témoignages",
     "Ressources",
     "Autre"
