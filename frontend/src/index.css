@@ -202,7 +202,7 @@ code {
 }
 
 .prose a {
-    color: #2563eb !important;
+    color: #2563eb;
     text-decoration: underline !important;
     text-underline-offset: 3px !important;
     font-weight: 500 !important;
@@ -210,7 +210,7 @@ code {
 }
 
 .prose a:hover {
-    color: #1d4ed8 !important;
+    color: #1d4ed8;
     text-decoration-thickness: 2px !important;
 }
 
@@ -230,7 +230,7 @@ code {
 
 .prose s, .prose strike {
     text-decoration: line-through !important;
-    color: #6b7280 !important;
+    color: #6b7280;
 }
 
 /* Listes stylisées */
@@ -248,7 +248,7 @@ code {
 
 .prose ul li::before {
     content: '•' !important;
-    color: #3b82f6 !important;
+    color: #3b82f6;
     font-size: 1.5em !important;
     position: absolute !important;
     left: 0 !important;
@@ -272,7 +272,7 @@ code {
 .prose ol li::before {
     content: counter(item) !important;
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-    color: white !important;
+    color: white;
     font-weight: 700 !important;
     font-size: 0.75rem !important;
     width: 1.5rem !important;
@@ -294,14 +294,14 @@ code {
     margin: 1.5rem 0 !important;
     border-radius: 0 12px 12px 0 !important;
     font-style: italic !important;
-    color: #1e40af !important;
+    color: #1e40af;
     position: relative !important;
 }
 
 .prose blockquote::before {
     content: '"' !important;
     font-size: 3rem !important;
-    color: #93c5fd !important;
+    color: #93c5fd;
     position: absolute !important;
     top: -10px !important;
     left: 10px !important;
@@ -311,7 +311,7 @@ code {
 /* Code premium */
 .prose pre {
     background: linear-gradient(135deg, #1f2937 0%, #111827 100%) !important;
-    color: #f3f4f6 !important;
+    color: #f3f4f6;
     padding: 1.25rem 1.5rem !important;
     border-radius: 12px !important;
     margin: 1.5rem 0 !important;
@@ -324,7 +324,7 @@ code {
 
 .prose code {
     background-color: #fef3c7 !important;
-    color: #92400e !important;
+    color: #92400e;
     padding: 3px 8px !important;
     border-radius: 6px !important;
     font-family: 'Fira Code', 'Monaco', 'Consolas', monospace !important;
@@ -334,7 +334,7 @@ code {
 
 .prose pre code {
     background-color: transparent !important;
-    color: inherit !important;
+    color: inherit;
     padding: 0 !important;
     border-radius: 0 !important;
 }
@@ -369,7 +369,7 @@ code {
 
 .prose th {
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-    color: white !important;
+    color: white;
     font-weight: 600 !important;
     padding: 0.75rem 1rem !important;
     text-align: left !important;
@@ -378,7 +378,7 @@ code {
 .prose td {
     padding: 0.75rem 1rem !important;
     border-bottom: 1px solid #e5e7eb !important;
-    color: #1f2937 !important;
+    color: #1f2937;
 }
 
 .prose tr:nth-child(even) {
@@ -543,7 +543,7 @@ article {
 }
 
 .article-content a {
-    color: #2563eb !important;
+    color: #2563eb;
     text-decoration: underline !important;
     text-underline-offset: 3px !important;
     font-weight: 500 !important;
@@ -551,7 +551,7 @@ article {
 }
 
 .article-content a:hover {
-    color: #1d4ed8 !important;
+    color: #1d4ed8;
     text-decoration-thickness: 2px !important;
 }
 
@@ -570,7 +570,7 @@ article {
     margin: 2rem 0 !important;
     border-radius: 0 1rem 1rem 0 !important;
     font-style: italic !important;
-    color: #1e40af !important;
+    color: #1e40af;
 }
 
 .article-content blockquote p {
@@ -588,11 +588,11 @@ article {
 }
 
 .article-content ul li::marker {
-    color: #3b82f6 !important;
+    color: #3b82f6;
 }
 
 .article-content ol li::marker {
-    color: #3b82f6 !important;
+    color: #3b82f6;
     font-weight: 600 !important;
 }
 
@@ -601,12 +601,12 @@ article {
     padding: 0.25rem 0.5rem !important;
     border-radius: 0.375rem !important;
     font-size: 0.875em !important;
-    color: #1f2937 !important;
+    color: #1f2937;
 }
 
 .article-content pre {
     background: #1f2937 !important;
-    color: #e5e7eb !important;
+    color: #e5e7eb;
     padding: 1.5rem !important;
     border-radius: 1rem !important;
     overflow-x: auto !important;
@@ -616,7 +616,7 @@ article {
 .article-content pre code {
     background: none !important;
     padding: 0 !important;
-    color: inherit !important;
+    color: inherit;
 }
 
 .article-content hr {
@@ -637,7 +637,7 @@ article {
 
 .article-content th {
     background: #1e40af !important;
-    color: white !important;
+    color: white;
     padding: 1rem !important;
     text-align: left !important;
     font-weight: 600 !important;
@@ -956,10 +956,3 @@ article table,
 }
 
 
-/* Couleurs personnalisées Quill — les styles inline ont priorité */
-.prose [style*="color"],
-.prose * [style*="color"],
-.article-content [style*="color"],
-.article-content * [style*="color"] {
-    color: unset !important;
-}
