@@ -711,7 +711,7 @@ ARTICLE_CATEGORIES = [
     "Actualités",
     "Droits",
     "Municipales",
-    "Ressources",
+    "Concurrence",
     "Autre"
 ]
 
