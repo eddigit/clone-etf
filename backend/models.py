@@ -710,7 +710,7 @@ ARTICLE_CATEGORIES = [
     "Juridique",
     "Actualités",
     "Droits",
-    "Témoignages",
+    "Municipales",
     "Ressources",
     "Autre"
 ]
