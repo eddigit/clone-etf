@@ -37,7 +37,8 @@ const Blog = () => {
         const params = new URLSearchParams({ status: 'published' });
         if (selectedCategory) params.append('category', selectedCategory);
 
-        const response = await fetch(`${API_URL}/api/articles?${params.toString()}`);
+        params.append("limit", "50");
+          const response = await fetch(`${API_URL}/api/articles?${params.toString()}`);
 
         if (response.ok) {
           const data = await response.json();
