@@ -4,17 +4,6 @@
   "outputDirectory": "frontend/build",
   "rewrites": [
     {
-      "source": "/blog/:slug",
-      "destination": "/api/og-blog",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": "(?i).*(facebookexternalhit|Facebot|LinkedInBot|Twitterbot|WhatsApp|Slackbot|TelegramBot|Discordbot).*"
-        }
-      ]
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
