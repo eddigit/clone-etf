@@ -315,10 +315,13 @@ def create_ai_router(db, get_current_admin_user=None):
                 user_type=UserType.VISITOR
             )
             ai_service.clear_conversation("health_check")
+            is_fallback = "désagrément" in response
             return {
-                "status": "healthy",
+                "status": "degraded" if is_fallback else "healthy",
                 "model": ai_service.model,
-                "api_connected": True,
+                "api_connected": not is_fallback,
+                "api_key_set": bool(ai_service.api_key),
+                "api_key_prefix": ai_service.api_key[:12] + "..." if ai_service.api_key else "EMPTY",
                 "timestamp": datetime.utcnow().isoformat()
             }
         except Exception as e:
@@ -328,6 +331,42 @@ def create_ai_router(db, get_current_admin_user=None):
                 "error": str(e),
                 "timestamp": datetime.utcnow().isoformat()
             }
+    
+    @router.get("/debug")
+    async def ai_debug():
+        """Debug endpoint — vérifie la config IA (temporaire)."""
+        import httpx as httpx_debug
+        debug_info = {
+            "model": ai_service.model,
+            "api_key_set": bool(ai_service.api_key),
+            "api_key_length": len(ai_service.api_key) if ai_service.api_key else 0,
+            "api_key_prefix": ai_service.api_key[:20] + "..." if ai_service.api_key else "EMPTY",
+            "api_url": ai_service.api_url,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        # Test direct de l'API Anthropic
+        try:
+            async with httpx_debug.AsyncClient(timeout=15.0) as client:
+                resp = await client.post(
+                    ai_service.api_url,
+                    headers={
+                        "x-api-key": ai_service.api_key,
+                        "anthropic-version": "2023-06-01",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "model": ai_service.model,
+                        "system": "Test",
+                        "messages": [{"role": "user", "content": "Hi"}],
+                        "max_tokens": 10,
+                        "temperature": 0.0
+                    }
+                )
+                debug_info["api_test_status"] = resp.status_code
+                debug_info["api_test_body"] = resp.text[:300]
+        except Exception as e:
+            debug_info["api_test_error"] = str(e)
+        return debug_info
     
     # ==================== ENDPOINTS RAG ====================
     

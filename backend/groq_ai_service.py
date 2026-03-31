@@ -656,7 +656,8 @@ class GroqAIService:
                 )
                 
                 if response.status_code != 200:
-                    logger.error(f"Anthropic API error: {response.status_code} - {response.text}")
+                    logger.error(f"Anthropic API error: {response.status_code} - {response.text[:500]}")
+                    logger.error(f"API key present: {bool(self.api_key)}, key prefix: {self.api_key[:15] if self.api_key else 'NONE'}")
                     return self._get_fallback_response()
                 
                 data = response.json()
@@ -676,7 +677,10 @@ class GroqAIService:
                 return ai_response
                 
         except Exception as e:
-            logger.error(f"Error in Claude AI chat: {e}")
+            logger.error(f"Error in Claude AI chat: {type(e).__name__}: {e}")
+            logger.error(f"API key set: {bool(self.api_key)}, model: {self.model}")
+            import traceback
+            logger.error(traceback.format_exc())
             return self._get_fallback_response()
 
     async def send_conversation_notification(
