@@ -1,9 +1,9 @@
 """
-Routes API pour l'Intelligence Artificielle Groq + RAG
+Routes API pour l'Intelligence Artificielle Claude + RAG
 ETF - En Toute Franchise
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, BackgroundTasks
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
@@ -40,6 +40,13 @@ class ChatResponse(BaseModel):
     response: str
     conversation_id: str
     timestamp: str
+
+
+class NotifyEndRequest(BaseModel):
+    """Requête de notification de fin de conversation"""
+    conversation_id: str = Field(..., description="ID de la conversation à notifier")
+    user_type: Optional[str] = Field("visitor", description="Type d'utilisateur")
+    user_info: Optional[Dict[str, Any]] = Field(None, description="Informations sur l'utilisateur")
 
 
 class SentimentRequest(BaseModel):
@@ -112,10 +119,6 @@ class RAGSearchRequest(BaseModel):
 def create_ai_router(db, get_current_admin_user=None):
     """
     Crée le routeur pour les routes IA
-    
-    Args:
-        db: Instance de la base de données MongoDB
-        get_current_admin_user: Dépendance pour vérifier l'admin (optionnel)
     """
     router = APIRouter(prefix="/ai", tags=["Intelligence Artificielle"])
     
@@ -127,28 +130,18 @@ def create_ai_router(db, get_current_admin_user=None):
     @router.post("/chat", response_model=ChatResponse)
     async def chat_with_ai(request: ChatRequest):
         """
-        Envoie un message à l'IA et reçoit une réponse.
-        
-        Cette route est publique et peut être utilisée par :
-        - Les visiteurs (widget de chat)
-        - Les membres connectés
-        - L'interface admin
-        
-        L'IA adapte ses réponses selon le type d'utilisateur et le contexte.
+        Envoie un message à Léa et reçoit une réponse.
         """
         try:
-            # Générer un ID de conversation si non fourni
             conversation_id = request.conversation_id
             if not conversation_id:
                 conversation_id = f"conv_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{id(request)}"
             
-            # Parser le type d'utilisateur
             try:
                 user_type = UserType(request.user_type) if request.user_type else UserType.VISITOR
             except ValueError:
                 user_type = UserType.VISITOR
             
-            # Parser le contexte
             context = None
             if request.context:
                 try:
@@ -156,7 +149,6 @@ def create_ai_router(db, get_current_admin_user=None):
                 except ValueError:
                     pass
             
-            # Appeler le service IA
             response = await ai_service.chat(
                 user_message=request.message,
                 conversation_id=conversation_id,
@@ -175,6 +167,30 @@ def create_ai_router(db, get_current_admin_user=None):
             logger.error(f"Error in chat endpoint: {e}")
             raise HTTPException(status_code=500, detail="Erreur lors de la communication avec l'IA")
     
+    # ==================== NOTIFICATION FIN DE CONVERSATION ====================
+
+    @router.post("/notify-end")
+    async def notify_conversation_end(request: NotifyEndRequest, background_tasks: BackgroundTasks):
+        """
+        Notifie la fin d'une conversation — envoie un email récapitulatif.
+        
+        Appelé par le frontend quand :
+        - L'utilisateur ferme le widget de chat
+        - L'utilisateur reset la conversation
+        - Timeout d'inactivité (côté frontend)
+        """
+        try:
+            background_tasks.add_task(
+                ai_service.send_conversation_notification,
+                conversation_id=request.conversation_id,
+                user_type=request.user_type or "visitor",
+                user_info=request.user_info
+            )
+            return {"status": "notification_queued", "conversation_id": request.conversation_id}
+        except Exception as e:
+            logger.error(f"Error queuing notification: {e}")
+            return {"status": "error", "detail": str(e)}
+
     # ==================== ROUTES ADMIN ====================
     
     @router.post("/analyze-sentiment", response_model=SentimentResponse)
@@ -182,16 +198,7 @@ def create_ai_router(db, get_current_admin_user=None):
         request: SentimentRequest,
         current_user: dict = Depends(get_current_admin_user) if get_current_admin_user else None
     ):
-        """
-        Analyse le sentiment d'un texte.
-        
-        Utile pour :
-        - Détecter les utilisateurs mécontents dans le chat
-        - Analyser les retours et commentaires
-        - Prioriser les demandes urgentes
-        
-        **Réservé aux administrateurs**
-        """
+        """Analyse le sentiment d'un texte."""
         try:
             result = await ai_service.analyze_sentiment(request.text)
             return SentimentResponse(**result)
@@ -204,23 +211,14 @@ def create_ai_router(db, get_current_admin_user=None):
         request: EmailAssistRequest,
         current_user: dict = Depends(get_current_admin_user) if get_current_admin_user else None
     ):
-        """
-        Génère une suggestion de réponse à un email.
-        
-        L'IA analyse l'email original et propose une réponse 
-        professionnelle et cohérente avec la communication ETF.
-        
-        **Réservé aux administrateurs**
-        """
+        """Génère une suggestion de réponse à un email."""
         try:
             suggested = await ai_service.generate_email_response(
                 original_email=request.original_email,
                 context=request.context
             )
-            
             if not suggested:
                 raise HTTPException(status_code=500, detail="Impossible de générer une réponse")
-            
             return EmailAssistResponse(suggested_response=suggested)
         except HTTPException:
             raise
@@ -233,20 +231,10 @@ def create_ai_router(db, get_current_admin_user=None):
         conversation_id: str,
         current_user: dict = Depends(get_current_admin_user) if get_current_admin_user else None
     ):
-        """
-        Génère un résumé d'une conversation.
-        
-        Utile pour les administrateurs qui reprennent une conversation
-        ou veulent avoir un aperçu rapide.
-        
-        **Réservé aux administrateurs**
-        """
+        """Génère un résumé d'une conversation."""
         try:
             summary = await ai_service.summarize_conversation(conversation_id)
-            return ConversationSummaryResponse(
-                summary=summary,
-                conversation_id=conversation_id
-            )
+            return ConversationSummaryResponse(summary=summary, conversation_id=conversation_id)
         except Exception as e:
             logger.error(f"Error getting summary: {e}")
             raise HTTPException(status_code=500, detail="Erreur lors de la génération du résumé")
@@ -256,16 +244,10 @@ def create_ai_router(db, get_current_admin_user=None):
         conversation_id: str,
         current_user: dict = Depends(get_current_admin_user) if get_current_admin_user else None
     ):
-        """
-        Récupère l'historique complet d'une conversation.
-        
-        **Réservé aux administrateurs**
-        """
+        """Récupère l'historique complet d'une conversation."""
         history = ai_service.get_conversation_history(conversation_id)
         return ConversationHistoryResponse(
-            conversation_id=conversation_id,
-            messages=history,
-            message_count=len(history)
+            conversation_id=conversation_id, messages=history, message_count=len(history)
         )
     
     @router.delete("/conversation/{conversation_id}")
@@ -273,13 +255,7 @@ def create_ai_router(db, get_current_admin_user=None):
         conversation_id: str,
         current_user: dict = Depends(get_current_admin_user) if get_current_admin_user else None
     ):
-        """
-        Efface l'historique d'une conversation.
-        
-        L'historique en mémoire est effacé, mais les logs en base sont conservés.
-        
-        **Réservé aux administrateurs**
-        """
+        """Efface l'historique d'une conversation."""
         ai_service.clear_conversation(conversation_id)
         return {"message": f"Conversation {conversation_id} effacée"}
     
@@ -289,24 +265,16 @@ def create_ai_router(db, get_current_admin_user=None):
     async def get_ai_stats(
         current_user: dict = Depends(get_current_admin_user) if get_current_admin_user else None
     ):
-        """
-        Récupère les statistiques d'utilisation de l'IA.
-        
-        **Réservé aux administrateurs**
-        """
+        """Récupère les statistiques d'utilisation de l'IA."""
         try:
-            # Nombre de conversations actives en mémoire
             active_conversations = len(ai_service.conversations)
             
-            # Stats depuis la base de données
             if db:
                 total_messages = await db.ai_conversations.count_documents({})
                 today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
                 today_messages = await db.ai_conversations.count_documents({
                     "timestamp": {"$gte": today_start}
                 })
-                
-                # Distribution par type d'utilisateur
                 pipeline = [
                     {"$group": {"_id": "$user_type", "count": {"$sum": 1}}},
                     {"$sort": {"count": -1}}
@@ -339,22 +307,14 @@ def create_ai_router(db, get_current_admin_user=None):
     
     @router.get("/health")
     async def ai_health_check():
-        """
-        Vérifie que le service IA est opérationnel.
-        
-        Teste la connexion à l'API Groq.
-        """
+        """Vérifie que le service IA est opérationnel."""
         try:
-            # Test simple de l'API
             response = await ai_service.chat(
                 user_message="Test",
                 conversation_id="health_check",
                 user_type=UserType.VISITOR
             )
-            
-            # Nettoyer la conversation de test
             ai_service.clear_conversation("health_check")
-            
             return {
                 "status": "healthy",
                 "model": ai_service.model,
@@ -373,28 +333,17 @@ def create_ai_router(db, get_current_admin_user=None):
     
     @router.post("/rag/chat", response_model=RAGChatResponse)
     async def rag_chat(request: RAGChatRequest):
-        """
-        Chat avec le système RAG.
-        
-        Utilise la base de connaissances ETF (30 ans d'articles)
-        pour fournir des réponses contextualisées via Groq.
-        """
+        """Chat avec le système RAG."""
         try:
             if not knowledge_base.is_loaded:
                 return RAGChatResponse(
-                    success=False,
-                    response="",
+                    success=False, response="",
                     error="Base de connaissances non chargée. Veuillez contacter l'administrateur."
                 )
             
-            # Rechercher le contexte pertinent dans la base
-            context_data = knowledge_base.get_context_for_llm(
-                query=request.message,
-                top_k=3
-            )
+            context_data = knowledge_base.get_context_for_llm(query=request.message, top_k=3)
             
-            # Construire le prompt avec le contexte RAG
-            rag_prompt = f"""Tu es l'assistant IA de l'association ETF (En Toute Franchise), spécialiste du droit de la franchise depuis 1993.
+            rag_prompt = f"""Tu es Léa, l'assistante IA de l'association ETF (En Toute Franchise), spécialiste du droit de la franchise depuis 1993.
 
 CONTEXTE DE LA BASE DE CONNAISSANCES ETF :
 {context_data['context']}
@@ -406,94 +355,52 @@ RÈGLES :
 1. Réponds en te basant sur le contexte fourni
 2. Si le contexte ne contient pas l'information, dis-le clairement
 3. Cite les sources quand c'est pertinent
-4. Reste professionnel et précis sur les aspects juridiques
+4. Reste professionnelle et précise sur les aspects juridiques
 5. Propose de contacter ETF pour les cas complexes
 
 QUESTION DE L'UTILISATEUR :
 {request.message}"""
 
-            # Appeler Groq avec le contexte RAG
             response = await ai_service.chat(
                 user_message=rag_prompt,
                 conversation_id=f"rag_{datetime.utcnow().timestamp()}",
                 user_type=UserType.VISITOR
             )
             
-            return RAGChatResponse(
-                success=True,
-                response=response,
-                sources=context_data['sources']
-            )
+            return RAGChatResponse(success=True, response=response, sources=context_data['sources'])
             
         except Exception as e:
             logger.error(f"RAG chat error: {e}")
-            return RAGChatResponse(
-                success=False,
-                response="",
-                error=str(e)
-            )
+            return RAGChatResponse(success=False, response="", error=str(e))
     
     @router.post("/rag/search")
     async def rag_search(request: RAGSearchRequest):
-        """
-        Recherche dans la base de connaissances sans appeler le LLM.
-        
-        Retourne les articles les plus pertinents via TF-IDF.
-        """
+        """Recherche dans la base de connaissances sans appeler le LLM."""
         try:
             if not knowledge_base.is_loaded:
-                raise HTTPException(
-                    status_code=503,
-                    detail="Base de connaissances non chargée"
-                )
-            
-            results = knowledge_base.search(
-                query=request.query,
-                top_k=request.top_k
-            )
-            
-            return {
-                "success": True,
-                "query": request.query,
-                "results": results,
-                "total_found": len(results)
-            }
-            
+                raise HTTPException(status_code=503, detail="Base de connaissances non chargée")
+            results = knowledge_base.search(query=request.query, top_k=request.top_k)
+            return {"success": True, "query": request.query, "results": results, "total_found": len(results)}
         except Exception as e:
             logger.error(f"RAG search error: {e}")
             raise HTTPException(status_code=500, detail=str(e))
     
     @router.get("/rag/stats")
     async def rag_stats():
-        """
-        Statistiques de la base de connaissances.
-        
-        Retourne le nombre d'articles, les catégories, etc.
-        """
+        """Statistiques de la base de connaissances."""
         try:
             stats = knowledge_base.get_stats()
-            return {
-                "success": True,
-                **stats
-            }
+            return {"success": True, **stats}
         except Exception as e:
             logger.error(f"RAG stats error: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
     
     @router.get("/rag/suggestions")
     async def rag_suggestions():
-        """
-        Retourne des questions suggérées basées sur la base de connaissances.
-        """
+        """Retourne des questions suggérées."""
         try:
             suggestions = knowledge_base.get_suggested_questions()
-            return {
-                "success": True,
-                "suggestions": suggestions
-            }
+            return {"success": True, "suggestions": suggestions}
         except Exception as e:
             logger.error(f"RAG suggestions error: {e}")
             return {
@@ -509,25 +416,14 @@ QUESTION DE L'UTILISATEUR :
     
     @router.post("/rag/reload")
     async def rag_reload():
-        """
-        Recharge la base de connaissances depuis le fichier JSON.
-        
-        Nécessite les droits admin.
-        """
+        """Recharge la base de connaissances depuis le fichier JSON."""
         try:
             success = knowledge_base.load_articles()
             if success:
                 stats = knowledge_base.get_stats()
-                return {
-                    "success": True,
-                    "message": "Base de connaissances rechargée avec succès",
-                    **stats
-                }
+                return {"success": True, "message": "Base de connaissances rechargée avec succès", **stats}
             else:
-                return {
-                    "success": False,
-                    "error": "Échec du rechargement de la base de connaissances"
-                }
+                return {"success": False, "error": "Échec du rechargement de la base de connaissances"}
         except Exception as e:
             logger.error(f"RAG reload error: {e}")
             raise HTTPException(status_code=500, detail=str(e))

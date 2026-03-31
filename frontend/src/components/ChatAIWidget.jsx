@@ -17,10 +17,10 @@ import { API_URL } from '../config/api';
 import ReactMarkdown from 'react-markdown';
 
 /**
- * ChatAIWidget - Widget de chat intelligent avec IA Groq
+ * ChatAIWidget - Widget de chat intelligent avec IA Claude (Anthropic)
  * 
- * Ce widget permet aux visiteurs et membres de discuter avec Franck,
- * l'assistant IA d'En Toute Franchise.
+ * Ce widget permet aux visiteurs et membres de discuter avec Léa,
+ * l'assistante IA d'En Toute Franchise.
  * 
  * Props:
  * - userType: 'visitor' | 'member' | 'admin' | 'vip' | 'prospect' - Type d'utilisateur
@@ -43,6 +43,45 @@ const ChatAIWidget = ({
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const inactivityTimerRef = useRef(null);
+
+  // Notify backend that conversation ended (email report)
+  const notifyConversationEnd = useCallback((convId) => {
+    if (!convId) return;
+    // Only notify if there were actual messages (beyond welcome)
+    const storedMessages = sessionStorage.getItem('etf_ai_messages');
+    if (storedMessages) {
+      try {
+        const msgs = JSON.parse(storedMessages);
+        const userMsgs = msgs.filter(m => m.role === 'user');
+        if (userMsgs.length === 0) return; // No user messages, skip
+      } catch (e) { return; }
+    } else {
+      return;
+    }
+
+    // Fire-and-forget notification
+    fetch(`${API_URL}/ai/notify-end`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        conversation_id: convId,
+        user_type: userType,
+        user_info: userInfo
+      })
+    }).catch(err => console.log('Notification send failed:', err));
+  }, [userType, userInfo]);
+
+  // Reset inactivity timer (5 minutes)
+  const resetInactivityTimer = useCallback(() => {
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+    }
+    inactivityTimerRef.current = setTimeout(() => {
+      // After 5 min inactivity, send notification
+      notifyConversationEnd(conversationId);
+    }, 5 * 60 * 1000);
+  }, [conversationId, notifyConversationEnd]);
 
   // Générer ou récupérer l'ID de conversation
   useEffect(() => {
@@ -84,12 +123,36 @@ const ChatAIWidget = ({
     }
   }, [isOpen]);
 
+  // Send notification when user leaves page
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const convId = sessionStorage.getItem('etf_ai_conversation_id');
+      if (convId) {
+        // Use sendBeacon for reliability on page close
+        const payload = JSON.stringify({
+          conversation_id: convId,
+          user_type: userType,
+          user_info: userInfo
+        });
+        navigator.sendBeacon(`${API_URL}/ai/notify-end`, new Blob([payload], { type: 'application/json' }));
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
+    };
+  }, [userType, userInfo]);
+
   // Message de bienvenue au premier affichage
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       const welcomeMessage = userInfo?.name 
-        ? `Bonjour ${userInfo.name} ! 👋 Je suis Franck, l'assistant virtuel d'En Toute Franchise. Comment puis-je t'aider aujourd'hui ?`
-        : `Bonjour ! 👋 Je suis Franck, l'assistant virtuel d'En Toute Franchise. Que tu sois commerçant, artisan ou franchisé, je suis là pour répondre à tes questions. Comment puis-je t'aider ?`;
+        ? `Bonjour ${userInfo.name} ! 👋 Je suis Léa, l'assistante d'En Toute Franchise. Comment puis-je vous aider aujourd'hui ?`
+        : `Bonjour ! 👋 Je suis Léa, l'assistante d'En Toute Franchise. Que vous soyez commerçant, artisan ou franchisé, je suis là pour répondre à vos questions. Comment puis-je vous aider ?`;
       
       setMessages([{
         id: 'welcome',
@@ -134,6 +197,9 @@ const ChatAIWidget = ({
     const userMessage = inputValue.trim();
     setInputValue('');
     setError(null);
+
+    // Reset inactivity timer
+    resetInactivityTimer();
 
     // Ajouter le message utilisateur
     const newUserMessage = {
@@ -184,13 +250,13 @@ const ChatAIWidget = ({
 
     } catch (error) {
       console.error('Error sending message:', error);
-      setError('Désolé, je rencontre un problème. Réessaie dans quelques instants.');
+      setError('Désolée, je rencontre un problème. Réessayez dans quelques instants.');
       
       // Ajouter un message d'erreur
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
         role: 'assistant',
-        content: 'Désolé, je rencontre un petit problème technique. 😅 Tu peux réessayer ou nous contacter à contact@intoutefranchise.com',
+        content: 'Désolée, je rencontre un petit problème technique. 😅 Vous pouvez réessayer ou nous contacter à entoutefranchise6@gmail.com',
         timestamp: new Date(),
         isError: true
       }]);
@@ -225,8 +291,17 @@ const ChatAIWidget = ({
     return 'general';
   };
 
-  // Nouvelle conversation
+  // Fermer le chat — envoie la notification
+  const handleClose = () => {
+    notifyConversationEnd(conversationId);
+    setIsOpen(false);
+  };
+
+  // Nouvelle conversation — envoie la notification pour l'ancienne
   const resetConversation = () => {
+    // Notify for the old conversation
+    notifyConversationEnd(conversationId);
+
     const newId = `conv_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     sessionStorage.setItem('etf_ai_conversation_id', newId);
     sessionStorage.removeItem('etf_ai_messages');
@@ -255,7 +330,7 @@ const ChatAIWidget = ({
         <button
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 group"
-          title="Discuter avec Franck, notre assistant IA"
+          title="Discuter avec Léa, notre assistante"
         >
           <div className="relative">
             <MessageCircle className="h-7 w-7 text-white" />
@@ -299,10 +374,10 @@ const ChatAIWidget = ({
               </div>
               <div>
                 <h3 className="font-semibold text-white flex items-center gap-2">
-                  Franck
+                  Léa
                   <Sparkles className="h-4 w-4 text-yellow-300" />
                 </h3>
-                <p className="text-xs text-blue-100">Assistant IA • En ligne</p>
+                <p className="text-xs text-blue-100">Assistante ETF • En ligne</p>
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -326,7 +401,7 @@ const ChatAIWidget = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
+                onClick={(e) => { e.stopPropagation(); handleClose(); }}
                 className="text-white/80 hover:text-white hover:bg-white/10"
               >
                 <X className="h-4 w-4" />
@@ -435,7 +510,7 @@ const ChatAIWidget = ({
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="Écris ton message..."
+                    placeholder="Écrivez votre message..."
                     disabled={isLoading}
                     className="flex-1 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                   />
@@ -452,7 +527,7 @@ const ChatAIWidget = ({
                   </Button>
                 </div>
                 <p className="text-xs text-gray-400 mt-2 text-center">
-                  Propulsé par IA • <a href="/contact" className="text-blue-500 hover:underline">Contacter un humain</a>
+                  En Toute Franchise • <a href="/contact" className="text-blue-500 hover:underline">Contacter l'association</a>
                 </p>
               </div>
             </>

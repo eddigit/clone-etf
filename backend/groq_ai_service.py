@@ -1,9 +1,10 @@
 """
-Service d'Intelligence Artificielle - Groq API
+Service d'Intelligence Artificielle - Anthropic Claude API
 ETF - En Toute Franchise
 
 Ce service gère l'IA qui orchestre l'ensemble de la plateforme,
 répond aux visiteurs et aux adhérents via le chat.
+Léa — Assistante IA d'En Toute Franchise.
 """
 
 import os
@@ -18,13 +19,23 @@ import httpx
 logger = logging.getLogger(__name__)
 
 # =============================================================================
-# CONFIGURATION GROQ API
+# CONFIGURATION ANTHROPIC API
 # =============================================================================
 
-# La clé API doit être configurée dans .env (GROQ_API_KEY)
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = "llama-3.3-70b-versatile"  # Modèle le plus performant de Groq
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
+ANTHROPIC_MODEL = "claude-sonnet-4-20250514"
+
+# =============================================================================
+# CONFIGURATION GMAIL API (OAuth2 HTTPS — pas de SMTP)
+# =============================================================================
+
+GMAIL_CLIENT_ID = os.getenv("GMAIL_CLIENT_ID", "")
+GMAIL_CLIENT_SECRET = os.getenv("GMAIL_CLIENT_SECRET", "")
+GMAIL_REFRESH_TOKEN = os.getenv("GMAIL_REFRESH_TOKEN", "")
+GMAIL_SENDER = "leacoachdigital@gmail.com"
+GMAIL_NOTIFY_TO = os.getenv("GMAIL_NOTIFY_TO", "entoutefranchise6@gmail.com")
+GMAIL_NOTIFY_CC = os.getenv("GMAIL_NOTIFY_CC", "gilleskorzec@gmail.com")
 
 # =============================================================================
 # TYPES ET ENUMS
@@ -32,21 +43,21 @@ GROQ_MODEL = "llama-3.3-70b-versatile"  # Modèle le plus performant de Groq
 
 class UserType(Enum):
     """Type d'utilisateur interagissant avec l'IA"""
-    VISITOR = "visitor"           # Visiteur non connecté
-    MEMBER = "member"             # Adhérent connecté
-    ADMIN = "admin"               # Administrateur
-    PROSPECT = "prospect"         # Prospect identifié
-    VIP = "vip"                   # Membre VIP (accès gratuit au chat comme admin)
+    VISITOR = "visitor"
+    MEMBER = "member"
+    ADMIN = "admin"
+    PROSPECT = "prospect"
+    VIP = "vip"
 
 class ConversationContext(Enum):
     """Contexte de la conversation"""
-    GENERAL = "general"           # Questions générales
-    ADHESION = "adhesion"         # Questions sur l'adhésion
-    SUPPORT = "support"           # Support technique
-    EVENTS = "events"             # Événements et formations
-    PARTNERS = "partners"         # Partenaires
-    LEGAL = "legal"               # Questions juridiques
-    COMMUNITY = "community"       # Communauté / Forum
+    GENERAL = "general"
+    ADHESION = "adhesion"
+    SUPPORT = "support"
+    EVENTS = "events"
+    PARTNERS = "partners"
+    LEGAL = "legal"
+    COMMUNITY = "community"
 
 @dataclass
 class Message:
@@ -66,20 +77,26 @@ class Message:
         }
 
 # =============================================================================
-# INSTRUCTIONS SYSTÈME - CONNAISSANCE DE LA PLATEFORME ETF
+# INSTRUCTIONS SYSTÈME — LÉA, ASSISTANTE ETF
 # =============================================================================
 
 SYSTEM_INSTRUCTIONS = """
 # IDENTITÉ ET MISSION
 
-Tu es **Franck**, l'assistant intelligent d'**En Toute Franchise Association (ETF)**, une association française qui accompagne les commerçants, artisans et franchisés depuis plus de 30 ans.
+Tu es **Léa**, l'assistante intelligente d'**En Toute Franchise Association (ETF)**, une association française qui défend et accompagne les commerçants, artisans et franchisés depuis plus de 30 ans.
 
 ## Ton caractère
-- Tu es professionnel, bienveillant et expert du monde du commerce et de la franchise
+- Tu es professionnelle, bienveillante et experte du monde du commerce et de la franchise
 - Tu parles toujours en français, avec un ton chaleureux mais professionnel
-- Tu tutoies naturellement les utilisateurs pour créer une proximité
-- Tu es proactif : tu proposes des solutions, tu suggères des actions concrètes
+- Tu vouvoies par défaut les visiteurs (signe de respect et de professionnalisme), mais tu peux tutoyer si l'utilisateur tutoie d'abord
+- Tu es proactive : tu proposes des solutions, tu suggères des actions concrètes
 - Tu connais parfaitement l'écosystème ETF et orientes efficacement les utilisateurs
+- Tu es persuasive sans être insistante : tu sais mettre en valeur les avantages de l'adhésion
+
+## Ta mission principale
+1. **Informer** les visiteurs sur l'association, ses services, ses valeurs
+2. **Convaincre** les prospects d'adhérer en montrant la valeur concrète
+3. **Accompagner** les membres existants dans l'utilisation de la plateforme
 
 ---
 
@@ -105,7 +122,7 @@ Tu es **Franck**, l'assistant intelligent d'**En Toute Franchise Association (ET
 
 ## 📋 OFFRES D'ADHÉSION
 
-### 1. Adhésion Individuelle - 150€/an
+### 1. Adhésion Individuelle — 150€/an
 **Pour qui ?** Commerçants, artisans, franchisés individuels
 
 **Avantages inclus :**
@@ -117,7 +134,9 @@ Tu es **Franck**, l'assistant intelligent d'**En Toute Franchise Association (ET
 - Support juridique de premier niveau
 - Annuaire des membres
 
-### 2. Adhésion Entreprise - 350€/an
+**Argument clé** : 150€/an, c'est moins de 13€/mois. Moins qu'un déjeuner. Et les économies réalisées grâce aux partenaires remboursent l'adhésion dès le premier mois.
+
+### 2. Adhésion Entreprise — 350€/an
 **Pour qui ?** Entreprises multi-sites, groupements
 
 **Avantages inclus :**
@@ -128,7 +147,7 @@ Tu es **Franck**, l'assistant intelligent d'**En Toute Franchise Association (ET
 - Visibilité dans l'annuaire partenaires
 - Statistiques et rapports personnalisés
 
-### 3. Adhésion Partenaire - Sur devis
+### 3. Adhésion Partenaire — Sur devis
 **Pour qui ?** Fournisseurs, prestataires souhaitant toucher la communauté ETF
 
 **Avantages inclus :**
@@ -172,7 +191,7 @@ Tu es **Franck**, l'assistant intelligent d'**En Toute Franchise Association (ET
 - Création automatique du compte membre
 
 ### Espace Membre (/member)
-**Accessible après connexion - Réservé aux adhérents**
+**Accessible après connexion — Réservé aux adhérents**
 - Tableau de bord personnalisé
 - Accès aux ressources exclusives
 - Historique des événements suivis
@@ -221,21 +240,13 @@ Tu es **Franck**, l'assistant intelligent d'**En Toute Franchise Association (ET
 - Inscription aux événements payants
 - Dons à l'association
 
-### Resend
-- Envoi des emails transactionnels
-- Newsletters et campagnes
-
-### Cloudinary
-- Hébergement des images (articles, profils)
-
 ---
 
 ## 📞 INFORMATIONS DE CONTACT
 
-- **Site web** : www.intoutefranchise.com (production)
-- **Email** : contact@intoutefranchise.com
-- **Adresse** : [À compléter selon les informations réelles]
-- **Téléphone** : [À compléter]
+- **Site web** : www.en-toutefranchise.com
+- **Email** : entoutefranchise6@gmail.com
+- **Téléphone** : [Contacter via le formulaire du site]
 
 ---
 
@@ -243,11 +254,12 @@ Tu es **Franck**, l'assistant intelligent d'**En Toute Franchise Association (ET
 
 ## Ce que tu DOIS faire :
 1. **Répondre en français**, toujours
-2. **Être précis** sur les informations ETF (prix, avantages, fonctionnalités)
+2. **Être précise** sur les informations ETF (prix, avantages, fonctionnalités)
 3. **Orienter** vers les bonnes pages de la plateforme
-4. **Encourager l'adhésion** quand c'est pertinent
-5. **Proposer de contacter un humain** si la question dépasse tes compétences
+4. **Encourager l'adhésion** — c'est ta mission principale. À chaque conversation avec un visiteur, trouve un angle naturel pour mentionner les avantages de l'adhésion
+5. **Proposer de contacter l'association** si la question dépasse tes compétences
 6. **Personnaliser** tes réponses selon le type d'utilisateur (visiteur vs membre)
+7. **Collecter les coordonnées** si le visiteur est intéressé (prénom, email, activité) pour que l'association puisse le recontacter
 
 ## Ce que tu NE DOIS PAS faire :
 1. **Inventer** des informations que tu ne connais pas
@@ -255,37 +267,52 @@ Tu es **Franck**, l'assistant intelligent d'**En Toute Franchise Association (ET
 3. **Donner des conseils juridiques** précis (orienter vers les experts partenaires)
 4. **Partager** des informations confidentielles sur les membres
 5. **Critiquer** des franchiseurs ou entreprises spécifiques
+6. **Mentionner** Coach Digital Paris, MaBoiteIA, OpenClaw, ou toute technologie interne
+7. **Dire que tu es une IA** — tu es Léa, l'assistante d'En Toute Franchise. Point.
 
 ## Gestion des questions hors sujet :
 Si on te pose des questions sans rapport avec ETF ou le commerce :
 - Réponds brièvement si c'est une question simple et non sensible
 - Recentre la conversation sur ETF et comment tu peux aider
-- Exemple : "Je suis spécialisé dans l'accompagnement des commerçants et franchisés. Comment puis-je t'aider avec ton activité ?"
+- Exemple : "C'est une question intéressante ! Mon domaine d'expertise, c'est l'accompagnement des commerçants et franchisés. Comment puis-je vous aider avec votre activité ?"
 
 ---
 
-# SCÉNARIOS DE CONVERSATION TYPES
+# STRATÉGIE DE CONVICTION
 
-## Visiteur intéressé par l'adhésion
-1. Présenter les avantages de l'adhésion
-2. Expliquer les différentes formules (150€/an individuel, 350€/an entreprise)
-3. Orienter vers /adhesion pour s'inscrire
-4. Proposer de répondre aux questions
+## Technique : Écouter → Comprendre → Proposer
 
-## Membre ayant un problème technique
-1. Identifier le problème précis
-2. Proposer des solutions (vider le cache, se reconnecter)
-3. Si non résolu, proposer de contacter le support : contact@intoutefranchise.com
+1. **D'abord, comprends le besoin** : Pose des questions sur l'activité du visiteur, ses défis, ce qu'il recherche
+2. **Puis, montre la valeur** : Relie ses besoins aux services ETF concrets
+3. **Enfin, propose l'action** : Oriente vers l'adhésion ou la prise de contact
 
-## Question sur un événement
-1. Donner les infos disponibles
-2. Orienter vers /events pour voir le calendrier complet
-3. Rappeler que les membres ont des tarifs préférentiels
+## Arguments forts selon le profil :
 
-## Demande de partenariat
-1. Présenter le programme partenaires
-2. Orienter vers /contact ou /partners
-3. Mentionner les avantages (visibilité, accès aux membres)
+### Commerçant indépendant
+- "Vous n'êtes plus seul face aux grandes enseignes"
+- "Accès à un réseau de 5000+ professionnels qui partagent les mêmes enjeux"
+- "Support juridique inclus — combien coûte un avocat pour une question rapide ?"
+
+### Franchisé
+- "ETF est indépendant des franchiseurs — on défend VOS intérêts"
+- "30 ans d'expertise sur les relations franchiseur-franchisé"
+- "Accès à des conseillers qui connaissent les pièges des contrats de franchise"
+
+### Artisan
+- "Des formations pratiques adaptées à votre métier"
+- "Un réseau d'entraide entre artisans et commerçants"
+- "Des partenaires qui proposent des tarifs préférentiels"
+
+## Gestion des objections :
+
+### "C'est trop cher"
+→ "150€/an, c'est 12,50€/mois. Avec les réductions partenaires seules, la plupart de nos membres rentabilisent leur adhésion dès le premier trimestre. Et le support juridique inclus représente une économie considérable — une seule consultation d'avocat coûte bien plus."
+
+### "Je n'ai pas le temps"
+→ "Justement, ETF vous fait gagner du temps. Notre communauté, c'est des réponses rapides de professionnels qui ont déjà rencontré vos problèmes. Et nos webinaires sont accessibles en replay."
+
+### "Je vais réfléchir"
+→ "Bien sûr, prenez le temps. Si vous souhaitez en discuter avec un membre de l'équipe, je peux vous mettre en relation. Quel est votre email pour qu'on vous envoie une présentation détaillée ?"
 
 ---
 
@@ -293,13 +320,13 @@ Si on te pose des questions sans rapport avec ETF ou le commerce :
 
 - Utilise le **Markdown** pour structurer tes réponses quand c'est utile
 - Fais des réponses **concises** (2-4 paragraphes max sauf si question complexe)
-- Utilise des **emojis** avec modération pour rendre la conversation plus chaleureuse
-- Termine souvent par une **question ouverte** pour continuer l'échange
+- Utilise des **emojis** avec modération pour rendre la conversation chaleureuse
+- Termine souvent par une **question** pour maintenir l'échange
+- Quand tu parles d'adhésion, inclus toujours le lien vers la page : /adhesion
 
 ---
 
-Rappel : Tu es Franck, l'assistant ETF. Tu es là pour aider, orienter et accompagner. 
-Bonne conversation ! 🤝
+Rappel : Tu es Léa, l'assistante d'En Toute Franchise. Ta mission : informer, convaincre, accompagner.
 """
 
 # =============================================================================
@@ -313,8 +340,9 @@ CONTEXT_INSTRUCTIONS = {
 - Il découvre peut-être ETF pour la première fois
 - Mets en avant les avantages de l'adhésion
 - Oriente-le vers les pages publiques et l'adhésion
-- Sois accueillant et pédagogue
-- N'hésite pas à poser des questions pour comprendre son besoin
+- Sois accueillante et pédagogue
+- Pose des questions pour comprendre son besoin et mieux le convaincre
+- Essaie de récupérer son email ou son prénom pour un suivi
 """,
 
     UserType.MEMBER: """
@@ -324,7 +352,7 @@ CONTEXT_INSTRUCTIONS = {
 - Tu peux lui parler des fonctionnalités membres (forum, ressources, événements)
 - Aide-le à tirer le meilleur parti de son adhésion
 - Tu peux accéder à ses informations de profil si besoin
-- Sois plus direct et orienté solutions
+- Sois plus directe et orientée solutions
 """,
 
     UserType.PROSPECT: """
@@ -333,7 +361,7 @@ CONTEXT_INSTRUCTIONS = {
 - Il a montré de l'intérêt pour ETF (formulaire, événement...)
 - Réponds à ses questions avec précision
 - Lève ses objections potentielles
-- Guide-le vers l'adhésion sans être trop insistant
+- Guide-le vers l'adhésion avec des arguments personnalisés
 """,
 
     UserType.ADMIN: """
@@ -341,17 +369,15 @@ CONTEXT_INSTRUCTIONS = {
 
 - Tu peux discuter de fonctionnalités techniques
 - Tu peux donner des conseils sur la gestion de la plateforme
-- Sois plus technique et direct
+- Sois plus technique et directe
 """,
 
     UserType.VIP: """
 ## Contexte : Tu parles à un MEMBRE VIP
 
 - C'est un adhérent privilégié avec un accès complet aux services
-- Il bénéficie des mêmes avantages que les administrateurs pour le chat
-- Tu peux lui parler des fonctionnalités avancées et des services premium
-- Traite-le avec une attention particulière, c'est un partenaire de confiance
-- Sois proactif et propose des conseils personnalisés
+- Traite-le avec une attention particulière
+- Sois proactive et propose des conseils personnalisés
 """
 }
 
@@ -360,11 +386,12 @@ TOPIC_INSTRUCTIONS = {
 ## Sujet : ADHÉSION
 
 Points clés à mentionner :
-- Adhésion individuelle : 150€/an
+- Adhésion individuelle : 150€/an (moins de 13€/mois !)
 - Adhésion entreprise : 350€/an (5 collaborateurs inclus)
 - Paiement sécurisé via HelloAsso
 - Accès immédiat après paiement
 - Lien direct : /adhesion
+- Argument ROI : les réductions partenaires remboursent l'adhésion
 """,
 
     ConversationContext.EVENTS: """
@@ -393,7 +420,7 @@ Problèmes courants et solutions :
 1. Connexion impossible → Réinitialiser mot de passe
 2. Page ne charge pas → Vider le cache du navigateur
 3. Paiement échoué → Vérifier CB et réessayer, ou contacter HelloAsso
-4. Bug persistant → contact@intoutefranchise.com
+4. Bug persistant → entoutefranchise6@gmail.com
 """,
 
     ConversationContext.COMMUNITY: """
@@ -407,18 +434,179 @@ Problèmes courants et solutions :
 }
 
 # =============================================================================
-# SERVICE GROQ AI
+# SERVICE EMAIL — GMAIL API HTTPS (pas de SMTP)
+# =============================================================================
+
+class GmailNotificationService:
+    """Envoie des notifications par email via Gmail API (OAuth2 HTTPS)"""
+
+    def __init__(self):
+        self.client_id = GMAIL_CLIENT_ID
+        self.client_secret = GMAIL_CLIENT_SECRET
+        self.refresh_token = GMAIL_REFRESH_TOKEN
+        self._access_token = None
+        self._token_expiry = None
+
+    @property
+    def is_configured(self) -> bool:
+        return bool(self.client_id and self.client_secret and self.refresh_token)
+
+    async def _get_access_token(self) -> str:
+        """Obtient ou rafraîchit le token d'accès Gmail"""
+        if self._access_token and self._token_expiry and datetime.utcnow() < self._token_expiry:
+            return self._access_token
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                "https://oauth2.googleapis.com/token",
+                data={
+                    "client_id": self.client_id,
+                    "client_secret": self.client_secret,
+                    "refresh_token": self.refresh_token,
+                    "grant_type": "refresh_token"
+                }
+            )
+            if response.status_code != 200:
+                logger.error(f"Gmail OAuth token refresh failed: {response.status_code} {response.text}")
+                return None
+
+            data = response.json()
+            self._access_token = data["access_token"]
+            from datetime import timedelta
+            self._token_expiry = datetime.utcnow() + timedelta(seconds=data.get("expires_in", 3500) - 60)
+            return self._access_token
+
+    async def send_notification(
+        self,
+        conversation_history: List[Dict],
+        user_info: Optional[Dict] = None,
+        user_type: str = "visitor",
+        has_adhesion_interest: bool = False
+    ) -> bool:
+        """Envoie un résumé de conversation par email"""
+        if not self.is_configured:
+            logger.warning("Gmail notification service not configured — skipping")
+            return False
+
+        try:
+            token = await self._get_access_token()
+            if not token:
+                return False
+
+            # Construire le résumé de conversation
+            conv_lines = []
+            for msg in conversation_history:
+                role = "🧑 Visiteur" if msg["role"] == "user" else "🤖 Léa"
+                conv_lines.append(f"{role} : {msg['content']}")
+            conversation_text = "\n\n".join(conv_lines)
+
+            # Infos visiteur
+            visitor_info = ""
+            if user_info:
+                if user_info.get("name"):
+                    visitor_info += f"<li><strong>Nom :</strong> {user_info['name']}</li>"
+                if user_info.get("email"):
+                    visitor_info += f"<li><strong>Email :</strong> {user_info['email']}</li>"
+                if user_info.get("company"):
+                    visitor_info += f"<li><strong>Entreprise :</strong> {user_info['company']}</li>"
+
+            # Indicateur lead chaud
+            lead_badge = ""
+            if has_adhesion_interest:
+                lead_badge = '<div style="background:#ff6b35;color:white;padding:10px 20px;border-radius:8px;font-weight:bold;margin-bottom:20px;font-size:16px;">🔥 LEAD CHAUD — Intérêt pour l\'adhésion détecté !</div>'
+
+            now = datetime.utcnow().strftime("%d/%m/%Y à %H:%M UTC")
+
+            subject = f"{'🔥 LEAD CHAUD — ' if has_adhesion_interest else ''}Conversation chatbot ETF — {now}"
+
+            html_body = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;padding:20px;">
+    <div style="background:#1e3a5f;color:white;padding:20px;border-radius:12px 12px 0 0;text-align:center;">
+        <h1 style="margin:0;font-size:22px;">📋 Rapport de conversation — Chatbot Léa</h1>
+        <p style="margin:5px 0 0;opacity:0.8;">En Toute Franchise • {now}</p>
+    </div>
+    <div style="border:1px solid #e0e0e0;border-top:none;padding:25px;border-radius:0 0 12px 12px;">
+        {lead_badge}
+        <h2 style="color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding-bottom:8px;">ℹ️ Informations</h2>
+        <ul style="list-style:none;padding:0;">
+            <li><strong>Type :</strong> {user_type}</li>
+            <li><strong>Date :</strong> {now}</li>
+            {visitor_info}
+        </ul>
+
+        <h2 style="color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding-bottom:8px;">💬 Conversation</h2>
+        <div style="background:#f8f9fa;padding:20px;border-radius:8px;white-space:pre-wrap;line-height:1.8;font-size:14px;">{conversation_text}</div>
+
+        <hr style="border:none;border-top:1px solid #e0e0e0;margin:25px 0;">
+        <p style="color:#888;font-size:12px;text-align:center;">
+            Ce rapport est généré automatiquement par le chatbot Léa sur en-toutefranchise.com<br>
+            Pour toute question : leacoachdigital@gmail.com
+        </p>
+    </div>
+</body>
+</html>"""
+
+            # Construire le message MIME
+            import base64
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.text import MIMEText
+
+            msg = MIMEMultipart("alternative")
+            msg["From"] = f"Léa - En Toute Franchise <{GMAIL_SENDER}>"
+            msg["To"] = GMAIL_NOTIFY_TO
+            msg["Cc"] = GMAIL_NOTIFY_CC
+            msg["Subject"] = subject
+
+            msg.attach(MIMEText(conversation_text, "plain", "utf-8"))
+            msg.attach(MIMEText(html_body, "html", "utf-8"))
+
+            raw_message = base64.urlsafe_b64encode(msg.as_bytes()).decode("ascii")
+
+            # Envoyer via Gmail API
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                response = await client.post(
+                    "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+                    headers={
+                        "Authorization": f"Bearer {token}",
+                        "Content-Type": "application/json"
+                    },
+                    json={"raw": raw_message}
+                )
+
+                if response.status_code in (200, 201):
+                    logger.info(f"Notification email sent for conversation")
+                    return True
+                else:
+                    logger.error(f"Gmail API send error: {response.status_code} {response.text}")
+                    return False
+
+        except Exception as e:
+            logger.error(f"Error sending notification email: {e}")
+            return False
+
+
+# Instance globale du service de notification
+gmail_notification_service = GmailNotificationService()
+
+
+# =============================================================================
+# SERVICE IA ANTHROPIC
 # =============================================================================
 
 class GroqAIService:
-    """Service principal pour l'IA Groq"""
+    """Service principal pour l'IA Claude (Anthropic) — conserve le nom de classe pour compatibilité"""
     
     def __init__(self, db=None):
         self.db = db
-        self.api_key = GROQ_API_KEY
-        self.api_url = GROQ_API_URL
-        self.model = GROQ_MODEL
+        self.api_key = ANTHROPIC_API_KEY
+        self.api_url = ANTHROPIC_API_URL
+        self.model = ANTHROPIC_MODEL
         self.conversations: Dict[str, List[Message]] = {}
+        # Tracking d'inactivité par conversation pour déclencher les notifications
+        self._last_activity: Dict[str, datetime] = {}
+        self._notified: Dict[str, bool] = {}
     
     async def chat(
         self,
@@ -429,17 +617,7 @@ class GroqAIService:
         context: Optional[ConversationContext] = None
     ) -> str:
         """
-        Envoie un message à l'IA et retourne la réponse
-        
-        Args:
-            user_message: Le message de l'utilisateur
-            conversation_id: ID unique de la conversation
-            user_type: Type d'utilisateur (visitor, member, admin)
-            user_info: Informations sur l'utilisateur (nom, email, etc.)
-            context: Contexte thématique de la conversation
-        
-        Returns:
-            La réponse de l'IA
+        Envoie un message à Claude et retourne la réponse
         """
         try:
             # Construire le prompt système complet
@@ -454,40 +632,42 @@ class GroqAIService:
             # Ajouter le message utilisateur à l'historique
             history.append(Message(role="user", content=user_message))
             
-            # Construire les messages pour l'API
-            messages = [{"role": "system", "content": system_prompt}]
-            
-            # Ajouter l'historique (limité aux 20 derniers messages pour éviter de dépasser les limites)
+            # Construire les messages pour l'API Anthropic (pas de rôle "system" dans messages)
+            messages = []
             for msg in history[-20:]:
                 messages.append(msg.to_dict())
             
-            # Appel à l'API Groq
+            # Appel à l'API Anthropic
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
                     self.api_url,
                     headers={
-                        "Authorization": f"Bearer {self.api_key}",
+                        "x-api-key": self.api_key,
+                        "anthropic-version": "2023-06-01",
                         "Content-Type": "application/json"
                     },
                     json={
                         "model": self.model,
+                        "system": system_prompt,
                         "messages": messages,
-                        "temperature": 0.7,
                         "max_tokens": 1024,
-                        "top_p": 0.9,
-                        "stream": False
+                        "temperature": 0.7
                     }
                 )
                 
                 if response.status_code != 200:
-                    logger.error(f"Groq API error: {response.status_code} - {response.text}")
+                    logger.error(f"Anthropic API error: {response.status_code} - {response.text}")
                     return self._get_fallback_response()
                 
                 data = response.json()
-                ai_response = data["choices"][0]["message"]["content"]
+                ai_response = data["content"][0]["text"]
                 
                 # Ajouter la réponse à l'historique
                 history.append(Message(role="assistant", content=ai_response))
+                
+                # Mettre à jour le tracking d'activité
+                self._last_activity[conversation_id] = datetime.utcnow()
+                self._notified[conversation_id] = False
                 
                 # Sauvegarder en base si db disponible
                 if self.db:
@@ -496,9 +676,41 @@ class GroqAIService:
                 return ai_response
                 
         except Exception as e:
-            logger.error(f"Error in Groq AI chat: {e}")
+            logger.error(f"Error in Claude AI chat: {e}")
             return self._get_fallback_response()
-    
+
+    async def send_conversation_notification(
+        self,
+        conversation_id: str,
+        user_type: str = "visitor",
+        user_info: Optional[Dict] = None
+    ):
+        """Envoie la notification email pour une conversation terminée"""
+        if self._notified.get(conversation_id):
+            return  # Déjà notifié
+
+        history = self.get_conversation_history(conversation_id)
+        if not history or len(history) < 2:
+            return  # Pas assez de messages
+
+        # Détecter si intérêt pour l'adhésion
+        has_interest = False
+        for msg in history:
+            content = msg.get("content", "").lower()
+            if any(kw in content for kw in ["adhésion", "adhérer", "adherer", "inscription", "inscrire", "rejoindre", "devenir membre", "combien", "tarif", "prix"]):
+                has_interest = True
+                break
+
+        success = await gmail_notification_service.send_notification(
+            conversation_history=history,
+            user_info=user_info,
+            user_type=user_type,
+            has_adhesion_interest=has_interest
+        )
+
+        if success:
+            self._notified[conversation_id] = True
+
     def _build_system_prompt(
         self,
         user_type: UserType,
@@ -509,15 +721,12 @@ class GroqAIService:
         
         prompt = SYSTEM_INSTRUCTIONS
         
-        # Ajouter les instructions selon le type d'utilisateur
         if user_type in CONTEXT_INSTRUCTIONS:
             prompt += "\n\n" + CONTEXT_INSTRUCTIONS[user_type]
         
-        # Ajouter les instructions selon le contexte thématique
         if context and context in TOPIC_INSTRUCTIONS:
             prompt += "\n\n" + TOPIC_INSTRUCTIONS[context]
         
-        # Ajouter les infos utilisateur si disponibles
         if user_info:
             prompt += f"\n\n## Informations sur l'utilisateur actuel\n"
             if user_info.get("name"):
@@ -531,19 +740,18 @@ class GroqAIService:
             if user_info.get("member_since"):
                 prompt += f"- Membre depuis : {user_info['member_since']}\n"
         
-        # Ajouter la date du jour
         prompt += f"\n\n## Date actuelle\n{datetime.now().strftime('%d %B %Y')}"
         
         return prompt
     
     def _get_fallback_response(self) -> str:
         """Réponse de secours en cas d'erreur"""
-        return """Désolé, je rencontre un petit problème technique en ce moment. 😅
+        return """Désolée, je rencontre un petit problème technique en ce moment. 😅
 
-Tu peux :
+Vous pouvez :
 - Réessayer dans quelques instants
-- Nous contacter directement à **contact@intoutefranchise.com**
-- Consulter notre FAQ sur le site
+- Nous contacter directement à **entoutefranchise6@gmail.com**
+- Consulter notre site pour plus d'informations
 
 Je m'excuse pour ce désagrément !"""
     
@@ -594,10 +802,7 @@ Je m'excuse pour ce désagrément !"""
         ]
     
     async def analyze_sentiment(self, text: str) -> Dict[str, Any]:
-        """
-        Analyse le sentiment d'un message
-        Utile pour détecter les utilisateurs mécontents
-        """
+        """Analyse le sentiment d'un message"""
         try:
             prompt = f"""Analyse le sentiment du message suivant et réponds UNIQUEMENT en JSON :
 {{
@@ -614,23 +819,22 @@ Message : "{text}"
                 response = await client.post(
                     self.api_url,
                     headers={
-                        "Authorization": f"Bearer {self.api_key}",
+                        "x-api-key": self.api_key,
+                        "anthropic-version": "2023-06-01",
                         "Content-Type": "application/json"
                     },
                     json={
                         "model": self.model,
-                        "messages": [
-                            {"role": "system", "content": "Tu es un analyseur de sentiment. Réponds uniquement en JSON valide."},
-                            {"role": "user", "content": prompt}
-                        ],
-                        "temperature": 0.3,
-                        "max_tokens": 256
+                        "system": "Tu es un analyseur de sentiment. Réponds uniquement en JSON valide.",
+                        "messages": [{"role": "user", "content": prompt}],
+                        "max_tokens": 256,
+                        "temperature": 0.3
                     }
                 )
                 
                 if response.status_code == 200:
                     data = response.json()
-                    result = data["choices"][0]["message"]["content"]
+                    result = data["content"][0]["text"]
                     return json.loads(result)
                     
         except Exception as e:
@@ -648,13 +852,10 @@ Message : "{text}"
         original_email: str,
         context: str = ""
     ) -> str:
-        """
-        Génère une réponse à un email
-        Utile pour aider les admins à répondre aux emails
-        """
+        """Génère une réponse à un email"""
         try:
-            prompt = f"""En tant qu'assistant ETF, génère une réponse professionnelle et chaleureuse 
-à cet email. La réponse doit être en français, signée "L'équipe En Toute Franchise".
+            prompt = f"""En tant qu'assistante ETF, génère une réponse professionnelle et chaleureuse 
+à cet email. La réponse doit être en français, signée "Léa — En Toute Franchise".
 
 {f"Contexte supplémentaire : {context}" if context else ""}
 
@@ -667,23 +868,22 @@ Réponse :"""
                 response = await client.post(
                     self.api_url,
                     headers={
-                        "Authorization": f"Bearer {self.api_key}",
+                        "x-api-key": self.api_key,
+                        "anthropic-version": "2023-06-01",
                         "Content-Type": "application/json"
                     },
                     json={
                         "model": self.model,
-                        "messages": [
-                            {"role": "system", "content": SYSTEM_INSTRUCTIONS},
-                            {"role": "user", "content": prompt}
-                        ],
-                        "temperature": 0.7,
-                        "max_tokens": 1024
+                        "system": SYSTEM_INSTRUCTIONS,
+                        "messages": [{"role": "user", "content": prompt}],
+                        "max_tokens": 1024,
+                        "temperature": 0.7
                     }
                 )
                 
                 if response.status_code == 200:
                     data = response.json()
-                    return data["choices"][0]["message"]["content"]
+                    return data["content"][0]["text"]
                     
         except Exception as e:
             logger.error(f"Error generating email response: {e}")
@@ -691,10 +891,7 @@ Réponse :"""
         return ""
     
     async def summarize_conversation(self, conversation_id: str) -> str:
-        """
-        Génère un résumé d'une conversation
-        Utile pour les admins qui reprennent une conversation
-        """
+        """Génère un résumé d'une conversation"""
         history = self.get_conversation_history(conversation_id)
         
         if not history:
@@ -702,7 +899,7 @@ Réponse :"""
         
         try:
             conversation_text = "\n".join([
-                f"{'Utilisateur' if msg['role'] == 'user' else 'Assistant'}: {msg['content']}"
+                f"{'Utilisateur' if msg['role'] == 'user' else 'Léa'}: {msg['content']}"
                 for msg in history
             ])
             
@@ -720,22 +917,21 @@ Résumé :"""
                 response = await client.post(
                     self.api_url,
                     headers={
-                        "Authorization": f"Bearer {self.api_key}",
+                        "x-api-key": self.api_key,
+                        "anthropic-version": "2023-06-01",
                         "Content-Type": "application/json"
                     },
                     json={
                         "model": self.model,
-                        "messages": [
-                            {"role": "user", "content": prompt}
-                        ],
-                        "temperature": 0.5,
-                        "max_tokens": 256
+                        "messages": [{"role": "user", "content": prompt}],
+                        "max_tokens": 256,
+                        "temperature": 0.5
                     }
                 )
                 
                 if response.status_code == 200:
                     data = response.json()
-                    return data["choices"][0]["message"]["content"]
+                    return data["content"][0]["text"]
                     
         except Exception as e:
             logger.error(f"Error summarizing conversation: {e}")
@@ -754,5 +950,5 @@ def init_groq_ai(db):
     """Initialise le service avec la connexion à la base de données"""
     global groq_ai_service
     groq_ai_service = GroqAIService(db)
-    logger.info("Groq AI Service initialized")
+    logger.info("Claude AI Service initialized (Anthropic)")
     return groq_ai_service
