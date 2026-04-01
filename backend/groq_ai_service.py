@@ -378,7 +378,9 @@ class GmailNotificationService:
 
     @property
     def is_configured(self) -> bool:
-        return bool(self.client_id and self.client_secret and self.refresh_token)
+        configured = bool(self.client_id and self.client_secret and self.refresh_token)
+        logger.info(f"Gmail configured check: client_id={'YES' if self.client_id else 'NO'}, client_secret={'YES' if self.client_secret else 'NO'}, refresh_token={'YES' if self.refresh_token else 'NO'} → {configured}")
+        return configured
 
     async def _get_access_token(self) -> str:
         """Obtient ou rafraîchit le token d'accès Gmail"""
@@ -413,6 +415,7 @@ class GmailNotificationService:
         has_adhesion_interest: bool = False
     ) -> bool:
         """Envoie un résumé de conversation par email"""
+        logger.info(f"send_notification called: history_len={len(conversation_history)}, user_type={user_type}, user_info={user_info}")
         if not self.is_configured:
             logger.warning("Gmail notification service not configured — skipping")
             return False
@@ -619,12 +622,16 @@ class GroqAIService:
         user_info: Optional[Dict] = None
     ):
         """Envoie la notification email pour une conversation terminée"""
+        logger.info(f"send_conversation_notification called: conv_id={conversation_id}, notified_already={self._notified.get(conversation_id)}")
         if self._notified.get(conversation_id):
-            return  # Déjà notifié
+            logger.info(f"Already notified for {conversation_id}, skipping")
+            return
 
         history = self.get_conversation_history(conversation_id)
+        logger.info(f"Conversation history for {conversation_id}: {len(history)} messages")
         if not history or len(history) < 2:
-            return  # Pas assez de messages
+            logger.warning(f"Not enough messages for {conversation_id} ({len(history) if history else 0}), skipping notification")
+            return
 
         # Détecter si intérêt pour l'adhésion
         has_interest = False
