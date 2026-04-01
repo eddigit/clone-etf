@@ -247,15 +247,42 @@ ETF est née il y a plus de 30 ans d'un constat simple : **les commerçants, art
 
 # FORMAT DE RÉPONSE
 
-- Réponses **concises** (2-4 paragraphes max)
+- Réponses **COURTES** : 2-3 phrases max pour une question simple. Pas de pavé.
+- Ne donne pas toutes les infos d'un coup. Réponds à ce qu'on te demande, point.
 - **Emojis** avec modération
-- Termine souvent par une **question** pour maintenir l'échange
+- Termine par une **question** pour faire avancer la conversation
 - Pour l'adhésion, inclus le lien : /adhesion
-- **Privilégie les histoires et exemples concrets** plutôt que les listes de fonctionnalités
+- **Pas de listes à rallonge** — une info clé, une question de suivi
 
 ---
 
-Rappel : Tu es Léa, assistante d'En Toute Franchise. L'association d'abord, le digital en bonus.
+# 🎯 QUALIFICATION — PRIORITÉ ABSOLUE
+
+## Ta priorité n°1 : savoir à qui tu parles et récupérer ses coordonnées
+
+**Dès les premiers échanges, tu dois obtenir (dans cet ordre, de manière naturelle) :**
+
+1. **Ce qu'il fait** : commerçant ? artisan ? franchisé ? grande surface ? administration ? particulier ? Quel secteur ?
+2. **Son prénom**
+3. **Son email** (indispensable pour le recontacter)
+4. **Son téléphone** (si possible)
+
+**Comment faire :**
+- Ne pose PAS toutes les questions d'un coup comme un formulaire
+- Intègre-les naturellement dans la conversation
+- Exemples :
+  - "Et vous, vous êtes dans quel domaine d'activité ?" (après sa première question)
+  - "Au fait, je ne me suis pas présentée ! Moi c'est Léa 😊 Et vous, c'est... ?" (prénom)
+  - "Si vous voulez, je peux vous envoyer plus d'infos par email. Quelle est votre adresse ?" (email)
+  - "On peut aussi vous rappeler si vous préférez — vous avez un numéro ?" (téléphone)
+
+**RÈGLE** : Si après 4-5 échanges tu n'as toujours pas d'email, trouve un prétexte naturel pour le demander. Une conversation sans coordonnées = une conversation perdue.
+
+**Quand tu as les infos, inclus-les dans tes réponses pour que le système de notification les capture.**
+
+---
+
+Rappel : Tu es Léa, assistante d'En Toute Franchise. Qualifie, écoute, aide. L'association d'abord, le digital en bonus.
 """
 
 # =============================================================================
@@ -439,6 +466,10 @@ class GmailNotificationService:
                     visitor_info += f"<li><strong>Nom :</strong> {user_info['name']}</li>"
                 if user_info.get("email"):
                     visitor_info += f"<li><strong>Email :</strong> {user_info['email']}</li>"
+                if user_info.get("phone"):
+                    visitor_info += f"<li><strong>Téléphone :</strong> {user_info['phone']}</li>"
+                if user_info.get("profile"):
+                    visitor_info += f"<li><strong>Profil :</strong> {user_info['profile']}</li>"
                 if user_info.get("company"):
                     visitor_info += f"<li><strong>Entreprise :</strong> {user_info['company']}</li>"
 
@@ -615,6 +646,37 @@ class GroqAIService:
             logger.error(traceback.format_exc())
             return self._get_fallback_response()
 
+    def _extract_user_info_from_conversation(self, history: List[Dict]) -> Dict:
+        """Extrait les infos du visiteur depuis la conversation (email, tel, prénom, activité)"""
+        import re
+        extracted = {}
+        full_text = " ".join([m.get("content", "") for m in history])
+        
+        # Email
+        email_match = re.search(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', full_text)
+        if email_match:
+            extracted["email"] = email_match.group()
+        
+        # Téléphone français
+        phone_match = re.search(r'(?:(?:\+33|0033|0)\s*[1-9])(?:[\s.-]*\d{2}){4}', full_text)
+        if phone_match:
+            extracted["phone"] = phone_match.group()
+        
+        # Activité / profil détecté
+        text_lower = full_text.lower()
+        if any(w in text_lower for w in ["franchisé", "franchise", "franchiseur"]):
+            extracted["profile"] = "Franchisé"
+        elif any(w in text_lower for w in ["artisan", "artisanat"]):
+            extracted["profile"] = "Artisan"
+        elif any(w in text_lower for w in ["grande surface", "hypermarché", "supermarché"]):
+            extracted["profile"] = "Grande distribution"
+        elif any(w in text_lower for w in ["administration", "mairie", "collectivité"]):
+            extracted["profile"] = "Administration"
+        elif any(w in text_lower for w in ["commerçant", "commerce", "boutique", "magasin"]):
+            extracted["profile"] = "Commerçant"
+        
+        return extracted
+
     async def send_conversation_notification(
         self,
         conversation_id: str,
@@ -633,6 +695,17 @@ class GroqAIService:
             logger.warning(f"Not enough messages for {conversation_id} ({len(history) if history else 0}), skipping notification")
             return
 
+        # Extraire les infos du visiteur depuis la conversation
+        extracted_info = self._extract_user_info_from_conversation(history)
+        if user_info:
+            extracted_info.update(user_info)
+        elif extracted_info:
+            user_info = extracted_info
+        else:
+            user_info = {}
+        
+        logger.info(f"Extracted user info for {conversation_id}: {extracted_info}")
+
         # Détecter si intérêt pour l'adhésion
         has_interest = False
         for msg in history:
@@ -643,7 +716,7 @@ class GroqAIService:
 
         success = await gmail_notification_service.send_notification(
             conversation_history=history,
-            user_info=user_info,
+            user_info=user_info if user_info else extracted_info,
             user_type=user_type,
             has_adhesion_interest=has_interest
         )
