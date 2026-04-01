@@ -671,7 +671,7 @@ class GroqAIService:
                 self._notified[conversation_id] = False
                 
                 # Sauvegarder en base si db disponible
-                if self.db:
+                if self.db is not None:
                     await self._save_conversation(conversation_id, user_message, ai_response, user_type, user_info)
                 
                 return ai_response
@@ -769,7 +769,7 @@ Je m'excuse pour ce désagrément !"""
     ):
         """Sauvegarde la conversation en base de données"""
         try:
-            if not self.db:
+            if self.db is None:
                 return
             
             conversation_data = {
