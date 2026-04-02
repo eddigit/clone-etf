@@ -612,8 +612,8 @@ class GroqAIService:
                         "model": self.model,
                         "system": system_prompt,
                         "messages": messages,
-                        "max_tokens": 1024,
-                        "temperature": 0.7
+                        "max_tokens": 300,
+                        "temperature": 0.5
                     }
                 )
                 
