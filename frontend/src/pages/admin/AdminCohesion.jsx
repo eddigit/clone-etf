@@ -2603,7 +2603,7 @@ const AdminCohesion = () => {
                 <Input
                   value={currentCategory.name}
                   onChange={(e) => setCurrentCategory({...currentCategory, name: e.target.value})}
-                  placeholder="Ex: Journalistes, Particuliers, Les Mousquetaires..."
+                  placeholder="Ex: Journalistes, Particuliers, Commerçants..."
                 />
               </div>
               <div>
