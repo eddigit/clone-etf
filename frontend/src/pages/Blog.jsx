@@ -7,7 +7,7 @@ import { Clock, User, ArrowRight, FileText, Filter } from 'lucide-react';
 // Mock data disabled - only real articles from backend
 
 // API URL - utiliser l'API si disponible
-const API_URL = process.env.REACT_APP_API_URL || 'https://clone-etf.onrender.com';
+const API_URL = process.env.REACT_APP_API_URL || 'https://etf-backend-t3j5.onrender.com';
 
 const Blog = () => {
   const navigate = useNavigate();

@@ -50,7 +50,7 @@ const iconMap = {
   Rocket
 };
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://clone-etf.onrender.com';
+const API_URL = process.env.REACT_APP_API_URL || 'https://etf-backend-t3j5.onrender.com';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -72,7 +72,7 @@ const Home = () => {
   useEffect(() => {
     const fetchFeaturedArticles = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/articles/featured`);
+        const response = await fetch(`${API_URL}/api/articles?limit=3&status=published`);
         if (response.ok) {
           const data = await response.json();
           setFeaturedArticles(data.articles || []);

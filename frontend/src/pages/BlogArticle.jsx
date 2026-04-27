@@ -20,7 +20,7 @@ import {
   Check
 } from 'lucide-react';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://clone-etf.onrender.com';
+const API_URL = process.env.REACT_APP_API_URL || 'https://etf-backend-t3j5.onrender.com';
 
 const BlogArticle = () => {
   const { slug } = useParams();
