@@ -72,7 +72,7 @@ const Home = () => {
   useEffect(() => {
     const fetchFeaturedArticles = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/articles?limit=3&status=published`);
+        const response = await fetch(`${API_URL}/api/articles/featured`);
         if (response.ok) {
           const data = await response.json();
           setFeaturedArticles(data.articles || []);
