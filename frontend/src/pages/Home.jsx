@@ -75,7 +75,17 @@ const Home = () => {
         const response = await fetch(`${API_URL}/api/articles/featured`);
         if (response.ok) {
           const data = await response.json();
-          setFeaturedArticles(data.articles || []);
+          const ORDER = [
+            'nos-droits-fondamentaux',
+            'justice-aucun-acces-reel',
+            'decentralisation-inachevee'
+          ];
+          const sorted = (data.articles || []).sort((a, b) => {
+            const ia = ORDER.indexOf(a.slug);
+            const ib = ORDER.indexOf(b.slug);
+            return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+          });
+          setFeaturedArticles(sorted);
         }
       } catch (error) {
         console.error('Error fetching featured articles:', error);

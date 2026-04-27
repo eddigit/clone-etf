@@ -194,11 +194,11 @@ code {
 
 .prose p, .prose li, .prose span {
     color: #1f2937;
-    line-height: 1.8 !important;
+    line-height: 1.6 !important;
 }
 
 .prose p {
-    margin: 1rem 0 !important;
+    margin: 0.5rem 0 !important;
 }
 
 .prose a {
@@ -539,7 +539,7 @@ article {
 }
 
 .article-content p {
-    margin: 1.5rem 0 !important;
+    margin: 0.5rem 0 !important;
 }
 
 .article-content a {
