@@ -258,37 +258,6 @@ const Home = () => {
       </section>
 
 
-      {/* Section Blog - Lien permanent vers les articles */}
-      <section className="py-16 bg-gradient-to-r from-green-900/30 via-slate-900 to-green-900/30 border-t border-b border-green-800/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="text-center md:text-left">
-              <Badge className="mb-3 bg-green-700 text-white">
-                <Newspaper className="h-3 w-3 mr-1" />
-                Blog & Actualités
-              </Badge>
-              <h2 className="text-3xl font-bold text-white mb-3">
-                Nos articles et conseils pour les commerçants
-              </h2>
-              <p className="text-gray-400 max-w-xl">
-                Témoignages, analyses juridiques, actualités franchise... Restez informé et profitez de l'expérience de 30 ans de l'association.
-              </p>
-            </div>
-            <div className="flex-shrink-0">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-xl hover:shadow-green-500/30 transition-all transform hover:scale-105"
-                onClick={() => navigate('/blog')}
-              >
-                <Newspaper className="mr-2 h-5 w-5" />
-                Lire nos articles
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Featured Articles Section */}
       {featuredArticles.length > 0 && (
         <section className="py-20 bg-slate-900">
@@ -365,6 +334,37 @@ const Home = () => {
           </div>
         </section>
       )}
+
+      {/* Section Blog - Lien permanent vers les articles */}
+      <section className="py-16 bg-gradient-to-r from-green-900/30 via-slate-900 to-green-900/30 border-t border-b border-green-800/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="text-center md:text-left">
+              <Badge className="mb-3 bg-green-700 text-white">
+                <Newspaper className="h-3 w-3 mr-1" />
+                Blog & Actualités
+              </Badge>
+              <h2 className="text-3xl font-bold text-white mb-3">
+                Nos articles et conseils pour les commerçants
+              </h2>
+              <p className="text-gray-400 max-w-xl">
+                Témoignages, analyses juridiques, actualités franchise... Restez informé et profitez de l'expérience de 30 ans de l'association.
+              </p>
+            </div>
+            <div className="flex-shrink-0">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-xl hover:shadow-green-500/30 transition-all transform hover:scale-105"
+                onClick={() => navigate('/blog')}
+              >
+                <Newspaper className="mr-2 h-5 w-5" />
+                Lire nos articles
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Pourquoi Adhérer Section */}
       <section className="py-20 bg-slate-900">
