@@ -4596,7 +4596,14 @@ async def websocket_admin(websocket: WebSocket, admin_id: str):
         connection_manager.disconnect_admin(admin_id)
 
 # CORS middleware - Configuration dynamique selon l'environnement
-allowed_origins = ["*"] if ENVIRONMENT == "development" else [FRONTEND_URL]
+# ALLOWED_ORIGINS (liste séparée par virgules) prend le pas sur FRONTEND_URL si défini.
+_ALLOWED_ORIGINS_ENV = os.environ.get('ALLOWED_ORIGINS', '').strip()
+if ENVIRONMENT == "development":
+    allowed_origins = ["*"]
+elif _ALLOWED_ORIGINS_ENV:
+    allowed_origins = [u.strip() for u in _ALLOWED_ORIGINS_ENV.split(",") if u.strip()]
+else:
+    allowed_origins = [FRONTEND_URL]
 
 app.add_middleware(
     CORSMiddleware,

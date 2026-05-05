@@ -394,17 +394,33 @@ const AdminBlog = () => {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestion du Blog</h1>
-          <p className="text-gray-600">Creez et gerez les articles du blog</p>
+      {/* Header sticky : reste visible au scroll pour accès permanent au bouton Nouvel article */}
+      <div className="sticky top-0 z-30 -mx-6 -mt-6 px-6 py-4 bg-white/95 backdrop-blur border-b border-gray-200 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Gestion du Blog</h1>
+            <p className="text-gray-600">Creez et gerez les articles du blog</p>
+          </div>
+          <Button
+            onClick={handleNewArticle}
+            size="lg"
+            className="bg-blue-600 hover:bg-blue-700 shadow-md whitespace-nowrap"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Nouvel article
+          </Button>
         </div>
-        <Button onClick={handleNewArticle} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvel article
-        </Button>
       </div>
+
+      {/* Bouton flottant (FAB) - toujours visible en bas à droite, surtout sur mobile */}
+      <Button
+        onClick={handleNewArticle}
+        className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg p-0 md:hidden"
+        aria-label="Nouvel article"
+        title="Nouvel article"
+      >
+        <Plus className="h-6 w-6" />
+      </Button>
 
       {/* Filters */}
       <Card>
