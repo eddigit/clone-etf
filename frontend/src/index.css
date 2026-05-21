@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -978,38 +980,53 @@ article table,
 
 
 /* ============================================================
-   PREMIUM EDITORIAL — Page article blog (refonte 2026-05-21)
-   Scopé sur .etf-article pour ne pas affecter le reste du site
-   Light éditorial + accent vert (cohérent avec Home dark slate)
+   PREMIUM EDITORIAL — Article blog (refonte 2026-05-21 v2)
+   Scopé sur .etf-article. Inspirations : Medium, Stripe blog,
+   The Verge, Linear changelog. Light éditorial + accent vert.
+   (Fonts importées en tête du fichier)
    ============================================================ */
 
-.etf-article {
-    /* Fond crème éditorial pour reposer l'oeil sur les longues lectures */
-    background:
-        radial-gradient(1100px 600px at 50% -100px, #ecfdf5 0%, transparent 60%),
-        linear-gradient(180deg, #fafaf7 0%, #ffffff 480px);
-    color: #1f2937;
+/* Famille serif utilitaire */
+.etf-serif {
+    font-family: "Source Serif 4", "Source Serif Pro", "Charter",
+        "Iowan Old Style", "Georgia", ui-serif, serif;
+    font-feature-settings: "ss01", "kern";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-/* Conteneur de contenu rédactionnel */
+.etf-article {
+    /* Crème ultra clair, ton chaud subtil */
+    background: #fafaf7;
+    color: #1c1917; /* stone-900 */
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, "Helvetica Neue", sans-serif;
+}
+
+/* ----- Corps rédactionnel ----- */
 .etf-article-body {
-    font-family: "Source Serif 4", "Source Serif Pro", "Charter", "Iowan Old Style",
-        "Georgia", ui-serif, serif;
-    font-size: 1.1875rem; /* 19px */
-    line-height: 1.75;
-    color: #1f2937;
+    font-family: "Source Serif 4", "Charter", "Iowan Old Style", "Georgia",
+        ui-serif, serif;
+    font-size: 1.21rem; /* 19.5px */
+    line-height: 1.72;
+    color: #1c1917; /* stone-900 */
     font-weight: 400;
     letter-spacing: -0.003em;
+    word-break: normal;
+    overflow-wrap: break-word;
+    hyphens: none;
+    -webkit-hyphens: none;
+    max-width: 100%;
 }
 
 @media (max-width: 768px) {
     .etf-article-body {
-        font-size: 1.0625rem; /* 17px sur mobile */
-        line-height: 1.7;
+        font-size: 1.0625rem; /* 17px */
+        line-height: 1.68;
     }
 }
 
-/* Titres : famille sérif pour cohérence */
+/* ----- Titres ----- */
 .etf-article-body h1,
 .etf-article-body h2,
 .etf-article-body h3,
@@ -1017,81 +1034,83 @@ article table,
 .etf-article-body h5,
 .etf-article-body h6 {
     font-family: "Source Serif 4", "Charter", "Georgia", ui-serif, serif;
-    color: #0f172a !important; /* slate-900 */
-    font-weight: 700 !important;
-    line-height: 1.25 !important;
-    letter-spacing: -0.015em !important;
-    /* "gather the children" : marge-top > marge-bottom */
+    color: #0c0a09 !important; /* stone-950 */
+    font-weight: 600 !important;
+    line-height: 1.18 !important;
+    letter-spacing: -0.022em !important;
+    scroll-margin-top: 88px;
 }
 
 .etf-article-body h1 {
     font-size: 2.25rem !important;
-    margin-top: 3rem !important;
-    margin-bottom: 1rem !important;
+    margin: 3.5rem 0 1rem !important;
 }
 
 .etf-article-body h2 {
     font-size: 1.875rem !important;
-    margin-top: 3rem !important;
-    margin-bottom: 1rem !important;
-    padding-bottom: 0 !important;
-    border-bottom: none !important;
+    margin: 3.5rem 0 1.1rem !important;
+    padding: 0 !important;
+    border: 0 !important;
     position: relative;
 }
-
-/* Trait d'accent vert sous les h2 — élégant, pas de border-bottom plein */
-.etf-article-body h2::after {
+.etf-article-body h2::before {
     content: '';
     display: block;
-    width: 56px;
-    height: 3px;
-    background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+    width: 38px;
+    height: 2px;
+    background: #059669;
+    margin-bottom: 1rem;
     border-radius: 2px;
-    margin-top: 0.75rem;
 }
 
 .etf-article-body h3 {
-    font-size: 1.5rem !important;
-    margin-top: 2.5rem !important;
-    margin-bottom: 0.75rem !important;
-    color: #064e3b !important; /* emerald-900 */
+    font-size: 1.4rem !important;
+    margin: 2.5rem 0 0.85rem !important;
+    color: #065f46 !important; /* emerald-800 */
+    font-weight: 600 !important;
 }
 
 .etf-article-body h4 {
-    font-size: 1.25rem !important;
-    margin-top: 2rem !important;
-    margin-bottom: 0.5rem !important;
+    font-size: 1.15rem !important;
+    margin: 2rem 0 0.6rem !important;
+    color: #1c1917 !important;
 }
 
-/* Paragraphes : aération généreuse */
-.etf-article-body p {
-    margin: 1.25rem 0 !important;
-    line-height: 1.75 !important;
-    color: #1f2937 !important;
-}
-
-/* Premier paragraphe : drop-cap optionnel (subtil, pas tape-à-l'oeil)
-   On le désactive si la première lettre n'est pas dans un <p> direct.
-   Désactivé par défaut — décommenter pour activer
+/* Premier paragraphe — drop cap éditorial très subtil */
 .etf-article-body > p:first-of-type::first-letter {
-    font-size: 3.5em;
-    line-height: 0.85;
+    font-family: "Source Serif 4", "Charter", "Georgia", serif;
+    font-size: 3.4em;
+    line-height: 0.86;
     float: left;
-    margin: 0.1em 0.1em 0 0;
-    font-weight: 700;
+    padding: 0.04em 0.12em 0 0;
+    margin-top: 0.08em;
+    font-weight: 600;
     color: #047857;
 }
-*/
 
-/* Liens : accent vert MyBotIA, soulignement élégant */
+@media (max-width: 640px) {
+    .etf-article-body > p:first-of-type::first-letter {
+        font-size: 2.8em;
+    }
+}
+
+/* Paragraphes */
+.etf-article-body p {
+    margin: 1.1rem 0 !important;
+    line-height: 1.72 !important;
+    color: #1c1917 !important;
+}
+
+/* Liens — underline élégant qui s'épaissit au hover */
 .etf-article-body a {
-    color: #047857 !important; /* emerald-700 */
+    color: #047857 !important;
     text-decoration: underline !important;
-    text-decoration-color: rgba(16, 185, 129, 0.4) !important;
+    text-decoration-color: rgba(5, 150, 105, 0.35) !important;
     text-decoration-thickness: 1.5px !important;
-    text-underline-offset: 4px !important;
+    text-underline-offset: 3.5px !important;
     font-weight: 500 !important;
-    transition: all 0.15s ease !important;
+    transition: color 0.2s ease, text-decoration-color 0.2s ease, text-decoration-thickness 0.2s ease !important;
+    word-break: break-word !important;
 }
 
 .etf-article-body a:hover {
@@ -1100,17 +1119,17 @@ article table,
     text-decoration-thickness: 2px !important;
 }
 
-/* Strong / b — accent vert subtil */
+/* Strong / em */
 .etf-article-body strong,
 .etf-article-body b {
-    color: #064e3b !important; /* emerald-900 */
+    color: #0c0a09 !important;
     font-weight: 600 !important;
 }
 
 .etf-article-body em,
 .etf-article-body i {
     font-style: italic !important;
-    color: #334155 !important;
+    color: #44403c !important; /* stone-700 */
 }
 
 /* ============================================================
@@ -1164,135 +1183,156 @@ article table,
 }
 
 /* ============================================================
-   LISTES — propres, accent vert, gestion des cascades vides Quill
+   LISTES — bullets et numéros refaits, propre & lisible
+   Gère aussi les pseudo-listes converties depuis « · » et « 1- » Word
    ============================================================ */
 
 .etf-article-body ul,
 .etf-article-body ol {
-    margin: 1.25rem 0 !important;
-    padding-left: 1.5rem !important;
-}
-
-.etf-article-body ul {
+    margin: 1.4rem 0 !important;
+    padding-left: 0 !important;
     list-style: none !important;
 }
 
-.etf-article-body ul > li {
+.etf-article-body ul > li,
+.etf-article-body ol > li {
     position: relative;
-    padding-left: 1.5rem !important;
-    margin: 0.5rem 0 !important;
-    line-height: 1.7 !important;
+    padding-left: 1.85rem !important;
+    margin: 0.55rem 0 !important;
+    line-height: 1.65 !important;
+    color: #1c1917;
 }
 
+/* Bullets — petit losange vert filigrane, raffiné */
 .etf-article-body ul > li::before {
     content: '';
     position: absolute;
-    left: 0;
-    top: 0.7em;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+    left: 0.4rem;
+    top: 0.78em;
+    width: 6px;
+    height: 6px;
+    background: #059669;
+    border-radius: 1px;
+    transform: rotate(45deg);
 }
 
+/* Numéros — pastille verte douce */
 .etf-article-body ol {
-    list-style: none !important;
-    counter-reset: etf-counter !important;
+    counter-reset: etf-num !important;
 }
-
 .etf-article-body ol > li {
-    position: relative;
-    padding-left: 2.25rem !important;
-    margin: 0.5rem 0 !important;
-    counter-increment: etf-counter !important;
-    line-height: 1.7 !important;
+    counter-increment: etf-num !important;
+    padding-left: 2.4rem !important;
 }
-
 .etf-article-body ol > li::before {
-    content: counter(etf-counter);
+    content: counter(etf-num);
     position: absolute;
     left: 0;
-    top: 0.15em;
-    width: 1.5rem;
-    height: 1.5rem;
+    top: 0.05em;
+    width: 1.6rem;
+    height: 1.6rem;
     border-radius: 50%;
-    background: linear-gradient(135deg, #047857 0%, #10b981 100%);
-    color: white;
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
     font-family: "Inter", system-ui, sans-serif;
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: 0.72rem;
+    font-weight: 600;
     display: flex;
     align-items: center;
     justify-content: center;
+    line-height: 1;
 }
 
-/* Listes imbriquées vides (artefact Quill ul>li>ul>li>... vides) → collapse */
+/* Sous-listes : bullets neutres petits */
 .etf-article-body ul ul,
 .etf-article-body ul ol,
 .etf-article-body ol ul,
 .etf-article-body ol ol {
-    margin: 0.25rem 0 0.25rem 0 !important;
+    margin: 0.45rem 0 0.45rem 0.8rem !important;
+}
+.etf-article-body ul ul > li::before {
+    background: #a8a29e;
+    width: 4px;
+    height: 4px;
+    transform: none;
+    border-radius: 50%;
+    top: 0.88em;
 }
 
-/* Items vides (juste des espaces / &nbsp; / <br>) → masqués */
+/* Listes converties depuis les pseudo-bullets « · » de Word
+   → on les rend visuellement aérées, encadrées sur un léger filet vert */
+.etf-article-body ul.etf-pseudo-bullets {
+    padding-left: 0 !important;
+    margin: 1.6rem 0 !important;
+    border-left: 2px solid #d1fae5;
+    padding-left: 1.4rem !important;
+}
+.etf-article-body ul.etf-pseudo-bullets > li {
+    padding-left: 1.5rem !important;
+    margin: 0.65rem 0 !important;
+}
+.etf-article-body ul.etf-pseudo-bullets > li::before {
+    left: 0;
+    top: 0.78em;
+    width: 7px;
+    height: 7px;
+    background: #10b981;
+    border-radius: 50%;
+    transform: none;
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.12);
+}
+
+/* Listes numérotées converties depuis « 1 - … » de Word */
+.etf-article-body ol.etf-pseudo-numbered {
+    padding-left: 0 !important;
+    border-left: 2px solid #d1fae5;
+    padding-left: 1.4rem !important;
+}
+
+/* Items vides → masqués */
 .etf-article-body li:empty,
 .etf-article-body ul:empty,
 .etf-article-body ol:empty,
 .etf-article-body p:empty {
     display: none !important;
 }
-
-/* Item ne contenant qu'un seul élément vide */
 .etf-article-body li > br:only-child,
 .etf-article-body p > br:only-child {
     display: none !important;
 }
 
-/* Sous-niveaux : marqueurs plus discrets */
-.etf-article-body ul ul > li::before {
-    background: #94a3b8;
-    box-shadow: none;
-    width: 5px;
-    height: 5px;
-    top: 0.85em;
-}
-
 /* ============================================================
-   CITATIONS / BLOCKQUOTES — encarts juridiques premium
+   CITATIONS / BLOCKQUOTES — encart éditorial sobre
    ============================================================ */
 
 .etf-article-body blockquote {
-    border-left: 3px solid #10b981 !important;
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.06) 0%, rgba(16, 185, 129, 0.02) 100%) !important;
-    padding: 1.5rem 1.75rem !important;
+    border-left: 3px solid #059669 !important;
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%) !important;
+    padding: 1.4rem 1.6rem 1.4rem 1.8rem !important;
     margin: 2rem 0 !important;
-    border-radius: 0 0.75rem 0.75rem 0 !important;
+    border-radius: 0 0.5rem 0.5rem 0 !important;
     font-style: italic !important;
-    color: #064e3b !important;
-    font-size: 1.0625em;
+    color: #0f172a !important;
+    font-size: 1.05em;
     position: relative;
 }
 
 .etf-article-body blockquote::before {
-    content: '"';
+    content: '\201C';
     position: absolute;
-    top: -0.5rem;
-    left: 0.5rem;
+    top: -1rem;
+    left: 0.8rem;
     font-family: "Source Serif 4", Georgia, serif;
-    font-size: 3.5rem;
+    font-size: 4rem;
     line-height: 1;
-    color: rgba(16, 185, 129, 0.25);
+    color: rgba(5, 150, 105, 0.18);
     font-style: normal;
+    pointer-events: none;
 }
 
-.etf-article-body blockquote p {
-    margin: 0 !important;
-}
-
-.etf-article-body blockquote p + p {
-    margin-top: 0.75rem !important;
-}
+.etf-article-body blockquote p { margin: 0 !important; }
+.etf-article-body blockquote p + p { margin-top: 0.75rem !important; }
 
 /* ============================================================
    IMAGES, HR, CODE, TABLES — finitions éditoriales
@@ -1304,15 +1344,34 @@ article table,
     display: block !important;
     margin: 2.5rem auto !important;
     border-radius: 0.75rem !important;
-    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.2),
-        0 8px 16px -8px rgba(15, 23, 42, 0.1) !important;
+    box-shadow: 0 1px 0 rgba(28, 25, 23, 0.04),
+        0 18px 35px -20px rgba(28, 25, 23, 0.25) !important;
+    border: 1px solid rgba(28, 25, 23, 0.06);
+}
+
+/* Placeholder pour images base64 strippées */
+.etf-article-body .etf-image-placeholder {
+    display: block;
+    margin: 1.5rem auto;
+    padding: 0.7rem 1rem;
+    background: #f5f5f4;
+    border: 1px dashed #d6d3d1;
+    color: #78716c;
+    font-family: "Inter", sans-serif;
+    font-size: 0.8rem;
+    text-align: center;
+    border-radius: 0.5rem;
+    max-width: 200px;
 }
 
 .etf-article-body hr {
     border: none !important;
     height: 1px !important;
-    background: linear-gradient(90deg, transparent, #cbd5e1, transparent) !important;
+    background: #e7e5e4 !important;
     margin: 3rem 0 !important;
+    width: 60%;
+    margin-left: auto !important;
+    margin-right: auto !important;
 }
 
 .etf-article-body code {
@@ -1394,12 +1453,53 @@ article table,
 .etf-article-body .ql-align-center { text-align: center !important; }
 .etf-article-body .ql-align-right { text-align: right !important; }
 .etf-article-body .ql-align-justify { text-align: justify !important; }
-.etf-article-body .ql-indent-1 { padding-left: 2rem !important; }
-.etf-article-body .ql-indent-2 { padding-left: 4rem !important; }
-.etf-article-body .ql-indent-3 { padding-left: 6rem !important; }
+/* Indents Quill — réduits pour ne pas casser la grille de lecture */
+.etf-article-body .ql-indent-1 { padding-left: 1.25rem !important; }
+.etf-article-body .ql-indent-2 { padding-left: 2.25rem !important; }
+.etf-article-body .ql-indent-3 { padding-left: 3.25rem !important; }
+@media (max-width: 640px) {
+    .etf-article-body .ql-indent-1,
+    .etf-article-body .ql-indent-2,
+    .etf-article-body .ql-indent-3 { padding-left: 0.75rem !important; }
+}
 .etf-article-body .ql-size-small { font-size: 0.875em !important; }
-.etf-article-body .ql-size-large { font-size: 1.25em !important; }
-.etf-article-body .ql-size-huge { font-size: 1.5em !important; }
+.etf-article-body .ql-size-large { font-size: 1.2em !important; color: #065f46; }
+.etf-article-body .ql-size-huge { font-size: 1.55em !important; line-height: 1.25; }
+
+/* YouTube wrapper responsive (utilisé par BlogArticle) */
+.etf-yt-wrap {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    margin: 2.25rem 0;
+    border-radius: 0.85rem;
+    overflow: hidden;
+    box-shadow: 0 22px 45px -25px rgba(15, 23, 42, 0.45);
+    background: #0f172a;
+}
+.etf-yt-wrap iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+/* Sécurité : pas de débordement horizontal */
+.etf-article-body,
+.etf-article-body * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+.etf-article-body pre,
+.etf-article-body table { overflow-x: auto !important; }
+
+/* Caché : <p> qui ne contient plus que des invisibles */
+.etf-article-body p:empty { display: none !important; }
+
+/* Utilitaire : scrollbar masquée (chips catégorie blog) */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ============================================================
    FIN — Premium editorial blog article
