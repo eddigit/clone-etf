@@ -977,3 +977,431 @@ article table,
 }
 
 
+/* ============================================================
+   PREMIUM EDITORIAL — Page article blog (refonte 2026-05-21)
+   Scopé sur .etf-article pour ne pas affecter le reste du site
+   Light éditorial + accent vert (cohérent avec Home dark slate)
+   ============================================================ */
+
+.etf-article {
+    /* Fond crème éditorial pour reposer l'oeil sur les longues lectures */
+    background:
+        radial-gradient(1100px 600px at 50% -100px, #ecfdf5 0%, transparent 60%),
+        linear-gradient(180deg, #fafaf7 0%, #ffffff 480px);
+    color: #1f2937;
+}
+
+/* Conteneur de contenu rédactionnel */
+.etf-article-body {
+    font-family: "Source Serif 4", "Source Serif Pro", "Charter", "Iowan Old Style",
+        "Georgia", ui-serif, serif;
+    font-size: 1.1875rem; /* 19px */
+    line-height: 1.75;
+    color: #1f2937;
+    font-weight: 400;
+    letter-spacing: -0.003em;
+}
+
+@media (max-width: 768px) {
+    .etf-article-body {
+        font-size: 1.0625rem; /* 17px sur mobile */
+        line-height: 1.7;
+    }
+}
+
+/* Titres : famille sérif pour cohérence */
+.etf-article-body h1,
+.etf-article-body h2,
+.etf-article-body h3,
+.etf-article-body h4,
+.etf-article-body h5,
+.etf-article-body h6 {
+    font-family: "Source Serif 4", "Charter", "Georgia", ui-serif, serif;
+    color: #0f172a !important; /* slate-900 */
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
+    letter-spacing: -0.015em !important;
+    /* "gather the children" : marge-top > marge-bottom */
+}
+
+.etf-article-body h1 {
+    font-size: 2.25rem !important;
+    margin-top: 3rem !important;
+    margin-bottom: 1rem !important;
+}
+
+.etf-article-body h2 {
+    font-size: 1.875rem !important;
+    margin-top: 3rem !important;
+    margin-bottom: 1rem !important;
+    padding-bottom: 0 !important;
+    border-bottom: none !important;
+    position: relative;
+}
+
+/* Trait d'accent vert sous les h2 — élégant, pas de border-bottom plein */
+.etf-article-body h2::after {
+    content: '';
+    display: block;
+    width: 56px;
+    height: 3px;
+    background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+    border-radius: 2px;
+    margin-top: 0.75rem;
+}
+
+.etf-article-body h3 {
+    font-size: 1.5rem !important;
+    margin-top: 2.5rem !important;
+    margin-bottom: 0.75rem !important;
+    color: #064e3b !important; /* emerald-900 */
+}
+
+.etf-article-body h4 {
+    font-size: 1.25rem !important;
+    margin-top: 2rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+/* Paragraphes : aération généreuse */
+.etf-article-body p {
+    margin: 1.25rem 0 !important;
+    line-height: 1.75 !important;
+    color: #1f2937 !important;
+}
+
+/* Premier paragraphe : drop-cap optionnel (subtil, pas tape-à-l'oeil)
+   On le désactive si la première lettre n'est pas dans un <p> direct.
+   Désactivé par défaut — décommenter pour activer
+.etf-article-body > p:first-of-type::first-letter {
+    font-size: 3.5em;
+    line-height: 0.85;
+    float: left;
+    margin: 0.1em 0.1em 0 0;
+    font-weight: 700;
+    color: #047857;
+}
+*/
+
+/* Liens : accent vert MyBotIA, soulignement élégant */
+.etf-article-body a {
+    color: #047857 !important; /* emerald-700 */
+    text-decoration: underline !important;
+    text-decoration-color: rgba(16, 185, 129, 0.4) !important;
+    text-decoration-thickness: 1.5px !important;
+    text-underline-offset: 4px !important;
+    font-weight: 500 !important;
+    transition: all 0.15s ease !important;
+}
+
+.etf-article-body a:hover {
+    color: #065f46 !important;
+    text-decoration-color: #10b981 !important;
+    text-decoration-thickness: 2px !important;
+}
+
+/* Strong / b — accent vert subtil */
+.etf-article-body strong,
+.etf-article-body b {
+    color: #064e3b !important; /* emerald-900 */
+    font-weight: 600 !important;
+}
+
+.etf-article-body em,
+.etf-article-body i {
+    font-style: italic !important;
+    color: #334155 !important;
+}
+
+/* ============================================================
+   ANTI-POLLUTION QUILL — force la cohérence visuelle
+   Override TOUS les styles inline color/background problématiques
+   ============================================================ */
+
+/* Couleurs inline Quill (color: rgb(0,71,178), color: black, etc.) → neutralisées */
+.etf-article-body [style*="color: rgb(0, 71, 178)"],
+.etf-article-body [style*="color:rgb(0,71,178)"],
+.etf-article-body [style*="color: rgb(0,71,178)"],
+.etf-article-body [style*="color: blue"],
+.etf-article-body [style*="color:blue"],
+.etf-article-body [style*="color: #0047b2"],
+.etf-article-body [style*="color:#0047b2"] {
+    color: #047857 !important; /* On force le vert d'accent pour les "couleurs d'emphase" */
+}
+
+.etf-article-body [style*="color: black"],
+.etf-article-body [style*="color:black"],
+.etf-article-body [style*="color: rgb(0, 0, 0)"],
+.etf-article-body [style*="color:rgb(0,0,0)"],
+.etf-article-body [style*="color: #000"],
+.etf-article-body [style*="color:#000"] {
+    color: #1f2937 !important; /* Force le gris foncé éditorial standard */
+}
+
+/* Backgrounds inline Quill (blanc forcé, etc.) → neutralisés */
+.etf-article-body [style*="background-color: white"],
+.etf-article-body [style*="background-color:white"],
+.etf-article-body [style*="background: white"],
+.etf-article-body [style*="background:white"],
+.etf-article-body [style*="background-color: rgb(255, 255, 255)"],
+.etf-article-body [style*="background-color:rgb(255,255,255)"],
+.etf-article-body [style*="background-color: #fff"],
+.etf-article-body [style*="background-color:#fff"] {
+    background-color: transparent !important;
+    background: transparent !important;
+}
+
+/* Force les font-family inline à hériter (Quill met parfois Arial / Helvetica) */
+.etf-article-body p[style*="font-family"],
+.etf-article-body span[style*="font-family"],
+.etf-article-body div[style*="font-family"] {
+    font-family: inherit !important;
+}
+
+/* Force les tailles de texte inline absurdes à hériter — sauf .ql-size-* */
+.etf-article-body span[style*="font-size"]:not(.ql-size-small):not(.ql-size-large):not(.ql-size-huge) {
+    font-size: inherit !important;
+}
+
+/* ============================================================
+   LISTES — propres, accent vert, gestion des cascades vides Quill
+   ============================================================ */
+
+.etf-article-body ul,
+.etf-article-body ol {
+    margin: 1.25rem 0 !important;
+    padding-left: 1.5rem !important;
+}
+
+.etf-article-body ul {
+    list-style: none !important;
+}
+
+.etf-article-body ul > li {
+    position: relative;
+    padding-left: 1.5rem !important;
+    margin: 0.5rem 0 !important;
+    line-height: 1.7 !important;
+}
+
+.etf-article-body ul > li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.7em;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+}
+
+.etf-article-body ol {
+    list-style: none !important;
+    counter-reset: etf-counter !important;
+}
+
+.etf-article-body ol > li {
+    position: relative;
+    padding-left: 2.25rem !important;
+    margin: 0.5rem 0 !important;
+    counter-increment: etf-counter !important;
+    line-height: 1.7 !important;
+}
+
+.etf-article-body ol > li::before {
+    content: counter(etf-counter);
+    position: absolute;
+    left: 0;
+    top: 0.15em;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+    color: white;
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Listes imbriquées vides (artefact Quill ul>li>ul>li>... vides) → collapse */
+.etf-article-body ul ul,
+.etf-article-body ul ol,
+.etf-article-body ol ul,
+.etf-article-body ol ol {
+    margin: 0.25rem 0 0.25rem 0 !important;
+}
+
+/* Items vides (juste des espaces / &nbsp; / <br>) → masqués */
+.etf-article-body li:empty,
+.etf-article-body ul:empty,
+.etf-article-body ol:empty,
+.etf-article-body p:empty {
+    display: none !important;
+}
+
+/* Item ne contenant qu'un seul élément vide */
+.etf-article-body li > br:only-child,
+.etf-article-body p > br:only-child {
+    display: none !important;
+}
+
+/* Sous-niveaux : marqueurs plus discrets */
+.etf-article-body ul ul > li::before {
+    background: #94a3b8;
+    box-shadow: none;
+    width: 5px;
+    height: 5px;
+    top: 0.85em;
+}
+
+/* ============================================================
+   CITATIONS / BLOCKQUOTES — encarts juridiques premium
+   ============================================================ */
+
+.etf-article-body blockquote {
+    border-left: 3px solid #10b981 !important;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.06) 0%, rgba(16, 185, 129, 0.02) 100%) !important;
+    padding: 1.5rem 1.75rem !important;
+    margin: 2rem 0 !important;
+    border-radius: 0 0.75rem 0.75rem 0 !important;
+    font-style: italic !important;
+    color: #064e3b !important;
+    font-size: 1.0625em;
+    position: relative;
+}
+
+.etf-article-body blockquote::before {
+    content: '"';
+    position: absolute;
+    top: -0.5rem;
+    left: 0.5rem;
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 3.5rem;
+    line-height: 1;
+    color: rgba(16, 185, 129, 0.25);
+    font-style: normal;
+}
+
+.etf-article-body blockquote p {
+    margin: 0 !important;
+}
+
+.etf-article-body blockquote p + p {
+    margin-top: 0.75rem !important;
+}
+
+/* ============================================================
+   IMAGES, HR, CODE, TABLES — finitions éditoriales
+   ============================================================ */
+
+.etf-article-body img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    margin: 2.5rem auto !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.2),
+        0 8px 16px -8px rgba(15, 23, 42, 0.1) !important;
+}
+
+.etf-article-body hr {
+    border: none !important;
+    height: 1px !important;
+    background: linear-gradient(90deg, transparent, #cbd5e1, transparent) !important;
+    margin: 3rem 0 !important;
+}
+
+.etf-article-body code {
+    background: #f1f5f9 !important;
+    color: #047857 !important;
+    padding: 0.15em 0.45em !important;
+    border-radius: 0.375rem !important;
+    font-family: "JetBrains Mono", "Fira Code", Monaco, monospace !important;
+    font-size: 0.875em !important;
+    font-weight: 500 !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+.etf-article-body pre {
+    background: #0f172a !important;
+    color: #e2e8f0 !important;
+    padding: 1.5rem !important;
+    border-radius: 0.75rem !important;
+    overflow-x: auto !important;
+    margin: 2rem 0 !important;
+    font-size: 0.9em !important;
+    line-height: 1.6 !important;
+    box-shadow: 0 10px 25px -10px rgba(15, 23, 42, 0.4) !important;
+}
+
+.etf-article-body pre code {
+    background: transparent !important;
+    color: inherit !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+.etf-article-body table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 2rem 0 !important;
+    border-radius: 0.5rem !important;
+    overflow: hidden !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    font-size: 0.95em;
+    font-family: "Inter", system-ui, sans-serif !important;
+}
+
+.etf-article-body th {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    font-weight: 600 !important;
+    padding: 0.85rem 1rem !important;
+    text-align: left !important;
+    border-bottom: 2px solid #cbd5e1 !important;
+}
+
+.etf-article-body td {
+    padding: 0.85rem 1rem !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    color: #334155 !important;
+}
+
+.etf-article-body tr:last-child td {
+    border-bottom: none !important;
+}
+
+/* ============================================================
+   PARAGRAPHES VIDES & NETTOYAGE QUILL FINAL
+   ============================================================ */
+
+/* Paragraphes ne contenant qu'un espace insécable, espace, ou <br> */
+.etf-article-body p > br:only-child,
+.etf-article-body div > br:only-child {
+    display: none;
+}
+
+/* Réduction des doublons d'espaces verticaux entre <p> vides successifs */
+.etf-article-body p:empty + p:empty {
+    display: none !important;
+}
+
+/* Quill align */
+.etf-article-body .ql-align-center { text-align: center !important; }
+.etf-article-body .ql-align-right { text-align: right !important; }
+.etf-article-body .ql-align-justify { text-align: justify !important; }
+.etf-article-body .ql-indent-1 { padding-left: 2rem !important; }
+.etf-article-body .ql-indent-2 { padding-left: 4rem !important; }
+.etf-article-body .ql-indent-3 { padding-left: 6rem !important; }
+.etf-article-body .ql-size-small { font-size: 0.875em !important; }
+.etf-article-body .ql-size-large { font-size: 1.25em !important; }
+.etf-article-body .ql-size-huge { font-size: 1.5em !important; }
+
+/* ============================================================
+   FIN — Premium editorial blog article
+   ============================================================ */
+
